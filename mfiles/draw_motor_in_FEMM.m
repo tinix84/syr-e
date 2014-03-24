@@ -7,7 +7,7 @@
 ns = geo.ns;
 p = geo.p;
 
-fem = dimMesh(geo);
+fem = dimMesh(geo,eval_type);
 % fem.res_traf=0.5;
 % fem.res=6;
 

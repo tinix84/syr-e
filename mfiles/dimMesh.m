@@ -1,7 +1,5 @@
 % adapts 
-function fem = dimMesh(geo)
-
-global eval_type 
+function fem = dimMesh(geo,eval_type)
 
 res_max=1/3*geo.g;
 % La dimensione degli elementi della mesh al traferro deve essere un

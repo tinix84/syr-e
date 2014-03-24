@@ -37,7 +37,7 @@ if matlabpool('Size')>0
 end
 % matlabpool(4)
 %%%%%%%%%%%%%%%%%%%
-global eval_type
+
 
 load results\lastpathname.mat;
 
@@ -97,7 +97,7 @@ switch eval_type
         for i = 1:length(io)
             
             % run FEMM
-            out = eval_motor_in_FEMM(geo,io_femm(i),gammat(i));
+            out = eval_motor_in_FEMM(geo,io_femm(i),gammat(i),eval_type);
             
             Istr=num2str(io(i),3); Istr = strrep(Istr,'.','A');
             gammaStr=num2str(gamma_temp(i),4); gammaStr = strrep(gammaStr,'.','d');            
@@ -132,7 +132,7 @@ switch eval_type
         end
          
         % run FEMM over the id,iq grid
-        F_map = eval_FdFq_tables_in_FEMM(geo,idvect,iqvect,0);
+        F_map = eval_FdFq_tables_in_FEMM(geo,idvect,iqvect,0,eval_type);
         
         % builds a new folder for each id, iq simulation
         Idstr=num2str(max(abs(idvect)),3); Idstr = strrep(Idstr,'.','A');

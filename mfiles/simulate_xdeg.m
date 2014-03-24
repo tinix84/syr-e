@@ -13,9 +13,7 @@
 % SOL(5,:) = fq,
 % SOL(6,:) = torque;
 
-function SOL = simulate_xdeg(geo,nsim,xdeg,io,gamma)
-
-global eval_type
+function SOL = simulate_xdeg(geo,nsim,xdeg,io,gamma,eval_type)
 
 % pathname = geo.pathname;
 pathname = cd;
@@ -43,10 +41,12 @@ if strcmp(eval_type,'MO_OA')
     % during optimization, random position offset
     sim_step=xdeg/(nsim-1+0.5);
     offset=1*sim_step*rand;
+    isOpen=0; %Disable parFor during optimization
 else
     % during re-evaluation, regular position steps
     sim_step=xdeg/(nsim-1);
     offset=0;
+    isOpen=1; %Enable parFor during optimization
 end
 
 
@@ -65,7 +65,7 @@ for ij=1:nsim-1
 end
 
 % for (single thread) or parfor (multi-thread) simulation cycle
-isOpen = matlabpool('size');
+
 if isOpen > 0
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

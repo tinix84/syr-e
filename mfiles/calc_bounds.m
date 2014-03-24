@@ -8,7 +8,6 @@
 
 % 23 04 10 - bounds_x
 
-global tipo_cost
 
 p = geo.p;                                      % Paia poli
 nlay = geo.nlay;                                % Numero di barriere

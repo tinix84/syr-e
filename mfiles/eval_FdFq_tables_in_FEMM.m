@@ -39,7 +39,7 @@ Fd = zeros(size(Id)); Fq = Fd; T = Fd; dT = Fd;
 
 for rr = 1:size(io,1)
     for cc = 1:size(io,2)
-        SOL = simulate_xdeg(geo,nsim,delta_sim,io_femm(rr,cc),gamma(rr,cc));
+        SOL = simulate_xdeg(geo,nsim,delta_sim,io_femm(rr,cc),gamma(rr,cc),eval_type);
         dT(rr,cc) = std(SOL(1:end-1,6));
         ris_sim = mean(SOL(1:end-1,:),1);
         T(rr,cc) = (ris_sim(6));

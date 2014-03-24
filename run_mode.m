@@ -17,11 +17,9 @@ warning('off','MATLAB:dispatcher:InexactMatch')
 % load the file containing the input data 
 data0;
 
-global eval_type options_global
-
 eval_type = 'MO_OA';
 
-FitnessFunction = @FEMMfitness;
+FitnessFunction = @(x)FEMMfitness(x,eval_type);
 
 % save geo_mot0 geo per mat
 % load geo_mot_temp;
@@ -30,7 +28,7 @@ FitnessFunction = @FEMMfitness;
 if matlabpool('Size')>0
     matlabpool close force
 end
-% matlabpool
+matlabpool
 % matlabpool(5)
 
 [x,fval,Pareto_front, Pareto_Fvals,exitFlag,output] = ...
@@ -43,3 +41,4 @@ case_name(case_name == ' ') = '_';
 case_name(case_name == ':') = '-';
 save(['results\' case_name]);
 
+matlabpool close

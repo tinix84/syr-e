@@ -23,10 +23,10 @@ load ultimo.mat;
     run([pathname,'data0']);
     load([pathname filemot]);
 
-global eval_type;
+
 eval_type='singt';
 error_code = 0;
-fem=dimMesh(geo);
+fem=dimMesh(geo,eval_type);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Qs=geo.Qs;

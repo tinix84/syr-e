@@ -7,7 +7,6 @@
 %% %%%%%%%%%%%%%%%
 
 clear all; close all; clc;
-global eval_type;
 current_path=cd;
 [pathstr, name, ext] = fileparts(current_path);
 

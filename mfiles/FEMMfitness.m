@@ -1,23 +1,20 @@
-function [cost] = FEMMfitness(RQ)
+function [cost] = FEMMfitness(RQ,eval_type)
 
 RQ=RQ';
 
 geo.pathname=cd;
 data0;                            
 
-global eval_type options_global
-% tipo_cost 
-
-options_global.iteration=0;
-options_global.currentgen=1;
-options_global.PopulationSize=1;
+options.iteration=0;
+options.currentgen=1;
+options.PopulationSize=1;
 
 if strcmp(eval_type,'MO_OA')
-    options_global.iteration=options_global.iteration+1;
-    iteration=options_global.iteration;
-    pop=options_global.PopulationSize;
-    generation=floor(iteration/pop)+1;
-    options_global.currentgen=generation;
+    options.iteration=options.iteration+1;
+    iteration=options.iteration;
+    populationSize=options.PopulationSize;
+    generation=floor(iteration/populationSize)+1;
+    options.currentgen=generation;
 end
 
 p = geo.p;                      % paia poli
@@ -49,9 +46,10 @@ dalpha_temp = dalpha_pu * (90/p - RQ(1));
 geo.dalpha = [RQ(1) dalpha_temp(1:end-1)];
 
 % SPESSORE DELLE BARRIERE: 'hc_pu'
-first_index = last_index + 1;
-last_index = first_index + nlay - 1;
-
+first_index = last_index + 1
+last_index = first_index + nlay - 1
+size(RQ)
+getComputerName()
 geo.hc_pu = RQ(first_index:last_index);
 % convert dalpha and hc_pu to alpha and hc
 geo = calc_alpha_hc_delta_x0_2(geo);
@@ -68,6 +66,7 @@ end
 % current phase angle
 gamma = RQ(end);
 
+pause(rand)
 openfemm
 draw_motor_in_FEMM
 save geo_mot_temp      
@@ -77,7 +76,7 @@ geo.io=io;
 % current value use for FEMM simulation, only 1 turns is set in femm
 io_femm=io*geo.Nbob;
 % evaluates the candidate machine (T, DT, fd, fq)
-[out] = eval_motor_in_FEMM(geo,io_femm,gamma);
+[out] = eval_motor_in_FEMM(geo,io_femm,gamma,eval_type);
 
 % Tn = out.Tn;
 numsim = size(out.SOL,1);
@@ -94,7 +93,7 @@ geo.power_factor = mean(cosd(delta-gamma));
 % penalize the solutions which are out of the expected range of interest
 % max_exp_ripple, min_exp_torque
 if strcmp(eval_type,'MO_OA')
-    if (cost(2)>per.max_exp_ripple | cost(1)>-per.min_exp_torque)
+    if (cost(2)>per.max_exp_ripple || cost(1)>-per.min_exp_torque)
         cost(1)=cost(1)*0.1;
         cost(2)=cost(2)*10;
     end

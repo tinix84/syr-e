@@ -4,7 +4,7 @@
 function entities(raggi,avvolgimento,rotore,statore,magneti,fid,LAria)
 % function entities(raggi,avvolgimento,rotore,statore,magneti,fid,LAria,albero)
 
-global PC
+%global PC
 
 %% Scrittura dei punti che caratterizzano i diversi layer
 %color 0 = nero
