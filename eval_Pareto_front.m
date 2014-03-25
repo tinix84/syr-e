@@ -10,15 +10,12 @@
 
 clear all; close all; clc
 addpath mfiles
-addpath('d:\femm42_beta\mfiles\');
-
-global eval_type
+addpath('c:\femm42\mfiles\');
 
 if matlabpool('Size')>0
     matlabpool close force
 end
-% matlabpool
-matlabpool(4)
+matlabpool
 
 pivot_cost = 1;
 

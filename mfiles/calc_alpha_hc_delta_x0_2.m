@@ -125,7 +125,7 @@ for k=1:nlay-1
         B2k(k+1)=B2p;
         B1k(k)=B1p;
     else
-        disp('OK');
+        disp('');
     end % end #4
 end
 hc_half1=Bx0-B1k;

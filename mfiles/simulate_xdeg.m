@@ -18,15 +18,15 @@ function SOL = simulate_xdeg(geo,nsim,xdeg,io,gamma,eval_type)
 % pathname = geo.pathname;
 pathname = cd;
 
-th0=geo.th0;
-p = geo.p;
-xr = geo.xr;
+th0 = geo.th0;
+p   = geo.p;
+xr  = geo.xr;
 gap = geo.g;
-ns = geo.ns;
-pc = 360/(ns*p)/2;
-ps=geo.ps;
+ns  = geo.ns;
+pc  = 360/(ns*p)/2;
+ps  = geo.ps;
 % l = geo.l;
-%% degree to simulate
+%% simulation angle
 gradi_da_sim=180/p*ps;
 
 id = io * cos(gamma * pi/180);
@@ -73,14 +73,9 @@ if isOpen > 0
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % temporary files
-    names_o{1} = 'run1';names_o{2} = 'run2';names_o{3} = 'run3';names_o{4} = 'run4';
-    names_o{5} = 'run5';names_o{6} = 'run6';names_o{7} = 'run7';names_o{8} = 'run8';
-    names_o{9} = 'run9';names_o{10} = 'run10';names_o{11} = 'run11';names_o{12} = 'run12';
-    names_o{13} = 'run13';names_o{14} = 'run14';names_o{15} = 'run15';names_o{16} = 'run16';
-    names_o{17} = 'run17';names_o{18} = 'run18';names_o{19} = 'run19';names_o{20} = 'run20';
-    names_o{21} = 'run21';names_o{22} = 'run22';names_o{23} = 'run23';names_o{24} = 'run24';
-    names_o{25} = 'run25';names_o{26} = 'run26';names_o{27} = 'run27';names_o{28} = 'run28';
-    names_o{29} = 'run29';names_o{30} = 'run30';names_o{31} = 'run31';names_o{32} = 'run32';
+    for i=1:32
+        names_o{i}=['run' num2str(i)];
+    end
     
     parfor jj = 1:nsim-1
         
@@ -104,7 +99,7 @@ if isOpen > 0
         mi_modifycircprop('fase3n',1,-i3);
         % assign the Hc property to the bonded magnets
         mi_modifymaterial('Bonded-Magnet',3,Hc);
-        % delete the airgap arc prior to moving the rotor 
+        % delete the airgap arc prior to moving the rotor
         mi_selectgroup(20), mi_deleteselectedarcsegments;
         % rotate the rotor
         mi_selectgroup(2), mi_moverotate(0,0,th_m);
@@ -179,14 +174,14 @@ if isOpen > 0
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%% END OF POST PROC %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            
+        
         SOL_PARFOR_temp(jj,:) = sol;
         h_temp.delete;
         delete(tmp_fem);
         ans_temp=strrep(tmp_fem,'.fem','.ans');
         delete(ans_temp);
     end
-   
+    
     SOL = SOL_PARFOR_temp;
     
 else
@@ -199,7 +194,7 @@ else
         th_m = (th(jj) - th0)/p;
         
         opendocument([pathname,'\mot0.fem']);
-
+        
         % assign the phase current values to the FEMM circuits
         i1 = i1_tmp(jj);
         i2 = i2_tmp(jj);
@@ -211,23 +206,23 @@ else
         mi_modifycircprop('fase3',1,i3);
         mi_modifycircprop('fase3n',1,-i3);
         
-                % assign the Hc property to the bonded magnets
+        % assign the Hc property to the bonded magnets
         mi_modifymaterial('Bonded-Magnet',3,Hc);
-        % delete the airgap arc prior to moving the rotor 
+        % delete the airgap arc prior to moving the rotor
         mi_selectgroup(20), mi_deleteselectedarcsegments;
         % rotate the rotor
         mi_selectgroup(2), mi_moverotate(0,0,th_m);
         % redraw the airgap arc
         draw_airgap_arc_with_mesh(geo,th_m,geo.fem)
-
+        
         mi_saveas([pathname,'\mot_temp.fem']);
         
         mi_analyze(1);
         mi_loadsolution;
-%         keyboard
+        %         keyboard
         post_proc;
         mo_close, mi_close
-
+        
         SOL = [SOL; sol];
     end
     % ripple_pu = abs(std(SOL(:,6))/mean(SOL(:,6)));
