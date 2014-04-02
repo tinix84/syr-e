@@ -46,10 +46,10 @@ dalpha_temp = dalpha_pu * (90/p - RQ(1));
 geo.dalpha = [RQ(1) dalpha_temp(1:end-1)];
 
 % SPESSORE DELLE BARRIERE: 'hc_pu'
-first_index = last_index + 1
-last_index = first_index + nlay - 1
-size(RQ)
-getComputerName()
+first_index = last_index + 1;
+last_index = first_index + nlay - 1;
+size(RQ);
+getComputerName();
 geo.hc_pu = RQ(first_index:last_index);
 % convert dalpha and hc_pu to alpha and hc
 geo = calc_alpha_hc_delta_x0_2(geo);
@@ -65,8 +65,19 @@ elseif (strcmp(geo.RotType,'Fluid'))
 end
 % current phase angle
 gamma = RQ(end);
-
-pause(rand)
+mang=num2str(rand);
+dirName=mang(3:end);
+if(~exist('tmp','dir'))
+    mkdir('tmp');
+end
+cd('tmp')
+while(exist(dirName,'dir'))
+    mang=num2str(rand);
+    dirName=mang(3:end);
+end
+mkdir(dirName);
+cd(dirName);
+copyfile('c:\empty_case.fem','.');
 openfemm
 draw_motor_in_FEMM
 save geo_mot_temp      
@@ -102,3 +113,5 @@ end
 save geo_mot_temp geo fem cost out RQ BLKLABELS per rotore2 statore
 
 closefemm
+cd('..\..')
+

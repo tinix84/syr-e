@@ -10,7 +10,6 @@ p = geo.p;
 fem = dimMesh(geo,eval_type);
 % fem.res_traf=0.5;
 % fem.res=6;
-
 filename = 'mot0.fem';
 opendocument('empty_case.fem');
 mi_probdef(0,'millimeters','planar',1e-8,geo.l,25);

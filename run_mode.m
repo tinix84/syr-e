@@ -3,14 +3,10 @@
 % runs the Multi-Objective optimization algorithm based on Differential
 % Evolution
 
-clear all; close all; clc;
-
+close all; clc;
+format long
 % FEMM must be installed in the defalut directory c:\
 % FEMM can be downloaded at www.femm.info
-addpath('d:\femm42_beta\mfiles\');
-addpath('MODE');
-% addpath('GODLIKE');
-addpath mfiles;
 
 warning('off','MATLAB:dispatcher:InexactMatch')
 
@@ -28,7 +24,7 @@ FitnessFunction = @(x)FEMMfitness(x,eval_type);
 if matlabpool('Size')>0
     matlabpool close force
 end
-matlabpool
+matlabpool local
 % matlabpool(5)
 
 [x,fval,Pareto_front, Pareto_Fvals,exitFlag,output] = ...
