@@ -218,6 +218,7 @@ else
         mi_saveas([pathname,'\mot_temp.fem']);
         
         mi_analyze(1);
+        
         mi_loadsolution;
         %         keyboard
         post_proc;
