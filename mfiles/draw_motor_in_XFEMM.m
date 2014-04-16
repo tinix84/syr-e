@@ -13,10 +13,7 @@ fem = dimMesh(geo,eval_type);
 filename = 'mot0.fem';
 %opendocument('empty_case.fem');
 %mi_probdef(0,'millimeters','planar',1e-8,geo.l,25);
-FemmProblem = newproblem_mfemm('planar', ...
-                               'Frequency', 0, ...
-                               'LengthUnits', 'millimeters',...
-                               'Depth',geo.l,'MinAngle',25);
+
 % calc winding factor (kavv) and rotor offset respect to position zero
 % (phase1_offset)
 [kavv, phase1_offset] = calcola_kavv_th0(geo.avv,geo.ns*geo.p,size(geo.avv,1),geo.p);
@@ -49,24 +46,24 @@ end
 
 %% definition of the boundary conditions
 % inner and outer circles
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'A=0',0);
+[FemmProblem, boundindA0, boundnameA0]=addboundaryprop_mfemm(FemmProblem,'A=0',0);
 %mi_addboundprop('A=0', 0, 0, 0, 0, 0, 0, 0, 0, 0);
 % Anit-Periodicity (2 x rotor + 2 x stator + 3 x airgap + 1 x AP move, which is the sliding contour)
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APr1',periodicity);
+[FemmProblem, boundindAPr1, boundnameAPr1]=addboundaryprop_mfemm(FemmProblem,'APr1',periodicity);
 %mi_addboundprop('APr1', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APr2',periodicity);
+[FemmProblem, boundindAPr2, boundnameAPr2]=addboundaryprop_mfemm(FemmProblem,'APr2',periodicity);
 %mi_addboundprop('APr2', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APg1',periodicity);
+[FemmProblem, boundindAPg1, boundnameAPg1]=addboundaryprop_mfemm(FemmProblem,'APg1',periodicity);
 %mi_addboundprop('APg1', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APg2',periodicity);
+[FemmProblem, boundindAPg2, boundnameAPg2]=addboundaryprop_mfemm(FemmProblem,'APg2',periodicity);
 %mi_addboundprop('APg2', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APg3',periodicity);
+[FemmProblem, boundindAPg3, boundnameAPg3]=addboundaryprop_mfemm(FemmProblem,'APg3',periodicity);
 %mi_addboundprop('APg3', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APmove',periodicity);
+[FemmProblem, boundindAPmove, boundnameAPmove]=addboundaryprop_mfemm(FemmProblem,'APmove',periodicity);
 %mi_addboundprop('APmove', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APs1',periodicity);
+[FemmProblem, boundindAPs1, boundnameAPs1]=addboundaryprop_mfemm(FemmProblem,'APs1',periodicity);
 %mi_addboundprop('APs1', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
-FemmProblem=addboundaryprop_mfemm(FemmProblem,'APs2',periodicity);
+[FemmProblem, boundindAPs2, boundnameAPs2]=addboundaryprop_mfemm(FemmProblem,'APs2',periodicity);
 %mi_addboundprop('APs2', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
 
 %% ROTOR
@@ -81,27 +78,35 @@ FemmProblem=draw_lines_archesX(FemmProblem,rotore2,2,fem.res);
 FemmProblem=assign_block_prop_rotX(FemmProblem,BLKLABELS,fem,2);
 % boundary conditions
 for ii=1:2
-    mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
+    %mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
-        mi_setsegmentprop('APr1', 0, 1, 0, 2);
-        mi_clearselected;
+        [id, xycoords] = findsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
+        FemmProblem.Segments(id).BoundaryMarker = boundnameAPr1;
+        %mi_setsegmentprop('APr1', 0, 1, 0, 2);
+        %mi_clearselected;
     elseif(BLKLABELSrot.boundary(ii,3)==0)
-        mi_selectarcsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2))
-        mi_setarcsegmentprop(fem.res, 'A=0', 0, 2);
-        mi_clearselected;
+        [id] = findarcsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
+        FemmProblem.ArcSegments(id).BoundaryMarker = boundnameA0;
+%         mi_selectarcsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2))
+%         mi_setarcsegmentprop(fem.res, 'A=0', 0, 2);
+%         mi_clearselected;
     end
 end
 % Condizioni al contorno di rotore ferro lamierino
 for ii=3:4
     
-    mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
+    %mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
-        mi_setsegmentprop('APr2', 0, 1, 0, 2);
-        mi_clearselected;
+        [id, xycoords] = findsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
+        FemmProblem.Segments(id).BoundaryMarker = boundnameAPr2;
+        %mi_setsegmentprop('APr2', 0, 1, 0, 2);
+        %mi_clearselected;
     elseif(BLKLABELSrot.boundary(ii,3)==0)
-        mi_selectarcsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2))
-        mi_setarcsegmentprop(fem.res, 'A=0', 0, 2);
-        mi_clearselected;
+        [id] = findarcsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
+        %mi_selectarcsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2))
+        FemmProblem.ArcSegments(id).BoundaryMarker = boundnameA0;
+        %mi_setarcsegmentprop(fem.res, 'A=0', 0, 2);
+        %mi_clearselected;
     end
 end
 
@@ -110,28 +115,31 @@ end
 STATmatr;
 BLKLABELS.statore=BLKLABELSstat;
 % draws lines and arces
-draw_lines_arches(statore,1,fem.res);
+FemmProblem=draw_lines_archesX(FemmProblem,statore,1,fem.res);
 % assigns the block labels
-assign_block_prop_stat(BLKLABELS,geo,fem,1) % assegna materiali;
+FemmProblem=assign_block_prop_statX(FemmProblem,BLKLABELS,geo,fem,1); % assegna materiali;
 % boundary conditions
 BLKLABELSstat=BLKLABELS.statore;
 for ii=1:size(BLKLABELSstat.boundary,1)
-    
-    mi_selectsegment(BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2));
+    [id, xycoords] = findsegment_mfemm(FemmProblem, [BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2)]);
+    %mi_selectsegment(BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2));
     if (BLKLABELSstat.boundary(ii,3)==10)
-        mi_setsegmentprop('APs1', 0, 1, 0, 1);
-        mi_clearselected;
+        FemmProblem.Segments(id).BoundaryMarker = boundnameAPs1;
+        %mi_setsegmentprop('APs1', 0, 1, 0, 1);
+        %mi_clearselected;
     elseif(BLKLABELSstat.boundary(ii,3)==0)
-        mi_selectarcsegment(BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2));
-        mi_setarcsegmentprop(fem.res, 'A=0', 0, 1);
-        mi_clearselected;
+        [id] = findarcsegment_mfemm(FemmProblem, [BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2)]);
+        FemmProblem.ArcSegments(id).BoundaryMarker = boundnameA0;
+%         mi_selectarcsegment(BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2));
+%         mi_setarcsegmentprop(fem.res, 'A=0', 0, 1);
+%         mi_clearselected;
     end
 end
 % keyboard
 %% airgap (group 20)
-    AirGapBuild(Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.xr,fem.res_traf,1,2);
-    draw_airgap_arc_with_mesh(geo,th_m0,fem);
+    FemmProblem=AirGapBuildX(FemmProblem,Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.xr,fem.res_traf,1,2,boundnameAPg1,boundnameAPg2,boundnameAPg3);
+    FemmProblem=draw_airgap_arc_with_meshX(FemmProblem,geo,th_m0,fem,boundnameAPmove);
 
 geo.fem=fem;
-mi_saveas(filename); % saves the file with name ’filename’.
+%mi_saveas(filename); % saves the file with name ’filename’.
 

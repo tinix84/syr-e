@@ -43,14 +43,14 @@ dat.CostProblem = FitnessFunction;                 % Cost function instance
 % state-of-the-art. IEEE Transactions on Evolutionary Computation. Vol 15,
 % 4 - 31.
 %
-dat.XPOP = 12*dat.NOBJ;             % Population size
+dat.XPOP = 36;             % Population size
 dat.Esc = 0.5;                         % Scaling factor
 dat.Pm= 0.2;                           % Croosover Probability
 %
 %% Other variables
 %
 dat.InitialPop=[];                     % Initial population (if any)
-dat.MAXGEN =10000;                     % Generation bound
+dat.MAXGEN =300;                     % Generation bound
 dat.MAXFUNEVALS = 150*dat.NVAR...  % Function evaluations bound
     *dat.NOBJ;                         
 dat.SaveResults='yes';                 % Write 'yes' if you want to 

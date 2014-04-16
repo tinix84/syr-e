@@ -1,4 +1,4 @@
-function [cost] = FEMMfitness(RQ,eval_type)
+function [cost] = FEMMfitnessX(RQ,eval_type)
 
 RQ=RQ';
 
@@ -79,8 +79,12 @@ end
 mkdir(dirName);
 cd(dirName);
 copyfile('c:\empty_case.fem','.');
-openfemm
-draw_motor_in_FEMM
+%openfemm
+FemmProblem = newproblem_mfemm('planar', ...
+                               'Frequency', 0, ...
+                               'LengthUnits', 'millimeters',...
+                               'Depth',geo.l,'MinAngle',25);
+draw_motor_in_XFEMM
 save geo_mot_temp      
 % current amplitude used for the simulations
 io = per.overload*calc_io(geo,per);
@@ -88,7 +92,7 @@ geo.io=io;
 % current value use for FEMM simulation, only 1 turns is set in femm
 io_femm=io*geo.Nbob;
 % evaluates the candidate machine (T, DT, fd, fq)
-[out] = eval_motor_in_FEMM(geo,io_femm,gamma,eval_type);
+[out,FemmProblem] = eval_motor_in_FEMMX(FemmProblem,geo,io_femm,gamma,eval_type,boundnameAPmove);
 
 % Tn = out.Tn;
 numsim = size(out.SOL,1);
@@ -113,6 +117,6 @@ end
 
 save geo_mot_temp geo fem cost out RQ BLKLABELS per rotore2 statore
 
-closefemm
+%closefemm
 cd('..\..')
 

@@ -23,7 +23,7 @@ for ii=1:nrig;
 %         mi_clearselected
 %         keyboard
     else
-        [outernodes,maxsegdeg,raggio,ang1,ang]=Disegna_Arco(Mat(ii,:),res);
+        [outernodes,maxsegdeg,raggio,ang1,ang]=Disegna_ArcoX(Mat(ii,:),res);
         [FemmProblem, nodeinds, nodeids] = addnodes_mfemm(FemmProblem, ...
                                         outernodes(:,1), outernodes(:,2));
         [FemmProblem, rcsegind] = addarcsegments_mfemm(FemmProblem, nodeids(1), ...
