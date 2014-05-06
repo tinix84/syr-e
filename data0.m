@@ -31,6 +31,8 @@ per.max_exp_ripple = 10;    % maximum expected torque ripple in pu during opimiz
 %                       rotor conductor winding material (not modeled)
 %                       }
 
+
+
 BLKLABELS.materials={
     'Air';
     'Air';

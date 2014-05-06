@@ -66,6 +66,7 @@ draw_lines_arches(rotore2,2,fem.res);
 % assigns the block labels
 assign_block_prop_rot(BLKLABELS,fem,2);
 % boundary conditions
+
 for ii=1:2
     mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
@@ -77,6 +78,7 @@ for ii=1:2
         mi_clearselected;
     end
 end
+
 % Condizioni al contorno di rotore ferro lamierino
 for ii=3:4
     
@@ -96,10 +98,13 @@ end
 STATmatr;
 BLKLABELS.statore=BLKLABELSstat;
 % draws lines and arces
+
 draw_lines_arches(statore,1,fem.res);
 % assigns the block labels
+
 assign_block_prop_stat(BLKLABELS,geo,fem,1) % assegna materiali;
 % boundary conditions
+
 BLKLABELSstat=BLKLABELS.statore;
 for ii=1:size(BLKLABELSstat.boundary,1)
     
@@ -113,6 +118,7 @@ for ii=1:size(BLKLABELSstat.boundary,1)
         mi_clearselected;
     end
 end
+
 % keyboard
 %% airgap (group 20)
     AirGapBuild(Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.xr,fem.res_traf,1,2);
@@ -120,4 +126,8 @@ end
 
 geo.fem=fem;
 mi_saveas(filename); % saves the file with name ’filename’.
-
+% ii=0;
+% mi_saveas(['testZero' num2str(ii) '.fem'])
+% system(['move testZero' num2str(ii) '.fem' ' ..'])
+% cd('..')
+% error('OK X')

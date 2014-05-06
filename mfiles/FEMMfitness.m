@@ -3,7 +3,7 @@ function [cost] = FEMMfitness(RQ,eval_type)
 RQ=RQ';
 
 geo.pathname=cd;
-data0;                            
+data0;
 
 options.iteration=0;
 options.currentgen=1;
@@ -20,7 +20,7 @@ end
 p = geo.p;                      % paia poli
 nlay = geo.nlay;                % numero delle barriere
 
-% transform the 
+% transform the
 % note: the vector of the inputs RQ contains
 % RQ(1) = dalpha(1) [mec deg]
 % RQ(2) = dalpha(2) [p.u.]
@@ -35,12 +35,12 @@ last_index = first_index + nlay - 1;
 
 dalpha_pu = RQ(first_index:last_index);
 
-% if the sum of the pu angles is too large, it is scaled down     
+% if the sum of the pu angles is too large, it is scaled down
 if sum(dalpha_pu) > 1
     dalpha_pu = dalpha_pu/sum(dalpha_pu);
 end
 
-% dalpha(2) to dalpha(nlay) in degrees 
+% dalpha(2) to dalpha(nlay) in degrees
 dalpha_temp = dalpha_pu * (90/p - RQ(1));
 % all dalpha in mec degrees
 geo.dalpha = [RQ(1) dalpha_temp(1:end-1)];
@@ -69,9 +69,11 @@ mang=num2str(rand);
 dirName=mang(3:end);
 %while(~exist('tmp','dir'))
 warning off MATLAB:MKDIR:DirectoryExists
+if (exist('readme.txt','file'))
     mkdir('tmp');
-%end
-cd('tmp')
+    %end
+    cd('tmp')
+end
 while(exist(dirName,'dir'))
     mang=num2str(rand);
     dirName=mang(3:end);
@@ -81,7 +83,7 @@ cd(dirName);
 copyfile('c:\empty_case.fem','.');
 openfemm
 draw_motor_in_FEMM
-save geo_mot_temp      
+save geo_mot_temp
 % current amplitude used for the simulations
 io = per.overload*calc_io(geo,per);
 geo.io=io;
@@ -89,7 +91,6 @@ geo.io=io;
 io_femm=io*geo.Nbob;
 % evaluates the candidate machine (T, DT, fd, fq)
 [out] = eval_motor_in_FEMM(geo,io_femm,gamma,eval_type);
-
 % Tn = out.Tn;
 numsim = size(out.SOL,1);
 % ripple_pu = out.ripple_pu;

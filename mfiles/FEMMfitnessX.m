@@ -69,9 +69,11 @@ mang=num2str(rand);
 dirName=mang(3:end);
 %while(~exist('tmp','dir'))
 warning off MATLAB:MKDIR:DirectoryExists
+if (exist('readme.txt','file'))
     mkdir('tmp');
-%end
-cd('tmp')
+    %end
+    cd('tmp')
+end
 while(exist(dirName,'dir'))
     mang=num2str(rand);
     dirName=mang(3:end);
@@ -84,6 +86,7 @@ FemmProblem = newproblem_mfemm('planar', ...
                                'Frequency', 0, ...
                                'LengthUnits', 'millimeters',...
                                'Depth',geo.l,'MinAngle',25);
+FemmProblem = initMaterials(FemmProblem, geo);
 draw_motor_in_XFEMM
 save geo_mot_temp      
 % current amplitude used for the simulations
@@ -91,12 +94,8 @@ io = per.overload*calc_io(geo,per);
 geo.io=io;
 % current value use for FEMM simulation, only 1 turns is set in femm
 io_femm=io*geo.Nbob;
-% evaluates the candidate machine (T, DT, fd, fq)
-[out,FemmProblem] = eval_motor_in_FEMMX(FemmProblem,geo,io_femm,gamma,eval_type,boundnameAPmove);
-
-% Tn = out.Tn;
-numsim = size(out.SOL,1);
-% ripple_pu = out.ripple_pu;
+%evaluates the candidate machine (T, DT, fd, fq)
+out = eval_motor_in_FEMMX(FemmProblem,geo,io_femm,gamma,eval_type,boundnameAPmove);
 
 % Cost functions to be minimized
 cost1 = -out.Tn;
@@ -117,6 +116,5 @@ end
 
 save geo_mot_temp geo fem cost out RQ BLKLABELS per rotore2 statore
 
-%closefemm
 cd('..\..')
-
+% 

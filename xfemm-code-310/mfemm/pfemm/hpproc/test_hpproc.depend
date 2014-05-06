@@ -1,0 +1,33 @@
+# depslib dependency file v1.0
+1395914709 source:e:\pfemmdata_sourceforge\hpproc\main.cpp
+	<iostream>
+	"hpproc.h"
+	"femmcomplex.h"
+
+1395915157 e:\pfemmdata_sourceforge\hpproc\hpproc.h
+	<vector>
+	"femmcomplex.h"
+	"hproblem.h"
+
+1395914554 e:\pfemmdata_sourceforge\libfemm\femmcomplex.h
+
+1395914540 e:\pfemmdata_sourceforge\hpproc\hproblem.h
+	<string>
+	"femmcomplex.h"
+
+1395918452 source:c:\documents and settings\s0237326\my documents\temp\code\pfemm\hpproc\main.cpp
+	<iostream>
+	"hpproc.h"
+	"femmcomplex.h"
+
+1395918452 c:\documents and settings\s0237326\my documents\temp\code\pfemm\hpproc\hpproc.h
+	<vector>
+	"femmcomplex.h"
+	"hproblem.h"
+
+1395872308 c:\documents and settings\s0237326\my documents\temp\code\pfemm\libfemm\femmcomplex.h
+
+1395872308 c:\documents and settings\s0237326\my documents\temp\code\pfemm\hpproc\hproblem.h
+	<string>
+	"femmcomplex.h"
+

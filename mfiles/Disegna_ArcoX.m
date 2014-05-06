@@ -39,6 +39,9 @@ end
 raggio=sqrt((x0-x1)^2+(y0-y1)^2);
 maxseg=ang*pi/180*raggio/ris;
 maxsegdeg=ang/maxseg;
+if maxsegdeg<1
+    maxsegdeg=0.8;
+end
 % 2013/07/05 MG modifica al fine di evitare che circonferenze troppo
 % piccole abbiano troppo pochi punti, non importa se viene meno la costanza
 % della risoluzione

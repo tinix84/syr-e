@@ -16,7 +16,7 @@
 function [SOL,FemmProblem] = simulate_xdegX(FemmProblem,geo,nsim,xdeg,io,gamma,eval_type,boundnameAPmove)
 
 % pathname = geo.pathname;
-pathname = cd;
+pathname = pwd;
 
 th0 = geo.th0;
 p   = geo.p;
@@ -190,11 +190,10 @@ else
     %%%%%%%%%%%%%%%%% ciclo for %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+    FemmProblem0=FemmProblem;
     for jj = 1:nsim-1
         th_m = (th(jj) - th0)/p;
-        
-        %opendocument([pathname,'\mot0.fem']);
-        
+        FemmProblem=FemmProblem0;
         % assign the phase current values to the FEMM circuits
         i1 = i1_tmp(jj);
         i2 = i2_tmp(jj);
@@ -205,45 +204,22 @@ else
         FemmProblem.Circuits(4).TotalAmps_re=-i1;
         FemmProblem.Circuits(5).TotalAmps_re=-i2;
         FemmProblem.Circuits(6).TotalAmps_re=-i3;
-
-%         mi_modifycircprop('fase1',1,i1);
-%         mi_modifycircprop('fase1n',1,-i1);
-%         mi_modifycircprop('fase2',1,i2);
-%         mi_modifycircprop('fase2n',1,-i2);
-%         mi_modifycircprop('fase3',1,i3);
-%         mi_modifycircprop('fase3n',1,-i3);
-        
-        % assign the Hc property to the bonded magnets
-        %mi_modifymaterial('Bonded-Magnet',3,Hc);
-        M=newmaterial_mfemm('Bonded-Magnet','H_c',Hc);
-        FemmProblem = addmaterials_mfemm(FemmProblem,M);
         % delete the airgap arc prior to moving the rotor
-        %mi_selectgroup(20), mi_deleteselectedarcsegments;
         FemmProblem = deletegroup_mfemm(FemmProblem, 20);
+     
         % rotate the rotor
-        FemmProblem=rotategroups_mfemm(FemmProblem,2,th_m);
-        %mi_selectgroup(2), mi_moverotate(0,0,th_m);
+        FemmProblem=rotategroups_mfemm(FemmProblem,2,th_m*pi/180);
+        
         % redraw the airgap arc
         FemmProblem=draw_airgap_arc_with_meshX(FemmProblem,geo,th_m,geo.fem,boundnameAPmove);
         
-        %mi_saveas([pathname,'\mot_temp.fem']);
-        plotfemmproblem(FemmProblem);
         filename = 'mot0.fem';
         writefemmfile(filename, FemmProblem);
-        
-        %filename = fmesher(filename);
-        %ansfile = fsolver(filename);
-        %myfpproc = fpproc();
-        %myfpproc.opendocument(ansfile);
-        
-        %mi_analyze(1);
-        
-        %mi_loadsolution;
-        %         keyboard
-        %post_proc;
-        %mo_close, mi_close
-        
+        filename = fmesher(filename);
+        ansfile = fsolver(filename);
+        sol=post_procX(FemmProblem,ansfile,geo,th_m,th(jj),id,iq);
         SOL = [SOL; sol];
+        
     end
     % ripple_pu = abs(std(SOL(:,6))/mean(SOL(:,6)));
     

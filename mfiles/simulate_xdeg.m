@@ -209,16 +209,20 @@ else
         % assign the Hc property to the bonded magnets
         mi_modifymaterial('Bonded-Magnet',3,Hc);
         % delete the airgap arc prior to moving the rotor
+        %mi_saveas(['testZero' num2str(jj) 'a.fem'])
+        %system(['move testZero' num2str(jj) 'a.fem' ' ..'])
         mi_selectgroup(20), mi_deleteselectedarcsegments;
         % rotate the rotor
+        %mi_saveas(['testZero' num2str(jj) 'b.fem'])
+        %system(['move testZero' num2str(jj) 'b.fem' ' ..'])
         mi_selectgroup(2), mi_moverotate(0,0,th_m);
         % redraw the airgap arc
+        %mi_saveas(['testZero' num2str(jj) 'c.fem'])
+        %system(['move testZero' num2str(jj) 'c.fem' ' ..'])
         draw_airgap_arc_with_mesh(geo,th_m,geo.fem)
         
         mi_saveas([pathname,'\mot_temp.fem']);
-        
         mi_analyze(1);
-        
         mi_loadsolution;
         %         keyboard
         post_proc;

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="fpproc/libfpproc.cbp" />
+		<Project filename="libfemm/libfemm.cbp" />
+		<Project filename="fsolver/libfsolver.cbp" />
+		<Project filename="fsolver/fsolver.cbp">
+			<Depends filename="fsolver/libfsolver.cbp" />
+		</Project>
+		<Project filename="fmesher/libfmesher.cbp" />
+		<Project filename="fmesher/fmesher.cbp">
+			<Depends filename="fmesher/libfmesher.cbp" />
+		</Project>
+		<Project filename="hsolver/libhsolver.cbp" />
+		<Project filename="hsolver/hsolver.cbp">
+			<Depends filename="hsolver/libhsolver.cbp" />
+		</Project>
+		<Project filename="hpproc/hpproc.cbp" />
+		<Project filename="fpproc/test_fpproc.cbp" />
+		<Project filename="hpproc/test_hpproc.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

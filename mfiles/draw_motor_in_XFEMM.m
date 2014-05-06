@@ -77,48 +77,55 @@ FemmProblem=draw_lines_archesX(FemmProblem,rotore2,2,fem.res);
 %plotfemmproblem(FemmProblem)
 FemmProblem=assign_block_prop_rotX(FemmProblem,BLKLABELS,fem,2);
 % boundary conditions
+
 for ii=1:2
     %mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
         [id, xycoords] = findsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
-        FemmProblem.Segments(id).BoundaryMarker = boundnameAPr1;
+        FemmProblem.Segments(id+1).BoundaryMarker = boundnameAPr1;
         %mi_setsegmentprop('APr1', 0, 1, 0, 2);
         %mi_clearselected;
     elseif(BLKLABELSrot.boundary(ii,3)==0)
         [id] = findarcsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
-        FemmProblem.ArcSegments(id).BoundaryMarker = boundnameA0;
+        FemmProblem.ArcSegments(id+1).BoundaryMarker = boundnameA0;
 %         mi_selectarcsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2))
 %         mi_setarcsegmentprop(fem.res, 'A=0', 0, 2);
 %         mi_clearselected;
     end
 end
+
 % Condizioni al contorno di rotore ferro lamierino
 for ii=3:4
     
     %mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
         [id, xycoords] = findsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
-        FemmProblem.Segments(id).BoundaryMarker = boundnameAPr2;
+        FemmProblem.Segments(id+1).BoundaryMarker = boundnameAPr2;
         %mi_setsegmentprop('APr2', 0, 1, 0, 2);
         %mi_clearselected;
     elseif(BLKLABELSrot.boundary(ii,3)==0)
         [id] = findarcsegment_mfemm(FemmProblem, [BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2)]);
         %mi_selectarcsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2))
-        FemmProblem.ArcSegments(id).BoundaryMarker = boundnameA0;
+        FemmProblem.ArcSegments(id+1).BoundaryMarker = boundnameA0;
         %mi_setarcsegmentprop(fem.res, 'A=0', 0, 2);
         %mi_clearselected;
     end
 end
+
 
 %% STATOR
 % builds the matrixed which describe the stator
 STATmatr;
 BLKLABELS.statore=BLKLABELSstat;
 % draws lines and arces
+
+
 FemmProblem=draw_lines_archesX(FemmProblem,statore,1,fem.res);
 % assigns the block labels
+
 FemmProblem=assign_block_prop_statX(FemmProblem,BLKLABELS,geo,fem,1); % assegna materiali;
 % boundary conditions
+
 BLKLABELSstat=BLKLABELS.statore;
 for ii=1:size(BLKLABELSstat.boundary,1)
     [id, xycoords] = findsegment_mfemm(FemmProblem, [BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2)]);
@@ -135,6 +142,8 @@ for ii=1:size(BLKLABELSstat.boundary,1)
 %         mi_clearselected;
     end
 end
+
+
 % keyboard
 %% airgap (group 20)
     FemmProblem=AirGapBuildX(FemmProblem,Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.xr,fem.res_traf,1,2,boundnameAPg1,boundnameAPg2,boundnameAPg3);
@@ -142,4 +151,9 @@ end
 
 geo.fem=fem;
 %mi_saveas(filename); % saves the file with name ’filename’.
-
+% ii=0;
+% writefemmfile(['testZeroX' num2str(ii) '.fem'], FemmProblem)
+% system(['move testZeroX' num2str(ii) '.fem' ' ..'])
+% cd('..')
+% plotfemmproblem(FemmProblem)
+% error('OK X')
