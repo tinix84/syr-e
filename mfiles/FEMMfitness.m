@@ -1,119 +1,148 @@
-function [cost] = FEMMfitness(RQ,eval_type)
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
 
-RQ=RQ';
+function [cost,geo,out,dirName] = FEMMfitness(RQ,geo,per,eval_type,filemot)
 
-geo.pathname=cd;
-data0;
+currentDir=pwd;
+[thisfilepath,dirName]=createTempDir();
 
-options.iteration=0;
-options.currentgen=1;
-options.PopulationSize=1;
-
-if strcmp(eval_type,'MO_OA')
-    options.iteration=options.iteration+1;
-    iteration=options.iteration;
-    populationSize=options.PopulationSize;
-    generation=floor(iteration/populationSize)+1;
-    options.currentgen=generation;
-end
-
-p = geo.p;                      % paia poli
-nlay = geo.nlay;                % numero delle barriere
-
-% transform the
-% note: the vector of the inputs RQ contains
-% RQ(1) = dalpha(1) [mec deg]
-% RQ(2) = dalpha(2) [p.u.]
-% ...
-% RQ(nlay) = dalpha(nlay); [p.u.]
-
-
-% RQ(end) = gamma
-
-first_index = 2;
-last_index = first_index + nlay - 1;
-
-dalpha_pu = RQ(first_index:last_index);
-
-% if the sum of the pu angles is too large, it is scaled down
-if sum(dalpha_pu) > 1
-    dalpha_pu = dalpha_pu/sum(dalpha_pu);
-end
-
-% dalpha(2) to dalpha(nlay) in degrees
-dalpha_temp = dalpha_pu * (90/p - RQ(1));
-% all dalpha in mec degrees
-geo.dalpha = [RQ(1) dalpha_temp(1:end-1)];
-
-% SPESSORE DELLE BARRIERE: 'hc_pu'
-first_index = last_index + 1;
-last_index = first_index + nlay - 1;
-size(RQ);
-getComputerName();
-geo.hc_pu = RQ(first_index:last_index);
-% convert dalpha and hc_pu to alpha and hc
-geo = calc_alpha_hc_delta_x0_2(geo);
-
-if (strcmp(geo.RotType,'3U'))
+% if in optimization, RQ defines the candidate machine
+if ~isempty(RQ)
+    
+    RQ=RQ';
+    if  strcmp(eval_type,'MO_GA')
+        RQ=RQ';
+    end
+    
+    geo.pathname=cd;
+    
+    options.iteration=0;
+    options.currentgen=1;
+    options.PopulationSize=1;
+    
+    if strcmp(eval_type,'MO_OA')
+        options.iteration=options.iteration+1;
+        iteration=options.iteration;
+        populationSize=options.PopulationSize;
+        generation=floor(iteration/populationSize)+1;
+        options.currentgen=generation;
+    end
+    
+    first_index = 2;
+    last_index = first_index + geo.nlay - 1;
+    
+    dalpha_pu = RQ(first_index:last_index);
+    
+    % the sum of the pu angles is rescaled to one
+    if sum(dalpha_pu) > 1
+        dalpha_pu = dalpha_pu/sum(dalpha_pu);
+    end
+    
+    % dalpha(2) to dalpha(nlay) in degrees
+    dalpha_temp = dalpha_pu * (90/geo.p - RQ(1));
+    % all dalpha in mec degrees
+    geo.dalpha = [RQ(1) dalpha_temp(1:end-1)];
+    
+    % SPESSORE DELLE BARRIERE: 'hc_pu'
     first_index = last_index + 1;
-    last_index=first_index;
-    geo.Delta_X=RQ(first_index:last_index);
-elseif (strcmp(geo.RotType,'Fluid'))
-    first_index = last_index + 1;
-    last_index = first_index + nlay - 1;
-    geo.Dfe=RQ(first_index:last_index);
-end
-% current phase angle
-gamma = RQ(end);
-mang=num2str(rand);
-dirName=mang(3:end);
-%while(~exist('tmp','dir'))
-warning off MATLAB:MKDIR:DirectoryExists
-if (exist('readme.txt','file'))
-    mkdir('tmp');
-    %end
-    cd('tmp')
-end
-while(exist(dirName,'dir'))
-    mang=num2str(rand);
-    dirName=mang(3:end);
-end
-mkdir(dirName);
-cd(dirName);
-copyfile('c:\empty_case.fem','.');
-openfemm
-draw_motor_in_FEMM
-save geo_mot_temp
-% current amplitude used for the simulations
-io = per.overload*calc_io(geo,per);
-geo.io=io;
-% current value use for FEMM simulation, only 1 turns is set in femm
-io_femm=io*geo.Nbob;
-% evaluates the candidate machine (T, DT, fd, fq)
-[out] = eval_motor_in_FEMM(geo,io_femm,gamma,eval_type);
-% Tn = out.Tn;
-numsim = size(out.SOL,1);
-% ripple_pu = out.ripple_pu;
+    last_index = first_index + geo.nlay - 1;
+    size(RQ);
+    getComputerName();
+    geo.hc_pu = RQ(first_index:last_index);
+    
+    if (strcmp(geo.RotType,'Fluid')||strcmp(geo.RotType,'Seg'))
+        first_index = last_index + 1;
+        last_index = first_index + geo.nlay - 1;
+        geo.Dfe=RQ(first_index:last_index);
+        
+        %     first_index=last_index+1;
+        %     geo.x=RQ(first_index);
+        %     first_index=first_index+1;
+        %     geo.kt=RQ(first_index);
+        %     first_index=first_index+1;
+        %     geo.b=RQ(first_index);
+        %     first_index=first_index+1;
+        %     geo.acs=RQ(first_index);
+        %
+        %     geo.xr=geo.x*geo.r;
+        %     geo.lt=geo.r*(1-geo.x-geo.g/geo.r-geo.b*geo.x/p);
+    end
+    % current phase angle
+    gamma = RQ(end);
 
-% Cost functions to be minimized
-cost1 = -out.Tn;
-cost2 = out.ripple_pu*100;
+    if exist([thisfilepath filesep 'empty_case.fem'],'file')>1
+        empty_case_path = [thisfilepath filesep 'empty_case.fem'];
+    else
+        empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
+    end
+
+    % The empty_case.fem file MUST be in the SyR-e root folder
+    copyfile(empty_case_path,'.');
+
+    openfemm
+    [geo] = draw_motor_in_FEMM(geo,eval_type);
+    
+else
+    openfemm
+    opendocument([filemot]);    
+    mi_saveas('mot0.fem'); % saves the file with name ’filename’
+end    
+
+%% evaluates the candidate machine (T, DT, fd, fq)
+iAmp = per.overload*calc_io(geo,per);
+if isempty(RQ)
+    gamma=per.gamma;
+end
+iAmpCoil=iAmp*geo.Nbob;
+
+[SOL] = simulate_xdeg(geo,iAmpCoil,gamma,eval_type);
+
+out.id = mean(SOL(:,2));
+out.iq = mean(SOL(:,3));
+out.fd = mean(SOL(:,4));
+out.fq = mean(SOL(:,5));
+out.T= abs(mean(SOL(:,6)));
+out.dTpu = std(SOL(:,6))/out.T;
+% out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
+out.SOL = SOL;
+
+%% Cost functions
+cost1 = -out.T;
+cost2 = out.dTpu*100;
 cost  = [cost1 cost2];
 
 delta = atan2(out.fq,out.fd) * 180/pi;
-geo.power_factor = mean(cosd(delta-gamma));
+geo.power_factor = mean(cosd(90+delta-gamma));
 
 % penalize the solutions which are out of the expected range of interest
 % max_exp_ripple, min_exp_torque
-if strcmp(eval_type,'MO_OA')
+if (strcmp(eval_type,'MO_OA')||strcmp(eval_type,'MO_GA'))
     if (cost(2)>per.max_exp_ripple || cost(1)>-per.min_exp_torque)
         cost(1)=cost(1)*0.1;
         cost(2)=cost(2)*10;
     end
 end
 
-save geo_mot_temp geo fem cost out RQ BLKLABELS per rotore2 statore
+save geo out
 
-closefemm
-cd('..\..')
-
+% if (strcmp(geo.RemoveTMPfile,'ON')&&(strcmp(eval_type,'MO_OA')||strcmp(eval_type,'MO_GA')))
+%     pause(0.1);
+%     local_path=cd;
+%     cd(local_path(1:end-(length(dirName))));
+%     rmdir(dirName,'s');
+% end
+% the previous files are non robust: the time needed in pause to guarantee
+% femm is actually closed depend on the specific computer. An alternative
+% procedure needs to be developed
+cd(currentDir);

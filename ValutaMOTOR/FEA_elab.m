@@ -1,3 +1,17 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 
 %% %%%%%%%%%%%%%%%
 %% 2013/08/22 MG script che esegue le simulazioni in termini di singt e singm la funzione singp non è ancora stata implementata...
@@ -75,7 +89,7 @@ Mac.pathname=pathstr;
 
 if strcmp(eval_type,'singt')
     
-    Mac.nsim_singt = 31; Mac.delta_sim_singt = Mac.p*360/Mac.Q; gamma=gamma_input;
+    Mac.nsim_singt = 30; Mac.delta_sim_singt = Mac.p*360/Mac.Q; gamma=gamma_input;
     
     for i = 1:length(io)
         out = valuta_motore(Mac,per,io(i),gamma(i));
@@ -97,7 +111,7 @@ if strcmp(eval_type,'singt')
     end
 elseif strcmp(eval_type,'singm')
     
-    Mac.nsim_singm = 16; Mac.delta_sim_singm = Mac.p*360/Mac.Q;
+    Mac.nsim_singm = 15; Mac.delta_sim_singm = Mac.p*360/Mac.Q;
     ivect=io;
     %     ivect = linspace(0,io,11);
     identificazione1(Mac,ivect,ivect,0);

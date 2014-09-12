@@ -16,18 +16,18 @@ function fmeshersetup(dodebug, verbose)
 %    limitations under the License.
 
     if nargin < 1
-        dodebug = false;
+        dodebug = true;
     end
     
     if nargin < 2
-        verbose = false;
+        verbose = true;
     end    
 
     % store the current directory
     origdir = pwd;
     
     % return to original dir on interruption or completion
-    OC = onCleanup (@() cd(origdir));
+    %OC = onCleanup (@() cd(origdir));
     
     % change to the mfemm directory (the directory this file is in)
     cd(fileparts(which('fmeshersetup.m')));
@@ -78,5 +78,5 @@ function fmeshersetup(dodebug, verbose)
     else
         mex(mexcommands{:});
     end
-    
+    cd(origdir)
 end

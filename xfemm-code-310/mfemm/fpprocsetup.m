@@ -26,7 +26,7 @@ function fpprocsetup(dodebug, verbose)
     origdir = pwd;
 
     % return to original dir on interruption or completion
-    OC = onCleanup (@() cd(origdir));
+    %OC = onCleanup (@() cd(origdir));
     
     % change to the mfemm directory (the directory this file is in)
     cd(fileparts(which('fpprocsetup.m')));
@@ -72,5 +72,5 @@ function fpprocsetup(dodebug, verbose)
         % call mex with the appropriately constructed commands
         mex(mexcommands{:});
     end
-
+    cd(origdir)
 end

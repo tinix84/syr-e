@@ -1,3 +1,17 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 %% eval_motor_in_FEMM.m
 % runs a set of FEA simulations according to the id, iq values given from outside
 % - MO_OA is when the script is called by the optimization alogorithm
@@ -7,6 +21,10 @@ function [out,FemmProblem] = eval_motor_in_FEMMX(FemmProblem,geo,io,gamma_in,eva
 
 switch eval_type
     case 'MO_OA'
+        gamma = gamma_in;
+        nsim = geo.nsim_MOOA;
+        delta_sim = geo.delta_sim_MOOA;
+    case 'MO_GA'
         gamma = gamma_in;
         nsim = geo.nsim_MOOA;
         delta_sim = geo.delta_sim_MOOA;
@@ -28,14 +46,14 @@ SOL(:,3,kk)=SOL(:,3,kk)/geo.Nbob;
 SOL(:,4,kk)=SOL(:,4,kk)*geo.Nbob;
 SOL(:,5,kk)=SOL(:,5,kk)*geo.Nbob;
 
-ris_sim = SOL(1:end-1,:,kk);
+ris_sim = SOL(:,:,kk);
 
 T(kk) = abs(mean(ris_sim(:,6)));
 ripple(kk) = std(ris_sim(:,6));
 fd(kk) = mean(ris_sim(:,4));
 fq(kk) = mean(ris_sim(:,5));
 
-out.SOL = SOL(1:end-1,:,:);
+out.SOL = SOL(:,:,:);
 out.Tn = T;
 out.ripple_pu = ripple./T;
 out.fd = fd;

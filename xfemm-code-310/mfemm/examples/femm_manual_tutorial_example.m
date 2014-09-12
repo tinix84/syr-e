@@ -302,6 +302,7 @@ ansfile = fsolver(filename);
 %
 % So to manipulate the output, we first create an fpproc class
 myfpproc = fpproc();
+myfpproc.setFemmProblem(FemmProblem);
 
 %%
 %

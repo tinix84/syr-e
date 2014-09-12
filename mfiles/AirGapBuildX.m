@@ -1,3 +1,17 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 %% 2013/08/21 MG contruction of arc and line of the airgap, bordo mobile dwaun apart...
 
 function FemmProblem=AirGapBuildX(FemmProblem,Qs,ps,p,g,pc,xr,res_traf,groupStat,groupRot,boundnameAPg1,boundnameAPg2,boundnameAPg3)
@@ -57,12 +71,12 @@ FemmProblem = addblocklabel_mfemm(FemmProblem, xAirTrafTr,yAirTrafTr, ...
 [xRot2,yRot2] = rot_point(xr,0,ps*180/p*pi/180);
 
 outernodes=[xRot1,yRot1;xArcRot1,yArcRot1];
-[FemmProblem, ~, nodeids] = addnodes_mfemm(FemmProblem, outernodes(:,1), outernodes(:,2),'InGroup',groupStat);
+[FemmProblem, ~, nodeids] = addnodes_mfemm(FemmProblem, outernodes(:,1), outernodes(:,2),'InGroup',groupRot);
 [FemmProblem,id] = addsegments_mfemm(FemmProblem, nodeids(1), nodeids(2),'InGroup',groupRot);
 FemmProblem.Segments(id).BoundaryMarker = boundnameAPg1;
 
 outernodes=[xRot2,yRot2;xArcRot2,yArcRot2];
-[FemmProblem, ~, nodeids] = addnodes_mfemm(FemmProblem, outernodes(:,1), outernodes(:,2),'InGroup',groupStat);
+[FemmProblem, ~, nodeids] = addnodes_mfemm(FemmProblem, outernodes(:,1), outernodes(:,2),'InGroup',groupRot);
 [FemmProblem,id] = addsegments_mfemm(FemmProblem, nodeids(1), nodeids(2),'InGroup',groupRot);
 FemmProblem.Segments(id).BoundaryMarker = boundnameAPg1;
 

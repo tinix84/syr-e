@@ -137,7 +137,7 @@ classdef fpproc < handle
             %    false otherwise.
             
             if ~exist(filename, 'file')
-                error('File could not be found.');
+                error(['File ' filename ' could not be found.']);
             end
             
             if ispc

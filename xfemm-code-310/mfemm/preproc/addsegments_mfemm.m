@@ -95,6 +95,35 @@ if ~isfield(FemmProblem, 'Segments') || isempty(FemmProblem.Segments)
         'InGroup',Segment.InGroup,...
         'BoundaryMarker',Segment.BoundaryMarker,...
         'MaxSideLength',Segment.MaxSideLength);
+    
+    linelist=FemmProblem.Segments;
+    nodelist=FemmProblem.Nodes;
+    dmin=norm(nodelist(n1(1)+1).Coords-nodelist(n0(1)+1).Coords)*1.e-05;
+    k=numel(linelist);
+    for j=0:numel(nodelist)-1
+        if (j~=n0(1))&&(j~=n1(1))
+            d=shortestDistance(FemmProblem,...
+                nodelist(j+1).Coords(1),nodelist(j+1).Coords(2),k);
+            if (norm(nodelist(j+1).Coords-nodelist(n0+1).Coords)<dmin),
+                d=2.*dmin;
+            end
+            if (norm(nodelist(j+1).Coords-nodelist(n1+1).Coords)<dmin),
+                d=2.*dmin;
+            end
+            if (d<dmin)
+                FemmProblem.Segments(k)=[];
+                FemmProblem=addsegments_mfemm(FemmProblem,n0,j,...
+                    'InGroup',Segment.InGroup,'Hidden',Segment.Hidden,...
+                    'MaxSideLength',-1,...
+                    'BoundaryMarker',Segment.BoundaryMarker);
+                FemmProblem=addsegments_mfemm(FemmProblem,j,n1,...
+                    'InGroup',Segment.InGroup,'Hidden',Segment.Hidden,...
+                    'MaxSideLength',-1,...
+                    'BoundaryMarker',Segment.BoundaryMarker);
+                j = numel(nodelist)-1;
+            end
+        end
+    end
 else
     %don't add if the line is already in the list
     for i=1:numel(FemmProblem.Segments)
@@ -107,7 +136,6 @@ else
     nodelist = FemmProblem.Nodes;
     seginds = repmat(-1, 1, numel(n0));
     % set up default segment properties
-    
     tol=Segment.MaxSideLength;
     for i=1:numel(n0)
         %check to see if there are intersections with segments
@@ -132,11 +160,11 @@ else
         % check to see if proposed line passes through other points;
         % if so, delete line and create lines that link intermediate points;
         % does this by recursive use of AddSegment;
-        if(tol==0)
-            dmin=norm(nodelist(n1(i)).Coordinates-nodelist(n0(i)).Coordinates)*1.e-05;
-        else
-            dmin=tol;
-        end
+        %if(tol==0)
+        dmin=norm(nodelist(n1(i)+1).Coords-nodelist(n0(i)+1).Coords)*1.e-06;
+        %else
+        %    dmin=tol;
+        %end
         linelist=FemmProblem.Segments;
         nodelist=FemmProblem.Nodes;
         k=numel(linelist);
@@ -154,11 +182,11 @@ else
                     FemmProblem.Segments(k)=[];
                     FemmProblem=addsegments_mfemm(FemmProblem,n0,j,...
                         'InGroup',Segment.InGroup,'Hidden',Segment.Hidden,...
-                        'MaxSideLength',Segment.MaxSideLength,...
+                        'MaxSideLength',-1,...
                         'BoundaryMarker',Segment.BoundaryMarker);
                     FemmProblem=addsegments_mfemm(FemmProblem,j,n1,...
                         'InGroup',Segment.InGroup,'Hidden',Segment.Hidden,...
-                        'MaxSideLength',Segment.MaxSideLength,...
+                        'MaxSideLength',-1,...
                         'BoundaryMarker',Segment.BoundaryMarker);
                     j = numel(nodelist)-1;
                 end

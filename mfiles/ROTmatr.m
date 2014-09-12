@@ -1,22 +1,38 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 %% 2013/07/02 MG Following script realize the rotor construction:
 % determination of arc and line position
 % determinazione of central label position
 %% rotore and matrix BLKLABELS
 
 switch geo.RotType
-    case 'I2U'
-        [geo,temp] = nodes_rotor_I2U(geo);
-        build_matrix_I2U;        
-    case '3U'
-        [geo,temp] = nodes_rotor_3U(geo);
-        build_matrix_I2U;
-    case '3C'
-        [geo,temp] = nodes_rotor_3C(geo);
-        build_matrix_3C;
+%     case 'ISeg_HS'
+%         [geo,temp] = nodes_rotor_ISeg_HS(geo);
+%         build_matrix_ISeg;
+    case 'ISeg'
+        [geo,temp] = nodes_rotor_ISeg(geo);
+        build_matrix_ISeg;        
+    case 'Seg'
+        [geo,temp] = nodes_rotor_Seg(geo);
+        build_matrix_Seg;
+    case 'Circular'
+        [geo,temp] = nodes_rotor_Circ(geo);
+        build_matrix_Circ;
     case 'Fluid'
         [geo,temp] = nodes_rotor_Fluid(geo);
         build_matrix_Fluid;
-        
 end
 
 codBound_FluxTan=0;
@@ -53,6 +69,7 @@ codMatFe=5;
 codMatBar=6;
 codMatShaft=7;
 codMatAvvRot=8;
+BLKLABELS.materials=geo.BLKLABELSmaterials;
 %% %%%%%%%%%%%%%
 
 rotNeg=rotore;
@@ -116,18 +133,36 @@ while kk<=ps-1
     kk=kk+1;
 end
 BarCenter=[BarCenter;Temp];
-
 clear Temp xtemp ytemp;
+% Addition negative Barcenter if rad ribs are present
+xc_2=[];yc_2=[];
+for kk=1:nlay
+   if  (YpontRadSx(kk)~=0)
+      xc_2=[xc_2;xc(kk)]; yc_2=[yc_2;-yc(kk)];
+   end
+end
 
+if (sum(YpontRadSx~=0)~=0)
+    Temp=[];
+    kk=1;
+    for kk=0:ps-1
+        [xtemp,ytemp]=rot_point(xc_2,yc_2,kk*180/p*pi/180);
+        Temp=[Temp;xtemp,ytemp,codMatBar*ones(size(xc_2,1),1),res*ones(size(xc_2,1),1),1*ones(size(xc_2,1),1),zeros(size(xc_2,1),1),zeros(size(xc_2,1),1),zeros(size(xc_2,1),1)];
+        kk=kk+1;
+    end
+    
+    BarCenter=[BarCenter;Temp];
+    clear Temp xtemp ytemp;
+end
+% Assigment of label name
 YpontRadSx=repmat(YpontRadSx,1,nlay*ps);
 BarName=[];
 kkk=1;
+
 for kk=1:nlay*ps
     
     if (YpontRadSx(kk)~=0)
-        num_bar_element=2;
-        BarCenter=[BarCenter;xc(kk),-yc(kk),codMatBar,res,1,xmag(kk),ymag(kk),zmag(kk)];
-        
+        num_bar_element=2;        
     else
         num_bar_element=1;
     end
@@ -194,4 +229,11 @@ clear xtemp ytemp;
 %% Rotazione boundary xy
 [xtemp,ytemp]=rot_point(BLKLABELSrot.boundary(:,1),BLKLABELSrot.boundary(:,2),90/p*pi/180);
 BLKLABELSrot.boundary=[xtemp,ytemp,BLKLABELSrot.boundary(:,3:end)];
-
+% 2014/07/30 MG I don't understad the changes iron rotor label are just
+% previously assigned why replace it? it don't work correctly? this
+% re-assign is not parametric to be used is better parametrize it...
+%%
+%marcoP: rotor label placed in x=1.01*R_shaft*cos(pi/4); %y=1.01*R_shaft*sin(pi/4);
+% BLKLABELSrot.xy(end-1,1) = 1.01*geo.Ar*cos(pi/4);
+% BLKLABELSrot.xy(end-1,2) = 1.01*geo.Ar*sin(pi/4);
+%%

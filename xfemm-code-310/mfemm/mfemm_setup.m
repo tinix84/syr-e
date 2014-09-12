@@ -143,10 +143,10 @@ function varargout = mfemm_setup(forceallcompile)
 
         fprintf('Compiling mex functions for mfemm.\n');
         
-        CC = onCleanup(@() cd(pwd));
+        %CC = onCleanup(@() cd(pwd));
         cd (thisfilepath);
         
-%        makelibs (thisfilepath);
+        makelibs (thisfilepath);
         
         if exist(fullfile(thisfilepath, 'pfemm', 'fmesher', 'libfmesher.a'), 'file') 
             fmeshersetup;
@@ -207,7 +207,7 @@ function makelibs (thisfilepath)
 
         fprintf (1, 'Attempting to build required libraries for mfemm using code::blocks ...\n');
         
-        [status,~] = system ([cbcmd, ' --target="Release" --build "', fullfile(thisfilepath, 'mfemm_libs.workspace'), '"'], '-echo');
+        status = system ([cbcmd, ' --target="Release" --build "', fullfile(thisfilepath, 'mfemm_libs.workspace'), '"'], '-echo');
         
         if status ~= 0
             error ('MFEMM:setup', 'There was an error while attempting to build the mfemm libraries using code::blocks.')

@@ -105,7 +105,7 @@ function writefemmfile(filename, FemmProblem)
         error('MFEMM:writefemmfile:nofileopen', message);
     end
     
-    C = onCleanup(@()fclose(fp));
+    %C = onCleanup(@());
 
     if numel(FemmProblem.ProbInfo) > 1
         error('MFEMM:writefemmfile:probinfonum', 'FemmProblem.ProbInfo must be a scalar structure.');
@@ -544,6 +544,6 @@ function writefemmfile(filename, FemmProblem)
 
     end    
         
-%    fclose(fp);
+    fclose(fp);
     
 end

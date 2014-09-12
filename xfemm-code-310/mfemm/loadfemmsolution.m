@@ -71,8 +71,10 @@ function [FemmProblem, Solution] = loadfemmsolution(filename, problemonly, FemmP
 if nargin < 2
     problemonly = false;
     FemmProblem = [];
+    solutiononly=false;
 elseif nargin < 3
     FemmProblem = [];
+    solutiononly=~problemonly;
 else
     solutiononly = true;
     hassolution  = true;
@@ -1044,10 +1046,12 @@ function v = StripKey(q)
 
 [start_idx, end_idx, extents, matches, tokens, names, splits] = regexp(q, '(?<=\=).*');
 
-v = strtrim(matches{1});
-
+try
+    v = strtrim(matches{1});
+catch
+    v = '0';
 end
-
+end
 
 function str = removequotes(v)
 

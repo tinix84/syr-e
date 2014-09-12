@@ -1,3 +1,17 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 %% 
 [xrot_traf,yrot_traf]=calc_intersezione_cerchi(xr, r, x0);
 Dx=(xr-xrot_traf(1))/5;  %per avere almeno 5 divisioni;
@@ -29,25 +43,29 @@ rG=(B1k+B2k)/2;
 M_Fe = 2*Afe*l * 1e-9 * 7800 ;   % massa ferro appeso ai ponticelli
 
 F_centrifuga = M_Fe .* rG/1000 *  (nmax * pi/30)^2;
-sigma_max = 180;    % N/mm2 - snervamento lamierino
 
 pont = F_centrifuga/(sigma_max * l);    % mm
 
-pont(pont < pont0) = 0; % NOTA BENE: Elimino i ponticelli troppo sottili
+for jj=1:nlay
+if (pont(jj) < pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione per gli altri tipi di rotore
+    pont(jj)=0;
+end    
+end
+
 
 hpont=pont;
-rac_pont=geo.racc_pont;
+rac_pont=abs(B1k-B2k)/4;
 
 for ii=1:nlay
     
     if hpont(ii)>0
         XpontRadBarSx(ii)=B1k(ii);
-        YpontRadBarSx(ii)=hpont(ii)+racc_pont;
+        YpontRadBarSx(ii)=hpont(ii)+rac_pont(ii);
         XpontRadBarDx(ii)=B2k(ii);
-        YpontRadBarDx(ii)=hpont(ii)+racc_pont;
-        XpontRadDx(ii)=B2k(ii)-racc_pont;
+        YpontRadBarDx(ii)=hpont(ii)+rac_pont(ii);
+        XpontRadDx(ii)=B2k(ii)-rac_pont(ii);
         YpontRadDx(ii)=hpont(ii);
-        XpontRadSx(ii)=B1k(ii)+racc_pont;
+        XpontRadSx(ii)=B1k(ii)+rac_pont(ii);
         YpontRadSx(ii)=hpont(ii);
 
     else

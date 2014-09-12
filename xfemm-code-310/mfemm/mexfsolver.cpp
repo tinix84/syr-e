@@ -4,7 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include "fsolver.h"
-#include "complex.h"
+#include "femmcomplex.h"
 #include "spars.h"
 #include "mesh.h"
 

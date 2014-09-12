@@ -104,6 +104,7 @@ if ~isfield(FemmProblem, 'ArcSegments') || isempty(FemmProblem.ArcSegments)
         'InGroup', options.InGroup(1), ...
         'BoundaryMarker', options.BoundaryMarker{1});
 else
+    
     %don't add if the arc is already in the list
     for i=1:numel(FemmProblem.ArcSegments)
         if(FemmProblem.ArcSegments(i).n0==n0) && ...
@@ -124,14 +125,18 @@ end
 % add proposed arc to the arclist
 
 arclist = FemmProblem.ArcSegments;
-linelist = FemmProblem.Segments;
 arc=arclist(arcseginds(1));
-for i=1:numel(linelist)
-    [p,j]=getLineArcIntersection(FemmProblem, arc, linelist(i));
-    if(j>0)
-        for k=1:j
-            FemmProblem=addnodes_mfemm(FemmProblem,...
-                real(p(k)),imag(p(k)),'InGroup',options.InGroup(1));
+if isfield(FemmProblem, 'Segments')
+    if ~isempty(FemmProblem.Segments)
+        linelist = FemmProblem.Segments;
+        for i=1:numel(linelist)
+            [p,j]=getLineArcIntersection(FemmProblem, arc, linelist(i));
+            if(j>0)
+                for k=1:j
+                    FemmProblem=addnodes_mfemm(FemmProblem,...
+                        real(p(k)),imag(p(k)),'InGroup',options.InGroup(1));
+                end
+            end
         end
     end
 end
@@ -180,7 +185,7 @@ if go
                 newarc.n1=i-1;
                 newarc.ArcLength=angle((a2-c)/(a0-c))*180./pi;
                 FemmProblem=addarcsegments_mfemm(FemmProblem,...
-                    newarc.n0,newarc.n1,newarc.ArcLength,'MaxSegDegrees', options.MaxSegDegrees(1), ...
+                    newarc.n0,newarc.n1,newarc.ArcLength,'MaxSegDegrees', dmin, ...
                     'Hidden', options.Hidden(1), ...
                     'InGroup', options.InGroup(1), ...
                     'BoundaryMarker', options.BoundaryMarker{1});
@@ -188,7 +193,7 @@ if go
                 newarc.n0=i-1;
                 newarc.ArcLength=angle((a1-c)/(a2-c))*180./pi;
                 FemmProblem=addarcsegments_mfemm(FemmProblem,...
-                    newarc.n0,newarc.n1,newarc.ArcLength,'MaxSegDegrees', options.MaxSegDegrees(1), ...
+                    newarc.n0,newarc.n1,newarc.ArcLength,'MaxSegDegrees', dmin, ...
                     'Hidden', options.Hidden(1), ...
                     'InGroup', options.InGroup(1), ...
                     'BoundaryMarker', options.BoundaryMarker{1});

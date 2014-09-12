@@ -20,7 +20,7 @@ function fsolversetup(dodebug, verbose)
     end
 
     if nargin < 2
-        verbose = false;
+        verbose = true;
     end
 
 %     if isoctave
@@ -40,7 +40,7 @@ function fsolversetup(dodebug, verbose)
     origdir = pwd;
     
     % return to original dir on interruption or completion
-    OC = onCleanup (@() cd(origdir));
+    %OC = onCleanup (@() cd(origdir));
 
     % change to the mfemm directory (the directory this file is in)
     cd(fileparts(which('fsolversetup.m')));
@@ -91,5 +91,5 @@ function fsolversetup(dodebug, verbose)
         % call mex with the appropriately constructed commands
         mex(mexcommands{:});
     end
-
+    cd(origdir)
 end

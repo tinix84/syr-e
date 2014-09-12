@@ -1,3 +1,17 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 %%
 %% Stator
 %%
@@ -8,12 +22,13 @@
 % the nodes where block labels must be placed
 
 ns = geo.ns;
-b = geo.b;
-kt = geo.kt;
+% b = geo.b;
+% kt = geo.kt;
 acs = geo.acs;
 avv = geo.avv;
 Nbob = geo.Nbob;
 lt = geo.lt;
+wt = geo.wt;
 p = geo.p;
 r = geo.r;
 xr = geo.xr;
@@ -29,7 +44,7 @@ res_traf=fem.res_traf;
 
 s.AS1=360/(ns*p)/2;             % angolo di mezzo passo cava
 s.RSI=xr+g;                     % r traferro statore
-LDente=kt*b*s.AS1*pi/180*s.RSI; % semilarghezza dente come metà arco
+LDente=wt/2; %kt*b*s.AS1*pi/180*s.RSI; % semilarghezza dente come metà arco
 s.RSE=r;                        % r esterno statore
 s.RS5=xr+g+lt;                  % r esterno cave
 PassoCava=(s.RSI)*2*pi/(ns*p);  % passo cava di statore

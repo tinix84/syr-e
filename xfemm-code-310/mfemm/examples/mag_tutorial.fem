@@ -1,0 +1,91 @@
+[Format]      =  4.0
+[Frequency]   =  0
+[Precision]   =  1e-08
+[MinAngle]    =  30
+[Depth]       =  0
+[LengthUnits] =  inches
+[ProblemType] =  axisymmetric
+[Coordinates] =  cartesian
+[ACSolver]    =  0
+[Comment]     =  ""
+[PointProps]   = 0
+[BdryProps]   = 1
+  <BeginBdry>
+    <BdryName> = "ID: 1 - ABC"
+    <BdryType> = 2
+    <A_0> = 0
+    <A_1> = 0
+    <A_2> = 0
+    <Phi> = 0
+    <c0> = 198943.67886486917
+    <c0i> = 0
+    <c1> = 0
+    <c1i> = 0
+    <Mu_ssd> = 0
+    <Sigma_ssd> = 0
+  <EndBdry>
+[BlockProps]  = 2
+  <BeginBlock>
+    <BlockName> = "Air"
+    <Mu_x> = 1
+    <Mu_y> = 1
+    <H_c> = 0
+    <H_cAngle> = 0
+    <J_re> = 0
+    <J_im> = 0
+    <Sigma> = 0
+    <d_lam> = 0
+    <Phi_h> = 0
+    <Phi_hx> = 0
+    <Phi_hy> = 0
+    <LamType> = 0
+    <LamFill> = 1
+    <NStrands> = 0
+    <WireD> = 0
+    <BHPoints> = 0
+  <EndBlock>
+  <BeginBlock>
+    <BlockName> = "18 AWG"
+    <Mu_x> = 1
+    <Mu_y> = 1
+    <H_c> = 0
+    <H_cAngle> = 0
+    <J_re> = 0
+    <J_im> = 0
+    <Sigma> = 58
+    <d_lam> = 0
+    <Phi_h> = 0
+    <Phi_hx> = 0
+    <Phi_hy> = 0
+    <LamType> = 3
+    <LamFill> = 1
+    <NStrands> = 1
+    <WireD> = 1.0239652968433499
+    <BHPoints> = 0
+  <EndBlock>
+[CircuitProps]  = 1
+  <BeginCircuit>
+    <CircuitName> = "Coil"
+    <TotalAmps_re> = 1
+    <TotalAmps_im> = 0
+    <CircuitType> = 1
+  <EndCircuit>
+[NumPoints] = 6
+0	-4	0	0
+0	4	0	0
+0.5	-1	0	0
+1.5	-1	0	0
+1.5	1	0	0
+0.5	1	0	0
+[NumSegments] = 5
+0	1	-1	0	0	0
+2	3	-1	0	0	0
+3	4	-1	0	0	0
+4	5	-1	0	0	0
+5	2	-1	0	0	0
+[NumArcSegments] = 1
+0	1	180	2.5	1	0	0
+[NumHoles] = 0
+[NumBlockLabels] = 2
+1	0	2	0.10000000000000001	1	0	0	1000	0
+0.5	1.5	1	0.10000000000000001	0	0	0	1	0

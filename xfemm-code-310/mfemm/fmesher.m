@@ -91,7 +91,7 @@ function filename = fmesher(varargin)
     else
         error('Incorrect number of arguments to fmesher.')
     end
-
+    
     mexfmesher(filename);
 
 end

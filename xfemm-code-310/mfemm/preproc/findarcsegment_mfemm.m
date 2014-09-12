@@ -1,9 +1,9 @@
-function [id] = findarcsegment_mfemm(FemmProblem, loc)
+function [ind] = findarcsegment_mfemm(FemmProblem, loc)
 % finds the arc nearest to a given location loc=[x y];
 %
 % Syntax
 %
-% [id] = findarcsegment_mfemm(FemmProblem, loc)
+% [ind] = findarcsegment_mfemm(FemmProblem, loc)
 %
 %
 % Copyright 2012 Richard Crozier
@@ -22,25 +22,25 @@ function [id] = findarcsegment_mfemm(FemmProblem, loc)
 %    limitations under the License.
 
 if ~isfield(FemmProblem,'ArcSegments')
-    id=[];
+    ind=[];
     return
 end
 if ~isfield(FemmProblem,'Nodes')
-    id=[];
+    ind=[];
     return
 end
 nodelist=FemmProblem.Nodes;
 arclist=FemmProblem.ArcSegments;
 if(numel(arclist)==0)
-    id=[];
+    ind=[];
     return
 end
-id=1;
+ind=1;
 d0=shortestDistanceFromArc(FemmProblem,arclist(1),loc(1)+1i*loc(2));
 for i=1:numel(arclist)
     d1=shortestDistanceFromArc(FemmProblem,arclist(i),loc(1)+1i*loc(2));
     if(d1<d0)
         d0=d1;
-        id=i;
+        ind=i;
     end
 end

@@ -43,8 +43,8 @@ for i = 1:numel(groupnos)
         for ii = 1:numel(FemmProblem.ArcSegments)
             if FemmProblem.ArcSegments(ii).InGroup == groupnos(i)
                 includenodes_id = [includenodes_id,...
-                    FemmProblem.Segments(ii).n0,...
-                    FemmProblem.Segments(ii).n1];
+                    FemmProblem.ArcSegments(ii).n0,...
+                    FemmProblem.ArcSegments(ii).n1];
             end
         end
     end

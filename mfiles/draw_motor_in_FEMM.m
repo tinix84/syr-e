@@ -1,42 +1,57 @@
-% draw_motor_in_FEMM.m - 24 08 09 - GMP
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
+function [geo] = draw_motor_in_FEMM(geo,eval_type)
+
+% draw_motor_in_FEMM.m
 % builds the .fem motor model with the rotor in position zero
 
-% input: geo and mat
-% output: mot0.fem (th_m = 0, i123 = [0,0,0])
-
-ns = geo.ns;
-p = geo.p;
+% input: see function argument
+% output:
+% - updated geo (individual for the machine)
+% - mot0.fem (th_m = 0, i123 = [0,0,0])
 
 fem = dimMesh(geo,eval_type);
 % fem.res_traf=0.5;
 % fem.res=6;
+
 filename = 'mot0.fem';
 opendocument('empty_case.fem');
 mi_probdef(0,'millimeters','planar',1e-8,geo.l,25);
-% calc winding factor (kavv) and rotor offset respect to position zero
-% (phase1_offset)
+
+% calc winding factor (kavv) and rotor offset (phase1_offset)
 [kavv, phase1_offset] = calcola_kavv_th0(geo.avv,geo.ns*geo.p,size(geo.avv,1),geo.p);
 
-% rotor offset angle
-th_m0 = 0;                          % [mec deg]
-% offset angle: for coordinate transformations
-geo.th0 = th_m0*p - phase1_offset;     % [elt deg]
-%%
-%% evaluation of the number of poles to simulate and corresponding periodicity
-%%
+% offset angle for coordinate transformations
+th_m0 = 0;                              % rotor position [mec deg]
+geo.th0 = th_m0*geo.p - phase1_offset;  % d- to alpha-axis offset [elt deg]
+
+% machine periodicity (t) and number of poles to be simulated (ps)
 Q=geo.ns*geo.p;
-t=gcd(ns*geo.p,geo.p);  % periodicity
+t=gcd(geo.ns*geo.p,geo.p);  % periodicity
 if ((6*t/Q)>1)
-    ps=2*p/t;
+    ps=2*geo.p/t;
     Qs=Q/t;
 else
-    ps=p/t;
+    ps=geo.p/t;
     Qs=Q/2/t;
 end
-%assign to variable geo, number of poles and slots simulated.
-geo.Qs=Qs;
-geo.ps=ps;
-% Boundary tipology
+
+geo.Qs=Qs;  % # of simulated slots
+geo.ps=ps;  % # of simulated poles
+
+% Boundary conditions
 if (rem(geo.ps,2)==0)
     periodicity=4;
 else
@@ -46,7 +61,7 @@ end
 %% definition of the boundary conditions
 % inner and outer circles
 mi_addboundprop('A=0', 0, 0, 0, 0, 0, 0, 0, 0, 0);
-% Anit-Periodicity (2 x rotor + 2 x stator + 3 x airgap + 1 x AP move, which is the sliding contour)
+% Periodicity or Anti-Periodicity (2 x rotor + 2 x stator + 3 x airgap + 1 x APmove) APmove is the sliding contour
 mi_addboundprop('APr1', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
 mi_addboundprop('APr2', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
 mi_addboundprop('APg1', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
@@ -57,16 +72,21 @@ mi_addboundprop('APs1', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
 mi_addboundprop('APs2', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
 
 %% ROTOR
-% build the matrixes which describe the rotor
+% build the matrices which describe the rotor
+geo.x0 = geo.xr/cos(pi/2/geo.p);
 ROTmatr;
-save CaseSim.mat;   % 2014/02/25 MG in the final version this save MUST be eliminated (necessary becouse if the algorith end for error there you find the last case analysed.
 BLKLABELS.rotore=BLKLABELSrot;
-% draws lines and arces
-draw_lines_arches(rotore2,2,fem.res);
-% assigns the block labels
-assign_block_prop_rot(BLKLABELS,fem,2);
-% boundary conditions
 
+% draw lines and arcs
+draw_lines_arches(rotore2,2,fem.res);
+
+% assign block labels
+assign_block_prop_rot(BLKLABELS,geo,fem,2);
+
+% prevents flux barrier overlapping in high speed ISeg machines (with radial ribs)
+% ISeg_HS_bug_fix;
+
+% assign boundary conditions
 for ii=1:2
     mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
@@ -78,10 +98,7 @@ for ii=1:2
         mi_clearselected;
     end
 end
-
-% Condizioni al contorno di rotore ferro lamierino
-for ii=3:4
-    
+for ii=3:4   
     mi_selectsegment(BLKLABELSrot.boundary(ii,1),BLKLABELSrot.boundary(ii,2));
     if (BLKLABELSrot.boundary(ii,3)==10)
         mi_setsegmentprop('APr2', 0, 1, 0, 2);
@@ -94,20 +111,19 @@ for ii=3:4
 end
 
 %% STATOR
-% builds the matrixed which describe the stator
+% builds the matrixes which describe the stator
 STATmatr;
 BLKLABELS.statore=BLKLABELSstat;
-% draws lines and arces
 
+% draw lines and arcs
 draw_lines_arches(statore,1,fem.res);
-% assigns the block labels
 
+% assign block labels
 assign_block_prop_stat(BLKLABELS,geo,fem,1) % assegna materiali;
-% boundary conditions
 
+% assign boundary conditions
 BLKLABELSstat=BLKLABELS.statore;
-for ii=1:size(BLKLABELSstat.boundary,1)
-    
+for ii=1:size(BLKLABELSstat.boundary,1)    
     mi_selectsegment(BLKLABELSstat.boundary(ii,1),BLKLABELSstat.boundary(ii,2));
     if (BLKLABELSstat.boundary(ii,3)==10)
         mi_setsegmentprop('APs1', 0, 1, 0, 1);
@@ -119,15 +135,9 @@ for ii=1:size(BLKLABELSstat.boundary,1)
     end
 end
 
-% keyboard
 %% airgap (group 20)
     AirGapBuild(Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.xr,fem.res_traf,1,2);
     draw_airgap_arc_with_mesh(geo,th_m0,fem);
 
 geo.fem=fem;
 mi_saveas(filename); % saves the file with name ’filename’.
-% ii=0;
-% mi_saveas(['testZero' num2str(ii) '.fem'])
-% system(['move testZero' num2str(ii) '.fem' ' ..'])
-% cd('..')
-% error('OK X')

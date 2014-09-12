@@ -1,3 +1,17 @@
+% Copyright 2014
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
+
 
 % interp the flux linkage maps over a very dense grid
 id = F_map.Id; iq = F_map.Iq;
@@ -5,19 +19,18 @@ Fd0 = F_map.Fd; Fq0 = F_map.Fq;
 T = F_map.T;
 dT = F_map.dT;
 
-n = 256;
-i_d=linspace(id(1),id(end),n);
-i_q=linspace(id(1),iq(end),n);
+i_d=linspace(id(1),id(end),n2);
+i_q=linspace(id(1),iq(end),n2);
 
 [Id,Iq]=meshgrid(i_d,i_q);
 
-Fd = interp2(id,iq,Fd0,Id,Iq,'cubic');
-Fq = interp2(id,iq,Fq0,Id,Iq,'cubic');
+Fd = interp2(idvect,iqvect,Fd0,Id,Iq,'cubic');
+Fq = interp2(idvect,iqvect,Fq0,Id,Iq,'splyne');
 
-T = interp2(id,iq,T,Id,Iq,'cubic');
+T = interp2(idvect,iqvect,T,Id,Iq,'splyne');
 T = T*klength;
 
-dT = interp2(id,iq,dT,Id,Iq,'cubic');
+dT = interp2(idvect,iqvect,dT,Id,Iq,'splyne');
 dT = dT*klength;
 
 %% rewind
@@ -34,14 +47,14 @@ Fq=Fq*klength;
 % Fd = Fd + Lld * Id;
 % Fq = Fq + Llq * Iq;
 
-save ([NewDir 'fdfq_idiq_n' num2str(n) '.mat'],'Fd','Fq','Id','Iq');
-save ([NewDir 'fdfq_idiq_n' num2str(n) '.mat'],'T','-append');
-save ([NewDir 'fdfq_idiq_n' num2str(n) '.mat'],'dT','-append');
+save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Fd','Fq','Id','Iq');
+save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'T','-append');
+save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dT','-append');
 
 % flux maps
 figure
-plot(Id(1,:),Fd([1 end],:)), grid on, hold on
-plot(Iq(:,1),Fq(:,[1 end])), 
+plot(Id(1,:),Fd([1 end],:),F_map.Id(1,:),F_map.Fd([1 end],:),'kx'), grid on, hold on
+plot(Iq(:,1),Fq(:,[1 end]),F_map.Iq(:,1),F_map.Fq(:,[1 end]),'kx'), 
 xlabel('id,iq [A]'), ylabel('\lambda_d, \lambda_q [Vs]'), %zlabel('\lambda_d')
 saveas(gcf,[NewDir 'Curves_' strrep(filemot,'.mat','.fig')])
 
