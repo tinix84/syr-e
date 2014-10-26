@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -18,10 +18,10 @@
 
 function geo = calcHcCheckGeoControlwDx(geo)
 
-xr = geo.xr;            % Raggio del rotore al traferro
+r = geo.r;              % Raggio del rotore al traferro
 p = geo.p;              % Paia poli
 nlay = geo.nlay;        % N° layers
-R = geo.r;              % Raggio ext
+R = geo.R;              % Raggio ext
 g = geo.g;              % Traferro
 lt = geo.lt;            % Lunghezza denti
 pont0 = geo.pont0;      % Ponticelli al traferro
@@ -29,43 +29,42 @@ dalpha = geo.dalpha;
 alpha = geo.alpha;
 hc_pu = geo.hc_pu;
 hfe_min = geo.hfe_min;        % min tickness of each steel flux guide
-Dfe=geo.Dfe;
+dx=geo.dx;
 Bx0=geo.Bx0;
-
 if strcmp(geo.RotType,'ISeg_HS')<1
     pont0=pont0*ones(1,geo.nlay);
     hfe_min=hfe_min*ones(1,geo.nlay);
 end
 
 % x0 is the coordinate of the center of the circular barriers
-x0 = xr/cos(pi/2/p);
+x0 = r/cos(pi/2/p);
 geo.x0 = x0;
 % max allowed shaft radius
-Ar = x0 - xr * tan(pi/2/p);
+Ar = x0 - r * tan(pi/2/p);
 geo.ArMaxAdmis = Ar;  
 % rotor space available radialwise (air + steel)
-htot = xr - Ar;
-ly = R - xr - g - lt;       % stator yoke
+htot = r - Ar;
+ly = R - r - g - lt;       % stator yoke
 lyr = 1.0 * ly;             % lower limit of the total steel tickness
-la = xr - Ar -lyr;          % upper limit of the total air insulation
+la = r - Ar -lyr;          % upper limit of the total air insulation
 % 2014/02/24 MG determination of the minimum thickness of air
 % length...
     hc_half_min = la/nlay/8;      % occhio che nn deve essere troppo piccolo se no le barriere verranno sempre eccessivamente piccole, ma?! :-|
 %     hc_half_min=0.5*pont0;
  
-beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,xr,x0);
-r = (x0 - xr * cos(alpha*pi/180))./(cos(beta*pi/180));
+beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,r,x0);
+rbeta = (x0 - r * cos(alpha*pi/180))./(cos(beta*pi/180));
 % Per il momento la taratura è a mano:
 
 delta=(1/(nlay)*sum(hc_pu));
-hfeqMax=r(end)-r(1)-(nlay-1)*2*hc_half_min;
+hfeqMax=rbeta(end)-rbeta(1)-(nlay-1)*2*hc_half_min;
 hfeqMin=(nlay-1)*hfe_min;
 % hfeq=hfeqMax-(hfeqMax-hfeqMin)/0.8*(delta-0.2);
 hfeq=hfeqMax-(hfeqMax-hfeqMin)*(delta);
 
-la=r(end)-r(1)-hfeq;
+la=rbeta(end)-rbeta(1)-hfeq;
 coeff_gamma=hc_pu(1)/2+hc_pu(nlay)/2+sum(hc_pu(2:nlay-1));
-% la=r(end)-r(1)-(nlay-1)*hfe_min;
+% la=rbeta(end)-rbeta(1)-(nlay-1)*hfe_min;
 % 
 % laprimo=la/(nlay-1);
 
@@ -79,14 +78,14 @@ conta=1;
 if (nlay==1)
     
     %% max hc according to alpha min
-    hc_half_max1 = (alpha*pi/180/(1+alpha*pi/180)*(xr-pont0));
+    hc_half_max1 = (alpha*pi/180/(1+alpha*pi/180)*(r-pont0));
     % (needs division by 2 .. don't know why but it works)
     hc_half_max1 = hc_half_max1 * 2;
     
     %% max hc according to alpha max (27 Jan 2011)
-    temp_alpha_hfemin = hfe_min/xr; % rad
+    temp_alpha_hfemin = hfe_min/r; % rad
     temp_alpha_hc_2 = pi/(2*p) - alpha*pi/180 - temp_alpha_hfemin;
-    hc_half_max2 = (temp_alpha_hc_2/(1+temp_alpha_hc_2)*(xr-pont0));
+    hc_half_max2 = (temp_alpha_hc_2/(1+temp_alpha_hc_2)*(r-pont0));
     hc_half_max = min(hc_half_max1,hc_half_max2);
 %     hc_pu(1) = 1;
     hc(1) = hc_pu(1) * hc_half_max * 2;
@@ -122,20 +121,20 @@ else
             
             if jj == 1
                 
-%                 hc_half_max = min((r(jj+1)-r(jj)-0.5*hc(jj+1)-hfe_min),(xr-pont0-x0+r(jj)));
-                hc_half_max = min((hc_pu(jj)/hc_pu(nlay))*hc_nlay_temp_half,(xr-pont0-x0+r(jj)));
-%                 hc_half_max = min(0.5*hc_pu(jj)*laprimo,(xr-pont0-x0+r(jj)));
+%                 hc_half_max = min((rbeta(jj+1)-rbeta(jj)-0.5*hc(jj+1)-hfe_min),(r-pont0-x0+rbeta(jj)));
+                hc_half_max = min((hc_pu(jj)/hc_pu(nlay))*hc_nlay_temp_half,(r-pont0-x0+rbeta(jj)));
+%                 hc_half_max = min(0.5*hc_pu(jj)*laprimo,(r-pont0-x0+rbeta(jj)));
                 if strcmp(geo.RotType,'ISeg_HS')
                    hc(jj) = 2*hc_half_max(jj);
                 else
                     hc(jj) = 2*hc_half_max(1); 
                 end
                 
-                if hc(jj)<2*hc_half_min && hc_half_min<=(xr-pont0(jj)-x0+r(jj))
+                if hc(jj)<2*hc_half_min && hc_half_min<=(r-pont0(jj)-x0+rbeta(jj))
                     hc(jj)=2*hc_half_min;
                 end
             else
-%                 hc_half_max =min([(hc_pu(jj)/hc_pu(nlay))*hc_nlay_temp_half,(r(jj+1)-r(jj)-hfe_min),(r(jj)-r(jj-1)-hfe_min)]);
+%                 hc_half_max =min([(hc_pu(jj)/hc_pu(nlay))*hc_nlay_temp_half,(rbeta(jj+1)-rbeta(jj)-hfe_min),(rbeta(jj)-rbeta(jj-1)-hfe_min)]);
                 hc_half_max =(hc_pu(jj)/hc_pu(nlay))*hc_nlay_temp_half;
                 if strcmp(geo.RotType,'ISeg_HS')
                    hc(jj) = 2*hc_half_max(jj);
@@ -186,48 +185,49 @@ for k=1:nlay-1
     end % end #4
 end % end for nlay
 
-if (B1k(nlay)<geo.Ar+hfe_min(end))    % questa condizione vale per l'ultima barriera di flux
-    B1k(nlay)=geo.Ar+hfe_min(end);
-    disp('#3 vincolo n° layer interseca albero')
-end
+%% Safety control for last flux barrier check feseability space between air and iron of the spyder at the air-gap and along the q axis
+[xc_temp,yc_temp]=calc_intersezione_cerchi(r,rbeta(nlay),x0);
+dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
 
-% Condition for high value of beta
-[xc_temp,yc_temp]=calc_intersezione_cerchi(xr,r(nlay),x0);
-dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[xr*cos(pi/2/p), xr*sin(pi/2/p)]);
 if (dPointEndBar<(Bx0(nlay)-B1k(nlay)))
    B1k(nlay)=Bx0(nlay)-dPointEndBar+hfe_min(nlay)/2;
+   
+end
+
+if (B1k(nlay)<geo.Ar+hfe_min(end))    % questa condizione vale per l'ultima barriera di flux
+    geo.Ar=max(B1k(nlay)-hfe_min(end),Bx0(nlay)-dPointEndBar);
 end
 
 hc=B2k-B1k;
-% Re-definition of B1k in function of Dfe...
-B1k=Bx0-hc/2+Dfe.*hc/2; B2k=Bx0+hc/2+Dfe.*hc/2;
+% Re-definition of B1k in function of dx...
+B1k=Bx0-hc/2+dx.*hc/2; B2k=Bx0+hc/2+dx.*hc/2;
 % Control and correction of the geometry with the iron degree of freedom
-    Dfe_old=Dfe;
+    dx_old=dx;
     hfemin=2*pont0;
     hcmin=1;
 
 for k=1:nlay  
-   if  (hc(k)/2*(1-abs(Dfe(k)))<=pont0);
-   disp('#1Dx Dfe riassegnati');
-   Dfe1=1-2*mean(pont0)/hc(k);
+   if  (hc(k)/2*(1-abs(dx(k)))<=pont0);
+   disp('#1Dx dx riassegnati');
+   dx1=1-2*mean(pont0)/hc(k);
 %    error_code=1;
-      if (Dfe(k)>0)
-       Dfe(k)=Dfe1;
+      if (dx(k)>0)
+       dx(k)=dx1;
       else
-          Dfe(k)=-Dfe1;
+          dx(k)=-dx1;
       end
    end
 end
 
-geo.Dfe=Dfe;
-B1k=Bx0-hc/2+Dfe.*hc/2; B2k=Bx0+hc/2+Dfe.*hc/2;
+geo.dx=dx;
+B1k=Bx0-hc/2+dx.*hc/2; B2k=Bx0+hc/2+dx.*hc/2;
 
 if nlay~=1
     
 for k=1:nlay-1
         hc_old=hc;
-    if ((xr-B2k(k))<1) % questa condizione varrebbe per la 1°barriera
-        B2k(k)=xr-1;
+    if ((r-B2k(k))<1) % questa condizione varrebbe per la 1°barriera
+        B2k(k)=r-1;
         disp('#2Dx vincolo 1 layer esce dal rotore');
 %         error_code=[error_code,2];
     end
@@ -282,8 +282,8 @@ end
 
 else
     hc_old=hc;
-    if ((xr-B2k(k))<1) % questa condizione varrebbe per la 1°barriera
-        B2k(k)=xr-1;
+    if ((r-B2k(k))<1) % questa condizione varrebbe per la 1°barriera
+        B2k(k)=r-1;
         disp('#8Dx vincolo 1 layer esce dal rotore');
 %         error_code=[error_code,2];
     end
@@ -292,8 +292,8 @@ end
 hc=B2k-B1k; 
 geo.hc=hc;
 %% 2014/02/25 MG Condition for the first flux barrier if hc is to high and nlay bigger the length of the barrier too smal to be drawn:
-if ((xr-pont0(1)-hc(1)/2)<=x0-r(1))
-    temp_hc1=2*(xr+r(1)-x0-(1.5)*pont0(1));
+if ((r-pont0(1)-hc(1)/2)<=x0-r(1))
+    temp_hc1=2*(r+rbeta(1)-x0-(1.5)*pont0(1));
     if (temp_hc1>0)
         hc(1)=temp_hc1;
     end

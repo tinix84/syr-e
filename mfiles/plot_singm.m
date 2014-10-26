@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -25,12 +25,12 @@ i_q=linspace(id(1),iq(end),n2);
 [Id,Iq]=meshgrid(i_d,i_q);
 
 Fd = interp2(idvect,iqvect,Fd0,Id,Iq,'cubic');
-Fq = interp2(idvect,iqvect,Fq0,Id,Iq,'splyne');
+Fq = interp2(idvect,iqvect,Fq0,Id,Iq,'cubic');
 
-T = interp2(idvect,iqvect,T,Id,Iq,'splyne');
+T = interp2(idvect,iqvect,T,Id,Iq,'cubic');
 T = T*klength;
 
-dT = interp2(idvect,iqvect,dT,Id,Iq,'splyne');
+dT = interp2(idvect,iqvect,dT,Id,Iq,'cubic');
 dT = dT*klength;
 
 %% rewind

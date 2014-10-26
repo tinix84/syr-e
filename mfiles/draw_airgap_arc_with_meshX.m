@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -20,7 +20,7 @@
 function FemmProblem=draw_airgap_arc_with_meshX(FemmProblem,geo,th_m,fem,boundnameAPmove)
 
 p  = geo.p;
-xr = geo.xr;
+r = geo.r;
 g  = geo.g;
 ns = geo.ns;
 ps=geo.ps;
@@ -34,7 +34,7 @@ gradi_da_sim = 180/p*ps;
 
 group = 20;
 
-x0 = xr+1/3*g;
+x0 = r+1/3*g;
 y0 = 0;
 
 res_deg=res;

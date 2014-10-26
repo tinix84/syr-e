@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -21,7 +21,6 @@ function [geo] = draw_motor_in_FEMM(geo,eval_type)
 % output:
 % - updated geo (individual for the machine)
 % - mot0.fem (th_m = 0, i123 = [0,0,0])
-
 fem = dimMesh(geo,eval_type);
 % fem.res_traf=0.5;
 % fem.res=6;
@@ -30,33 +29,36 @@ filename = 'mot0.fem';
 opendocument('empty_case.fem');
 mi_probdef(0,'millimeters','planar',1e-8,geo.l,25);
 
+% machine periodicity (t) and number of poles to be simulated (ps)
+Q=geo.ns*geo.p;
+t=gcd(round(geo.ns*geo.p),geo.p);  % periodicity
+if ((6*t/Q)>1)
+    ps=2*geo.p/t;   % periodic machine
+    Qs=Q/t;
+    tempWinTable = geo.avv;
+    periodicity=4;
+else
+    ps=geo.p/t;     % anti-periodic machine
+    Qs=Q/2/t;
+    tempWinTable = [geo.avv -geo.avv];
+    periodicity=5;
+end
+geo.Qs=Qs;  % # of simulated slots
+geo.ps=ps;  % # of simulated poles
+
 % calc winding factor (kavv) and rotor offset (phase1_offset)
-[kavv, phase1_offset] = calcola_kavv_th0(geo.avv,geo.ns*geo.p,size(geo.avv,1),geo.p);
+[kavv, phase1_offset] = calcKwTh0(tempWinTable);
 
 % offset angle for coordinate transformations
 th_m0 = 0;                              % rotor position [mec deg]
 geo.th0 = th_m0*geo.p - phase1_offset;  % d- to alpha-axis offset [elt deg]
 
-% machine periodicity (t) and number of poles to be simulated (ps)
-Q=geo.ns*geo.p;
-t=gcd(geo.ns*geo.p,geo.p);  % periodicity
-if ((6*t/Q)>1)
-    ps=2*geo.p/t;
-    Qs=Q/t;
-else
-    ps=geo.p/t;
-    Qs=Q/2/t;
-end
-
-geo.Qs=Qs;  % # of simulated slots
-geo.ps=ps;  % # of simulated poles
-
 % Boundary conditions
-if (rem(geo.ps,2)==0)
-    periodicity=4;
-else
-    periodicity=5;
-end
+% if (rem(geo.ps,2)==0)
+%     periodicity=4;
+% else
+%     periodicity=5;
+% end
 
 %% definition of the boundary conditions
 % inner and outer circles
@@ -73,7 +75,7 @@ mi_addboundprop('APs2', 0, 0, 0, 0, 0, 0, 0, 0, periodicity);
 
 %% ROTOR
 % build the matrices which describe the rotor
-geo.x0 = geo.xr/cos(pi/2/geo.p);
+geo.x0 = geo.r/cos(pi/2/geo.p);
 ROTmatr;
 BLKLABELS.rotore=BLKLABELSrot;
 
@@ -136,7 +138,7 @@ for ii=1:size(BLKLABELSstat.boundary,1)
 end
 
 %% airgap (group 20)
-    AirGapBuild(Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.xr,fem.res_traf,1,2);
+    AirGapBuild(Qs,ps,geo.p,geo.g,360/(ns*geo.p)/2,geo.r,fem.res_traf,1,2);
     draw_airgap_arc_with_mesh(geo,th_m0,fem);
 
 geo.fem=fem;

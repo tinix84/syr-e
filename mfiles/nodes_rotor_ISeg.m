@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -17,7 +17,7 @@ function [geo,temp]=nodes_rotor_ISeg(geo)
 %%
 %% INIZIALIZZAZIONE DATI DI INGRESSO:
 %%
-xr = geo.xr;                    % Raggio del rotore al traferro
+r = geo.r;                    % Raggio del rotore al traferro
 x0 = geo.x0;                    % Centro fittizio
 Ar=geo.Ar;
 rshaft=geo.Ar;
@@ -33,7 +33,7 @@ dalpha = geo.dalpha;            % Angoli dalpha
 alpha = integral_fx(1:length(dalpha),dalpha);
 geo.alpha=alpha;
 racc_pont = geo.racc_pont;      % racc_pont=1*pont0 <- per i ponticelli radiali.
-ang_pont0 = geo.ang_pont0;      % Ampiezza dell'angolo (in gradi) da spazzare con  raggio xr in modo da ottenre un arco lungo pont0
+ang_pont0 = geo.ang_pont0;      % Ampiezza dell'angolo (in gradi) da spazzare con  raggio r in modo da ottenre un arco lungo pont0
 
 nmax = geo.nmax;                % Velocità max (rpm) per la valutazione della sollecitazione centrifuga più gravosa (-> ponticelli)
 sigma_max=geo.sigma_max;
@@ -46,8 +46,8 @@ hc=geo.hc;
 %% DISEGNO DELLE BARRIERE E DEI PONTICELLI
 % INTRODUZIONE DI ALCUNE GRANDEZZE GEOMETRICHE UTILI E RIFERIMENTO AD UN CENTRO FITTIZIO DI COORDINATE (x0,0)
 
-beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,xr,x0);                  % La funzione calc_apertura_cerchio riceve in input le coordinate polari,
-% (xr, alpha) (alpha in rad), di un punto generico. Queste sono calcolate
+beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,r,x0);                  % La funzione calc_apertura_cerchio riceve in input le coordinate polari,
+% (r, alpha) (alpha in rad), di un punto generico. Queste sono calcolate
 % rispetto al centro (0,0). In output la funzione restituisce l'apertura
 % angolare (in rad) dello stesso punto rispetto al centro preso come
 % riferimento (ha coordinate:(x0,0)).
@@ -55,12 +55,12 @@ beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,xr,x0);                  % La
 % al centro di riferimento sono i punti mediani delle barriere, presi in
 % corrispondenza del traferro.
 
-r = (x0 - xr * cos(alpha*pi/180))./(cos(beta*pi/180));                      % Di questi stessi punti, si calcolano anche le distanze dal centro (x0,0)
-% e le si memorizzano nel vettore r.
+rbeta = (x0 - r * cos(alpha*pi/180))./(cos(beta*pi/180));                      % Di questi stessi punti, si calcolano anche le distanze dal centro (x0,0)
+% e le si memorizzano nel vettore rbeta.
 
 B1k_temp=geo.B1k;
 B2k_temp=geo.B2k;
-hfe=[xr-B2k_temp(1),B1k_temp(1:nlay-1)-B2k_temp(2:nlay),B1k_temp(nlay)-Ar]; %%
+hfe=[r-B2k_temp(1),B1k_temp(1:nlay-1)-B2k_temp(2:nlay),B1k_temp(nlay)-Ar]; %%
 
 r_all = [];                                                                 % Nel vettore r_all si memorizzano invece le distanze, sempre rispetto al
 % Starting and ending pooint of the flux barrier...
@@ -68,28 +68,28 @@ for jj = 1:nlay                                                             % ch
     r_all = [r_all x0-B2k_temp(jj) x0-B1k_temp(jj)];
 end
 
-pont_bound_conflict1=find(r_all(1:2:2*nlay)>=r);
-% pont_bound_conflict2=find(r_all(2:2:2*nlay)<=r);
+pont_bound_conflict1=find(r_all(1:2:2*nlay)>=rbeta);
+% pont_bound_conflict2=find(r_all(2:2:2*nlay)<=rbeta);
 %% Posizione banane su asse q (convenzione assi VAGATI)
 % 2013/07/06 MG punto banana su asse q serve per i successivi export in DXF
 
 % hcc=(r_all(2:2:end))-(r_all(1:2:end));
-[xpont,ypont] = calc_intersezione_cerchi((xr-pont0), r, x0);    % valore non del tutto corretto ricalcolato in seguito, tuttavia serve per il disegno della curva centro bar...
-[xcbar,ycbar] = calc_intersezione_cerchi((xr-pont0-hc/2), r, x0);
+[xpont,ypont] = calc_intersezione_cerchi((r-pont0), rbeta, x0);    % valore non del tutto corretto ricalcolato in seguito, tuttavia serve per il disegno della curva centro bar...
+[xcbar,ycbar] = calc_intersezione_cerchi((r-pont0-hc/2), rbeta, x0);
 % 2014/02/26 MG Problem of immaginary number for higher nlay value
 for ii=1:nlay
 if (not(isreal(xpont(ii)))||not(isreal(ypont(ii))))
-    xpont(ii)=xr-pont0; ypont(ii)=0;
+    xpont(ii)=r-pont0; ypont(ii)=0;
     error_mex(ii)=1;
 end
 
 if (not(isreal(xcbar(ii)))||not(isreal(ycbar(ii))))
-    xcbar(ii)=xr-pont0-hc(ii)/2; ycbar(ii)=0;
+    xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
     error_mex(ii)=1;
 end
 end
 
-% hfe=[xr-xcbar(1)-hc(1)/2,r_all(3:2:end)-r_all(2:2:end-1),x0-r_all(end)]; %%
+% hfe=[r-xcbar(1)-hc(1)/2,r_all(3:2:end)-r_all(2:2:end-1),x0-r_all(end)]; %%
 
 rpont_x0=sqrt(ypont.^2+(x0-xpont).^2);
 % [alphapont,rpont] = cart2pol(xpont,ypont);
@@ -101,7 +101,7 @@ for ii=1:nlay
     if (a==0 && c==0)
      % xpont and ypont are just evaluated
     else
-    A=1+b^2/a^2; B=2*b*c/a; C=(c^2/a^2-(xr-pont0)^2);
+    A=1+b^2/a^2; B=2*b*c/a; C=(c^2/a^2-(r-pont0)^2);
     ytemp=roots([A,B,C]); ypont(ii)=ytemp(find(ytemp>=0));
     xpont(ii)=-(b*ypont(ii)+c)/a;
     end
@@ -120,15 +120,21 @@ for ii=1:nlay
 end
 
 %% Intersezione circonferenze punti al traferro:
-[xTraf2,yTraf2] = calc_intersezione_cerchi(xr-pont0, r_all(1:2:end), x0);
-[xTraf1,yTraf1] = calc_intersezione_cerchi(xr-pont0, r_all(2:2:end), x0);
+[xTraf2,yTraf2] = calc_intersezione_cerchi(r-pont0, r_all(1:2:end), x0);
+[xTraf1,yTraf1] = calc_intersezione_cerchi(r-pont0, r_all(2:2:end), x0);
 
+for ii=1:nlay
+if (not(isreal(yTraf2(ii))))
+    xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
+    error_mex(ii)=1;
+end
+end
 %% 2014/06/22 MG
 % set di istruzioni per il disegno delle barriere nel caso in cui la punta
 % della barriera sia interna alla ipotetica curva centrale di barriera...
 for ii=2:nlay
    if (xTraf2(ii)<=xpont(ii) || yTraf2(ii)>=ypont(ii)) 
-       [xpont_temp,ypont_temp] = calc_intersezione_cerchi((xr-pont0), r(ii), x0);   
+       [xpont_temp,ypont_temp] = calc_intersezione_cerchi((r-pont0), rbeta(ii), x0);   
        xpont(ii)=xpont_temp;
        ypont(ii)=ypont_temp;
        clear xpont_temp ypont_temp;
@@ -298,24 +304,34 @@ for ii=2:nlay
         arcLayTraf2(ii)=(angT2-angT1)*180/pi;
     end
     
-        if (yyD1k(ii)<=YpBar1(ii) && xxD1k(ii)<=XpBar1(ii))
+    if (yyD1k(ii)<=YpBar1(ii) && xxD1k(ii)<=XpBar1(ii))
         yyD1k(ii)=YcRibTraf1(ii)+sqrt((abs((xpont(ii)-XcRibTraf1(ii))+1j*(ypont(ii)-YcRibTraf1(ii))))^2-(XpBar1(ii)-XcRibTraf1(ii))^2);
         YpBar1(ii)=yyD1k(ii);
         xxD1k(ii)=XpBar1(ii);
     end
+    
+end
 
+if (error_mex(1)==1)
+    temp.xc=(xxD1k(1:end)+xxD2k(1:end))/2;
+    temp.yc=[0,(yyD1k(2:end)+yyD2k(2:end))/2];
+    
+    
+else
+    temp.xc=(xxD1k+xxD2k)/2;
+    temp.yc=(yyD1k+yyD2k)/2;
 end
 
 %%
 %% Disegno del lamierino cn figure...
 %%
 % %%
-% xcir_plot=[0:0.5:xr];
-% ycir_plot=sqrt(xr^2-xcir_plot.^2);
+% xcir_plot=[0:0.5:r];
+% ycir_plot=sqrt(r^2-xcir_plot.^2);
 % figure(100);hold on;
 % xo=x0-rpont_x0'*cos(0:0.1:pi/2);
 % yo=rpont_x0'*sin(0:0.1:pi/2);
-% plot(xo',yo','--r','LineWidth',2); axis([0 xr+0.5 0 xr+0.5]); axis square
+% plot(xo',yo','--r','LineWidth',2); axis([0 r+0.5 0 r+0.5]); axis square
 % plot(B1k,0,'ob');plot(B2k,0,'ob');
 % plot(xpont,ypont,'*c');
 % plot(XpBar2,YpBar2,'bs');
@@ -342,6 +358,7 @@ end
 calcolo_posizioni_Pfe;
 %% Valutazione ponticelli radiali:
 
+rTemp = rbeta;
 calc_ribs_rad;
 %%
 %% Salvataggio dei dati finali:
@@ -372,11 +389,6 @@ temp.YcRibTraf1=YcRibTraf1;
 temp.XcRibTraf2=XcRibTraf2;
 temp.YcRibTraf2=YcRibTraf2;
 
-% geo.r_fe=rfe;
-% geo.x_fe=xFe;
-% geo.y_fe=yFe;
-temp.xc=xcbar;
-temp.yc=ycbar;
 %% Points for radial ribs
 temp.XpontRadDx=XpontRadDx;
 temp.YpontRadDx=YpontRadDx;
@@ -388,10 +400,23 @@ temp.YpontRadBarDx=YpontRadBarDx;
 temp.YpontRadBarSx=YpontRadBarSx;
 temp.error_mex=error_mex;
 % beta_f=0;
-hf=[xr,B1k]-[B2k,Ar]; % calcolo dei Delta di ferro di rotore
+hf=[r,B1k]-[B2k,Ar]; % calcolo dei Delta di ferro di rotore
 geo.hf = hf;
 % geo.beta_f = beta_f;
 geo.pont=pont;
+
+% barrier transverse dimension (for permeance evaluation)
+temp1_sk = calc_distanza_punti([mean([xxD1k' xxD2k'],2) mean([yyD1k' yyD2k'],2)],[mean([XpBar1' XpBar2'],2) mean([YpBar1' YpBar2'],2)]);
+temp2_sk = calc_distanza_punti([mean([B1k' B2k'],2) mean([B1k' B2k'],2)*0],[mean([XpBar1' XpBar2'],2) mean([YpBar1' YpBar2'],2)]);
+% equivalent sk = segment 1 + segment 2 + barrier end radius weighted by 1/0.7822 
+sk = temp1_sk'+temp2_sk' + 1/0.7822 * hc/2;
+
+geo.sk = sk;
+geo.pbk = geo.sk ./ geo.hc;
+geo.la = sum(geo.hc)/geo.r;
+geo.lfe = sum(geo.hf)/geo.r;
+geo.ly = (geo.R - (geo.r + geo.g + geo.lt))/geo.r;
+
 
 end
 

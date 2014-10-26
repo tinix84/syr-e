@@ -14,6 +14,9 @@
 
 function post_proc_single_motor(CurrLoPP,GammaPP,BrPP,NumOfRotPosPP,AngularSpanPP,NumGrid,varargin)
 
+% post_proc_single_motor simulates an existing machine
+% Open matlabpool manually prior to execution
+
 %% DATA ===================================================================
 %%   INPUT: CurrLoPP: current to be simulated
 %%          GammaPP: current phase angle
@@ -23,90 +26,41 @@ function post_proc_single_motor(CurrLoPP,GammaPP,BrPP,NumOfRotPosPP,AngularSpanP
 %%          NumGrid: number of points in [0 Imax] for the single machine post-processing
 %%=========================================================================
 
+%% singt mode 
+% simulates single or multiple (id,iq) conditions
+% example inputs:
+% single condition: CurrLoPP = 1, GammaPP = 45
+% multiple points:  CurrLoPP = [1 1.5 2], gamma = [45 45 45]
+
+%% singm mode (occurs when gamma = 1000)
+% regular grid of (id,iq) combinations, builds the magnetic model
+% (d,q flux linkages over id,iq)
+% example of inputs:
+% CurrLoPP = 1, GammaPP = 1000
+
+%% input dialog box
 if (nargin) == 0
     %% input dialog box
     temp = inputdlg({'current load [p.u.]';'gamma [deg]';'Br [T]';'number of rotor positions';'angular span (elt. deg.)';'points in [0 Imax]'},'INPUT',1,{'1';'60';'0';'17';'60';'5'});
     
-    CurrLoPP = eval(cell2mat(temp(1)));    % current to be simulated
-    GammaPP = eval(cell2mat(temp(2)));       % current phase angle
-    BrPP = eval(cell2mat(temp(3)));               % remanence of all barriers magnets
-    NumOfRotPosPP = eval(cell2mat(temp(4)));       % # simulated positions
-    AngularSpanPP = eval(cell2mat(temp(5)));  % angular span of simulation
-    NumGrid = eval(cell2mat(temp(6)));  %number of points in [0 Imax] for the single machine post-processing
+    CurrLoPP = eval(cell2mat(temp(1)));         % current to be simulated
+    GammaPP = eval(cell2mat(temp(2)));          % current phase angle
+    BrPP = eval(cell2mat(temp(3)));             % remanence of all barriers magnets
+    NumOfRotPosPP = eval(cell2mat(temp(4)));    % # simulated positions
+    AngularSpanPP = eval(cell2mat(temp(5)));    % angular span of simulation
+    NumGrid = eval(cell2mat(temp(6)));          % number of points in [0 Imax] for the single machine post-processing
 elseif nargin ~= 6
     disp('Wrong number of inputs')
     return
 end 
-%% pproc_single_motor.m
-
-% FEA evaluates one machine in single or multiple id, iq conditions
-% If needed, matlabpool has to be called from command window before
-% executing this file
-
-% input:
-% - data0.m used during optimization (mat structure is copied from this
-% file
-% - mot_xx.mat: mat file produced by evalParetoFront.m, describing the xx motor
-% under test
-% - io [p.u.], gamma [deg]
-
-%% singt mode
-% simulates single or multiple id, iq conditions
-% example inputs for single point simulation:
-% io = 1, gamma = 45 simulates id = io * cosd(45), iq = io * sind(45)
-% example of inputs for multiple points simulation:
-% io = [1 2 3], gamma = [45 45 45], simulates same phase angle and variable
-% amplitude .. and so on
-
-%% singm mode (occurs when gamma = 1000)
-% simulates a regular grid of (id,iq) combinations, to construct the motor
-% magnetic model (d,q flux linkages over id,iq)
-% example of inputs:
-% io = 1, gamma = 1000
-
-% drawYN permits to avoid to draw the motor. E.g. if little manual modifications
-% have been made on the .fem file like fillets etc ..
-% drawYN = 'Y' : loads the geo from mot_xx.mat and re-draws the motor
-% drawYN = 'N' : loads the geo from mot_xx.mat and the motor from
-% mot_xx.fem without redrawing it
-
-%% pproc_single_motor.m
-
-% FEA simulation of one existing machine
-% Open matlabpool manually prior to execution
-
-% input:
-% - filemot.fem (and filemot.mat)
-% - simulation conditions, from input mask
-
-%% singt mode
-% simulates a single or multiple id, iq conditions
-% examples:
-% current load = 1.0, gamma = 45 simulates id = io * cosd(45), iq = io * sind(45)
-% current load = [1 2 3], gamma = [45 45 45] simulates three conditions
-
-%% singm mode (called with gamma = 1000)
-% simulates a regular grid of (id,iq) combinations, to construct the motor
-% magnetic model (d,q flux linkages over id,iq)
-% examples:
-% current load = 1, gamma = 1000
-
-%% degree of accuracy in the post-processing of a single machine
-% performances (torque, ripple, fluxes) are calculated on a grid of id-iq
-% current values in the range [0 Imax] where Imax is given by the user.
-% The computed data is then interpolated on a finer grid.
-%%
 
 clc;
-
 syreRoot = fileparts(which('MODEstart.m'));
 current_path = syreRoot;
 
-%% input dialog box
-
 overload_temp =  CurrLoPP;   % current to be simulated
 gamma_temp = GammaPP;        % current phase angle
-Br = BrPP;                % remanence of all barriers magnets
+Br = BrPP;                   % remanence of all barriers magnets
 
 if gamma_temp == 1000
     eval_type = 'singm';    % map over id, iq
@@ -197,15 +151,18 @@ switch eval_type
             figure(10), subplot(2,1,1)
             plot(x,T,'-x',x,T+dTpu.*T,'r',x,T-dTpu.*T,'r'), grid on, ylabel('torque [Nm]')
             subplot(2,1,2)
-            plot(x,dTpu,'-x'), grid on, ylabel('torque ripple [Nm]')
+            plot(x,dTpu.*T,'-x'), grid on, ylabel('torque ripple [Nm]')
             xlabel('simulation #'),
+            saveas(gcf,[pathname '\torque_sens.fig'])
+
             
             figure(11), subplot(2,1,1)
             plot(x,fd,'-x',x,fq,'-x'), grid on, ylabel('[Vs]'), legend('\lambda_d','\lambda_q'),
             subplot(2,1,2)
             plot(x,sin(atan(iq./id)-atan(fq./fd)),'-x'), grid on, ylabel('IPF')
             xlabel('simulation #'),
-            
+            saveas(gcf,[pathname '\fdq_IPF_sens.fig'])
+ 
         end
         
     case 'singm'

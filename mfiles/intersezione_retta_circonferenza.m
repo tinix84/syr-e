@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -14,9 +14,9 @@
 
 %% Matteo 31/10/2011
 %Intersezione retta circonferenza:
-function [x y]=intersezione_retta_circonferenza(x0,y0,xr)
+function [x y]=intersezione_retta_circonferenza(x0,y0,r)
 
-[v]=roots([1, 1*(y0-x0), 1/2*(y0^2+x0^2-2*y0*x0-xr^2)]);
+[v]=roots([1, 1*(y0-x0), 1/2*(y0^2+x0^2-2*y0*x0-r^2)]);
 
 t=1;
 for i=1:length(v)

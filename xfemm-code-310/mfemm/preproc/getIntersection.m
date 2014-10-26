@@ -30,9 +30,14 @@ nodelist = FemmProblem.Nodes;
 %Check to see if the two lines have a common endpoint
 %If they do, there can be no other intersection...
 if (n0==linelist(segmentIndex).n0),
-    xi=FemmProblem.Nodes(n0).Coords(1);
-    yi=FemmProblem.Nodes(n0).Coords(2);
-    return
+    if n0==0
+        xi=FemmProblem.Nodes(1).Coords(1);
+        yi=FemmProblem.Nodes(1).Coords(2);
+    else
+        xi=FemmProblem.Nodes(n0).Coords(1);
+        yi=FemmProblem.Nodes(n0).Coords(2);
+        return
+    end
 end
 if (n0==linelist(segmentIndex).n1)
     xi=FemmProblem.Nodes(n1).Coords(1);

@@ -31,11 +31,11 @@ addpath([pathstr,'\dxf_conv_fun\']);
 addpath([pathstr,'\mfiles\']);
 
 load ultimo.mat;
-    
-    [filemot, pathname] = uigetfile([pathname '\*m*.mat'], 'Pick a motor');
-    save ultimo.mat pathname;
-    run([pathname,'data0']);
-    load([pathname filemot]);
+
+[filemot, pathname] = uigetfile([pathname '\*m*.mat'], 'Pick a motor');
+save ultimo.mat pathname;
+run([pathname,'data0']);
+load([pathname filemot]);
 
 
 eval_type='singt';
@@ -47,7 +47,7 @@ Qs=geo.Qs;
 ps=geo.ps;
 
 if (size(geo.avv,2)<Qs)
-avv=[geo.avv,-geo.avv];
+    avv=[geo.avv,-geo.avv];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,8 +63,8 @@ Export_to_DXF;
 %%  %%%
 BLKLABELS;
 Mac.g=geo.g;
-Mac.R=geo.r;
-Mac.RtS=geo.xr+geo.g;
+Mac.R=geo.R;
+Mac.RtS=geo.r+geo.g;
 Mac.p=geo.p;
 Mac.Q=geo.ns*geo.p;
 Mac.q=Mac.Q/(6*geo.p);

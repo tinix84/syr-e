@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -30,8 +30,8 @@ Nbob = geo.Nbob;
 lt = geo.lt;
 wt = geo.wt;
 p = geo.p;
-r = geo.r;
-xr = geo.xr;
+r = geo.R;
+xr = geo.r;
 g = geo.g;
 % Kbuccia = geo.kbuccia;
 ttd = geo.ttd;

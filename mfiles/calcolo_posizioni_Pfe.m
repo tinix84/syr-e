@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -33,13 +33,13 @@ else
  i_pont0=1;   
 end
     
-    tetaFeTraf(k)=180/p-(1/p)*asin((Cfe(k)*((xr-2*geo.pont0(i_pont0))/rshaft)^p)/(((xr-2*geo.pont0(i_pont0))/rshaft)^(2*p)-1))*180/pi; 
+    tetaFeTraf(k)=180/p-(1/p)*asin((Cfe(k)*((r-2*geo.pont0(i_pont0))/rshaft)^p)/(((r-2*geo.pont0(i_pont0))/rshaft)^(2*p)-1))*180/pi; 
 
-[xFe(k),yFe(k)]=rot_point((xr-2*geo.pont0(i_pont0))*cos(tetaFeTraf(k)*pi/180),(xr-2*geo.pont0(i_pont0))*sin(tetaFeTraf(k)*pi/180),-pi/2/p); 
+[xFe(k),yFe(k)]=rot_point((r-2*geo.pont0(i_pont0))*cos(tetaFeTraf(k)*pi/180),(r-2*geo.pont0(i_pont0))*sin(tetaFeTraf(k)*pi/180),-pi/2/p); 
 
 end
 
-[xFe,yFe]=rot_point((xr-2*geo.pont0(i_pont0))*cos(tetaFeTraf*pi/180),(xr-2*geo.pont0(i_pont0))*sin(tetaFeTraf*pi/180),-pi/2/p); 
+[xFe,yFe]=rot_point((r-2*geo.pont0(i_pont0))*cos(tetaFeTraf*pi/180),(r-2*geo.pont0(i_pont0))*sin(tetaFeTraf*pi/180),-pi/2/p); 
 
 
 % figure(200);

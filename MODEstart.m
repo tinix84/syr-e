@@ -26,22 +26,18 @@
 %%
 tic
 
-% close all;
-clc;
-data0;
+clc, clear all;
+[bounds, geo, per] = data0();
+
 dat.geo0=geo;
 dat.per=per;
-% if matlabpool('Size')>0
-%     matlabpool close force %NON SI FA!
-% end
-% matlabpool
-% matlabpool open MJSProfile1
-%%
+
 %%%%%%%%%% FEMM fitness handle %%%%%%%%%%%%%%%%%%%%%%%%%%
 eval_type = 'MO_OA';                         % you can choose between "MO_OA" and "MO_GA"
                                              % "MO_GA" use multi-objective algorithm from matlab ga toolbox
                                              % "MO_OA" use multi-objective de algorithm
 FitnessFunction = @(x)FEMMfitnessX(x,geo,per,eval_type);
+% FitnessFunction = @(x)FEMMfitness(x,geo,per,eval_type);
 %FitnessFunction = @(x)zdtTestFunctions(x,1);
 %bounds = [zeros(10,1) ones(10,1)];
 %bounds = [0 1;-5*ones(9,1) 5*ones(9,1)]; ZDT4
@@ -61,10 +57,10 @@ dat.CostProblem = FitnessFunction;           % Cost function instance
 
 NOBJ = 2;                                    % Number of objectives
 XPOP = 4;                                    % Population size
-Esc = 0.75;                                   % Scaling factor
+Esc = 0.75;                                  % Scaling factor
 Pm= 0.2;                                     % Croosover Probability
 
-NVAR = size(bounds,1);                       % Numer of decision variables
+NVAR = size(bounds,1);                       % Number of decision variables
 MAXGEN = 2;                                  % Generation bound
 MAXFUNEVALS = 20000*NVAR*NOBJ;               % Function evaluations bound
     
@@ -72,7 +68,7 @@ MAXFUNEVALS = 20000*NVAR*NOBJ;               % Function evaluations bound
 
 switch eval_type
     case 'MO_OA'
-        dat.FieldD =bounds;                  % Initialization bounds
+        dat.FieldD = bounds;                  % Initialization 
         dat.Initial = bounds;                  % Optimization bounds (see data0.m)
         dat.NOBJ = NOBJ;
         dat.NRES = 0;                        % Number of constraints

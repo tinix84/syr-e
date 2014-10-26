@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -17,7 +17,7 @@ BLKLABELSrot=BLKLABELS.rotore;
 
 % pulisce le selezioni precedenti
 mi_clearselected
-
+if not(isempty(BLKLABELSrot.names.BarName))
 % Assegna aria alle barriere di flux:
 for kk=1:size(BLKLABELSrot.names.BarName,1)
 %     keyboard
@@ -26,7 +26,9 @@ for kk=1:size(BLKLABELSrot.names.BarName,1)
     mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', 90/geo.p, group, 0);
     mi_clearselected;
 end
-
+else
+    kk=0;
+end
 index=kk+1;
 % Assegna ferro di rotore
     mi_addblocklabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));

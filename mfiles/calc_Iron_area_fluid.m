@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -41,9 +41,9 @@ for i=1:nlay
         xBarrier1{i}=xc1+r1*cos([angleB1:Dangle:angleA1]);
         yBarrier1{i}=yc1+r1*sin([angleB1:Dangle:angleA1]);
 
-Dx=(xr-xpont(1))/5;  %per avere almeno 5 divisioni;
-xcir_plot=[xr:-Dx:xr*cos(pi/2/p)];
-ycir_plot=sqrt(xr^2-xcir_plot.^2);
+Dx=(r-xpont(1))/5;  %per avere almeno 5 divisioni;
+xcir_plot=[r:-Dx:r*cos(pi/2/p)];
+ycir_plot=sqrt(r^2-xcir_plot.^2);
 VectCir=find(xcir_plot>=xpont(1));
 x_ext_rot=xcir_plot(VectCir);
 y_ext_rot=ycir_plot(VectCir);
@@ -92,7 +92,7 @@ yBarrier1{nlay+1}=yc1+r1*sin([angleB1:Dangle:angleA1]);
 %% Total area calculation: 
 Afe=cumsum(A);  % area of semipole
 
-rG=([xr B1k(1:nlay-1)]+B2k)/2;
+rG=([r B1k(1:nlay-1)]+B2k)/2;
 M_Fe = 2*Afe*l * 1e-9 * 7800 ;   % massa ferro appeso ai ponticelli
 
 F_centrifuga = M_Fe .* rG/1000 *  (nmax * pi/30)^2;

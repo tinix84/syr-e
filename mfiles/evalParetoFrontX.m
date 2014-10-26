@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -99,6 +99,7 @@ for m=1:size(x,1)
     writefemmfile('mot0X.fem', FemmProblem);
     movefile([syreRoot,'\mot0X.fem'],[pathname '\mot_'  mot_index '.fem']);
     % Save data geometry mot
+	geo.RQ = x(m,:);
     save([pathname '\mot_' mot_index '.mat'],'geo','per');
     %% %%%%%%%
     COST=[COST; cost{m}];
@@ -159,29 +160,42 @@ name_case = strrep(name_output,'sort_','');
 
 %% Pareto front
 close
-figure(1)
-hold on
+figure(1), hold on
 for ii=1:n_mot
     plot(T(ii),dT(ii),'x'),
     text(T(ii),dT(ii)+0.1,num2str(ii));
 end
 grid on, hold off
-xlabel('Torque [Nm]'),
-ylabel('Ripple [pu]')
-figure_title = strrep(filename,'.mat','');
+xlabel('Torque [Nm]'), ylabel('Ripple [pu]')
+
+[front,idx] = FastParetoEstimation(x,COST);
+nmot_actual_front=find(idx); %macchine sul fronte vero
+
+figure(1), hold on
+for ii=1:length(nmot_actual_front) %ii = 1:length(x) PERCHE' USARE LENGTH(X) ABBIAMO LA LUNGHEZZA DI T ???????????
+    T_front(ii)=front(ii,end-1);dT_front(ii)=front(ii,end);
+    plot(T_front(ii),dT_front(ii),'ro','LineWidth',2),
+    text(T_front(ii),dT_front(ii)+0.1,num2str(nmot_actual_front(ii)));
+end
+[T_front_sorted,ii_tfs]=sort(T_front);
+plot(T_front(ii_tfs),dT_front(ii_tfs),'r','LineWidth',2)
+set(gca,'FontName','Arial','FontSize',12)
+grid on, hold off
+xlabel('Torque - Nm'),
+ylabel('Torque ripple - %')
+figure_title = [geo.RotType ' nlay = ' num2str(geo.nlay) ' p = ' num2str(geo.p) ' - magnete plasto Br = ' num2str(geo.Br) ' T'];
 title(figure_title)
-saveas(gcf,[pathname '\pareto2x-' name_case '.fig']);
+saveas(gcf,[pathname '\Pareto - ' name_case '.fig']);
 
 %% Bar charts
-
-figure(2), %set(2,'Position',[40 50 1000 400],'Name',name_output)
+figure(2), 
 bw = 0.7;   % bar width
 set(gca,'xTickLabel',I);
 subplot(3,2,1)
 bar(dalpha,bw,'stacked'), grid,
 legenda=[];
 for kk=1:geo.nlay
-    legenda{kk}=['\delta\alpha',num2str(kk)];
+    legenda{kk}=['\Delta\alpha',num2str(kk)];
 end
 leg=legend(legenda);set(leg);
 xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
@@ -200,30 +214,9 @@ xlim([0 n_mot+1]);
 set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I));
 ylabel('mm');
 
-% figure(2), subplot(3,2,3)
-% bar(geo_all_sorted.HF,bw,'stacked'), grid,
-% legenda=[];
-% for kk=1:geo.nlay+1
-%     legenda{kk}=['steel (hf',num2str(kk),')'];
-% end
-% leg = legend(legenda);
-% set(leg,'Orientation','Horizontal','Location','Best')
-% xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
-
 figure(2), subplot(3,2,5)
 bar(x_sorted(:,end)), grid, legend('Current Angle \gamma'), xlim([0 n_mot+1]);
 set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),ylabel('Electrical Deg')
-
-% figure(2), subplot(3,2,5)
-% bar(abs(out_all_sorted.T)), grid, legend('Nm'); xlim([0 n_mot+1]);
-% set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
-
-% subplot(3,2,6)
-% bar(abs(out_all_sorted.dT)), grid, legend('ripple pu');
-% xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
-%
-% saveas(gcf,[pathname '\bar-' name_case '_sort' num2str(pivot_cost) '.fig']);
-% Cost-function riferimento figura 3 di pubblication 1:
 
 [Y I]=sort(-dT);
 COSTf=[abs(T(I,:)),dT(I,:)];
@@ -232,50 +225,32 @@ figure(2), subplot(3,2,2:2:6)
 bar(COSTf,'Group'), grid, legend('Torque Nm','ripple pu')
 xlim([0 n_mot+1]); set(gca,'xTicklabel',I);set(gca,'xTick',1:1:length(I));
 title('ripple in descending order')
-saveas(gcf,[pathname '\NEW GEOMETRY Torque_ripple_fn-' name_case '_sort' num2str(pivot_cost) '.fig']);
-
-[front,idx] = FastParetoEstimation(x,COST);
-nmot_actual_front=find(idx); %macchine sul fronte vero
-
-figure(10)
-hold on
-for ii=1:length(nmot_actual_front) %ii = 1:length(x) PERCHE' USARE LENGTH(X) ABBIAMO LA LUNGHEZZA DI T ???????????
-    T_front(ii)=front(ii,end-1);dT_front(ii)=front(ii,end);
-    plot(T_front(ii),dT_front(ii),'x'),
-    text(T_front(ii),dT_front(ii)+0.1,num2str(nmot_actual_front(ii)));
-end
-[T_front_sorted,ii_tfs]=sort(T_front);plot(T_front(ii_tfs),dT_front(ii_tfs),'LineWidth',2)
-set(gca,'FontName','Arial','FontSize',12)
-grid on, hold off
-xlabel('Torque - Nm'),
-ylabel('Torque ripple - %')
-figure_title = [geo.RotType ' nlay = ' num2str(geo.nlay) ' p = ' num2str(geo.p) ' - magnete plasto Br = ' num2str(geo.Br) ' T'];
-title(figure_title)
-saveas(gcf,[pathname '\pareto2x_actual-' name_case '.fig']);
+saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '.fig']);
 
 %% Evaluation of the Progressive distribution of the Pareto Front
-if OUT.eval_type=='MO_GA'
-    Pop=OUT.PSet;
-    Fit=OUT.PFront;
-else
-    Pop=OUT.MatrixPop;
-    Fit=OUT.MatrixFitness(:,:,end);
-end
-legenda={};
-color={'k' 'r' 'g' 'c','m'};
-figure(100);
-ii=1;
-for jk=ceil(linspace(1,size(Fit,3),5))
-    [front,idx] = FastParetoEstimation(Pop(:,:,jk),Fit(:,:,jk));
-    nmot_actual_front=find(idx); %macchine sul fronte vero
-    hold on;
-    plot(Fit(nmot_actual_front,1,jk),Fit(nmot_actual_front,2,jk),'*','Color',color{ii});
-    legenda{ii}=['front ',num2str(jk),' of ',num2str(size(Fit,3))];
-    ii=ii+1;
-    
-end
-hold off;grid on; xlabel('Torque [Nm]'); ylabel('ripple [%]'); title('Evolution of the Pareto Front during the optimization process'); legend(legenda);
-saveas(gcf,[pathname '\pareto2x_evolution_during_optimization-' name_case '.fig']);
+
+% if OUT.eval_type=='MO_GA'
+%     Pop=OUT.PSet;
+%     Fit=OUT.PFront;
+% else
+%     Pop=OUT.MatrixPop;
+%     Fit=OUT.MatrixFitness(:,:,end);
+% end
+% legenda={};
+% color={'k' 'r' 'g' 'c','m'};
+% figure(100);
+% ii=1;
+% for jk=ceil(linspace(1,size(Fit,3),5))
+%     [front,idx] = FastParetoEstimation(Pop(:,:,jk),Fit(:,:,jk));
+%     nmot_actual_front=find(idx); %macchine sul fronte vero
+%     hold on;
+%     plot(Fit(nmot_actual_front,1,jk),Fit(nmot_actual_front,2,jk),'*','Color',color{ii});
+%     legenda{ii}=['front ',num2str(jk),' of ',num2str(size(Fit,3))];
+%     ii=ii+1;
+%     
+% end
+% hold off;grid on; xlabel('Torque [Nm]'); ylabel('ripple [%]'); title('Evolution of the Pareto Front during the optimization process'); legend(legenda);
+% saveas(gcf,[pathname '\pareto2x_evolution_during_optimization-' name_case '.fig']);
 
 if OUT.eval_type=='MO_OA'
     movefile([pathname],['results\']);

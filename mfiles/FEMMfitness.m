@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -39,65 +39,25 @@ if ~isempty(RQ)
         options.currentgen=generation;
     end
     
-    first_index = 2;
-    last_index = first_index + geo.nlay - 1;
+    [geo,gamma] = interpretRQ(RQ,geo);
     
-    dalpha_pu = RQ(first_index:last_index);
-    
-    % the sum of the pu angles is rescaled to one
-    if sum(dalpha_pu) > 1
-        dalpha_pu = dalpha_pu/sum(dalpha_pu);
-    end
-    
-    % dalpha(2) to dalpha(nlay) in degrees
-    dalpha_temp = dalpha_pu * (90/geo.p - RQ(1));
-    % all dalpha in mec degrees
-    geo.dalpha = [RQ(1) dalpha_temp(1:end-1)];
-    
-    % SPESSORE DELLE BARRIERE: 'hc_pu'
-    first_index = last_index + 1;
-    last_index = first_index + geo.nlay - 1;
-    size(RQ);
-    getComputerName();
-    geo.hc_pu = RQ(first_index:last_index);
-    
-    if (strcmp(geo.RotType,'Fluid')||strcmp(geo.RotType,'Seg'))
-        first_index = last_index + 1;
-        last_index = first_index + geo.nlay - 1;
-        geo.Dfe=RQ(first_index:last_index);
-        
-        %     first_index=last_index+1;
-        %     geo.x=RQ(first_index);
-        %     first_index=first_index+1;
-        %     geo.kt=RQ(first_index);
-        %     first_index=first_index+1;
-        %     geo.b=RQ(first_index);
-        %     first_index=first_index+1;
-        %     geo.acs=RQ(first_index);
-        %
-        %     geo.xr=geo.x*geo.r;
-        %     geo.lt=geo.r*(1-geo.x-geo.g/geo.r-geo.b*geo.x/p);
-    end
-    % current phase angle
-    gamma = RQ(end);
-
     if exist([thisfilepath filesep 'empty_case.fem'],'file')>1
         empty_case_path = [thisfilepath filesep 'empty_case.fem'];
     else
         empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
     end
-
+    
     % The empty_case.fem file MUST be in the SyR-e root folder
     copyfile(empty_case_path,'.');
-
+    
     openfemm
     [geo] = draw_motor_in_FEMM(geo,eval_type);
     
 else
     openfemm
-    opendocument([filemot]);    
+    opendocument([filemot]);
     mi_saveas('mot0.fem'); % saves the file with name ’filename’
-end    
+end
 
 %% evaluates the candidate machine (T, DT, fd, fq)
 iAmp = per.overload*calc_io(geo,per);

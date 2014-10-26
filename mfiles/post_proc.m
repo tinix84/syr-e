@@ -6,7 +6,7 @@
 %
 %        http://www.apache.org/licenses/LICENSE-2.0
 %
-%    Unless required by applicable law or agreed to in writing, software
+%    Unless required by applicable law or agreed to in writing, dx
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %    See the License for the specific language governing permissions and
@@ -29,7 +29,7 @@ f3 = temp_out(3) * 2 * p/ps;
 
 % evaluate torque
 % T1 - from the innermost integration line (rot + gap/6)
-x = xr + gap*1/6;
+x = r + gap*1/6;
 ang0 = th_m; ang1 = gradi_da_sim + th_m;
 [x1,y1] = rot_point(x,0,ang0*pi/180);
 [x2,y2] = rot_point(x,0,ang1*pi/180);
@@ -42,7 +42,7 @@ T1 = T1(1) * 2 * p/ps;
 mo_clearcontour();
 
 % T2 - from the outermost integration line (stat - gap/6)
-x = xr + gap*5/6;
+x = r + gap*5/6;
 ang0 = -pc; ang1 = gradi_da_sim-pc;
 
 [x1,y1] = rot_point(x,0,ang0*pi/180);
@@ -55,7 +55,7 @@ T2 = T2(1) * 2 * p/ps;
 mo_clearcontour();
 
 % T3 - from an intermediate line (rot + gap/2)
-x = xr + gap*1/2;
+x = r + gap*1/2;
 ang0 = -pc; ang1 = gradi_da_sim-pc;
 
 [x1,y1] = rot_point(x,0,ang0*pi/180);
