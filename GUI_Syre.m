@@ -246,7 +246,7 @@ cd(fullfile (path,'koil'));
 system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
 cd(path);
 Windings = MatrixWin();
-dataSet.WinMatr = Windings; % winding matrix
+%dataSet.WinMatr = Windings; % winding matrix
 %% ==== RQ per plot =======================================================
 data = buildDefaultRQ(dataSet,bounds);
 % set(handles.RQPlotEdit,'String',mat2str(data));
@@ -260,13 +260,13 @@ SetParameters(handles,dataSet) % aux. function for set the values in the edit bo
 %% ======= Matrix of winding visual =======================================
 p = dataSet.NumOfPolePairs;
 Q = dataSet.NumOfSlots*6*p;
-dataSet.WinMatr = Windings; % winding matrix
 t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
 if ((6*t/Q)>1)
     Qs = Q/t;   % periodic machine
 else
     Qs = Q/2/t; % anti-periodic machine
 end
+dataSet.WinMatr = Windings(:,1:floor(Qs)); % takes only the first Qs columns
 columnName = cell(1,floor(Qs));
 for i = 1 : floor(Qs)
     columnName{i} = ['Slot n° ',num2str(i)];
@@ -305,13 +305,14 @@ cd(fullfile (path,'koil'));
 system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
 cd(path);
 Windings = MatrixWin();
-dataSet.WinMatr = Windings; % winding matrix
+%dataSet.WinMatr = Windings; % winding matrix
 t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
 if ((6*t/Q)>1)
     Qs = Q/t;   % periodic machine
 else
     Qs = Q/2/t; % anti-periodic machine
 end
+dataSet.WinMatr = Windings(:,1:floor(Qs)); % takes only the first Qs columns
 columnName = cell(1,floor(Qs));
 for i = 1 : floor(Qs)
     columnName{i} = ['Slot n° ',num2str(i)];
@@ -635,13 +636,14 @@ cd(fullfile (path,'koil'));
 system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
 cd(path);
 Windings = MatrixWin();
-dataSet.WinMatr = Windings; % winding matrix
+%dataSet.WinMatr = Windings; % winding matrix
 t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
 if ((6*t/Q)>1)
     Qs = Q/t;   % periodic machine
 else
     Qs = Q/2/t; % anti-periodic machine
 end
+dataSet.WinMatr = Windings(:,1:floor(Qs)); % takes only the first Qs columns
 columnName = cell(1,floor(Qs));
 for i = 1 : floor(Qs)
     columnName{i} = ['Slot n° ',num2str(i)];
@@ -849,13 +851,14 @@ cd(fullfile (path,'koil'));
 system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
 cd(path);
 Windings = MatrixWin();
-dataSet.WinMatr = Windings; % winding matrix
+%dataSet.WinMatr = Windings; % winding matrix
 t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
 if ((6*t/Q)>1)
     Qs = Q/t;   % periodic machine
 else
     Qs = Q/2/t; % anti-periodic machine
 end
+dataSet.WinMatr = Windings(:,1:floor(Qs)); % takes only the first Qs columns
 columnName = cell(1,floor(Qs));
 for i = 1 : floor(Qs)
     columnName{i} = ['Slot n° ',num2str(i)];
