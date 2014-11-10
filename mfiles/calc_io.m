@@ -73,8 +73,8 @@ vdenti=2*bt*x*lt;
 io2pu = lt*(2*(1-ly)-lt)-vdenti; 
 iopu = sqrt(io2pu);
 if (geo.q<1)
-    wt=2*pi*kt*x*b/(6*p*q);
-    ltestata=0.5*(wt+pi*(1+lt/2)*sin(pi/(6*p*q)));
+    wt = geo.wt;
+    ltestata = 0.5*(wt+pi*(1+lt/2)*sin(pi/(6*p*q)));
 else
     % lunghezza delle testate NORMr
     % formula empirica -> prof. Tassoni
