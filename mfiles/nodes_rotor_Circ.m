@@ -162,64 +162,64 @@ end
 rTemp = rbeta;
 calc_ribs_rad;
 
-%%% DISEGNO PINTICELLI %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-for jj = 1:2:length(r_all)
-    % DISEGNO DEI PONTICELLI RADIALI
-    % keyboard
-    x10 = x0 - r_all(jj) - racc_pont;                           % Coordinata x Nodo 10 ((Ponticello radiale_vertice in alto a dx)=(Punto
-    % in basso a dx del raccordo))
-    
-    x11 = x0 - r_all(jj+1) + racc_pont;                         % Coordinata x Nodo 11 ((Ponticello radiale_vertice in alto a sx)=(Punto
-    % in basso a sx del raccordo))
-    
-    if (x11 < x10) && (pont(ceil(jj/2))>0)                      % Se i due punti non si incrociano (raccordo non troppo grande rispetto alla
-        % larghezza della barriera), e se lo spessore estratto dall'algoritmo per il
-        % ponticello non è troppo piccolo, allora procedo al disegno del ponticello
-        
-        lpont = x10 - x11;                                      % lpont=lunghezza ponticello=larghezza barriera-2*racc_pont
-        hpont = pont(ceil(jj/2));
-        y10 = hpont/2;                                          % Coordinata y Nodo 10
-        y11 = y10;                                              % Coordinata y Nodo 11
-        
-        XpontRadDx(ceil(jj/2))=x10; YpontRadDx(ceil(jj/2))=y10;
-        XpontRadSx(ceil(jj/2))=x11; YpontRadSx(ceil(jj/2))=y10;
-        
-        x12 = x10 + 1.5 * racc_pont; y12 = y10+1.5*racc_pont;   % Punto 12 (serve solo per il disegno del raccordo: verrà cancellato)
-        XpontRadBarDx(ceil(jj/2))=XBanqdx(ceil(jj/2)); YpontRadBarDx(ceil(jj/2))=y10+(XpontRadBarDx(ceil(jj/2))-x10);
-        
-        %             mi_selectnode(x12,y12);                                 % Cancello i nodi di troppo (e così anche i tratti di segmento in eccesso)
-        %             mi_selectnode(x12,-y12);
-        %             mi_deleteselectednodes
-        
-        x13 = x11 - 1.5 * racc_pont; y13 = y10+1.5*racc_pont;   % Punto 13 (serve solo per il disegno del raccordo: verrà cancellato)
-        XpontRadBarSx(ceil(jj/2))=XBanqsx(ceil(jj/2)); YpontRadBarSx(ceil(jj/2))=y10+(x11-XpontRadBarSx(ceil(jj/2)));
-        
-    else                                                         % Se invece i punti 10 e 11 si incrociano (ovvero raccordo troppo grande rispetto)
-        % alla larghezza barriera), non faccio il ponticello e disegno solo una linea di
-        hpont = 0;
-        XpontRadBarSx(ceil(jj/2))=XBanqsx(ceil(jj/2));
-        YpontRadBarSx(ceil(jj/2))=0;
-        XpontRadBarDx(ceil(jj/2))=XBanqdx(ceil(jj/2));
-        YpontRadBarDx(ceil(jj/2))=0;
-        XpontRadDx(ceil(jj/2))=NaN;
-        YpontRadDx(ceil(jj/2))=0;
-        XpontRadSx(ceil(jj/2))=NaN;
-        YpontRadSx(ceil(jj/2))=0;
-        
-    end
-    if ceil(jj/2) == 1;
-        x = x0 - rbeta(ceil(jj/2));
-        y = hpont(1) * 0.6;
-        if y == 0
-            y = pont0;
-        end
-    else
-        [xtemp,ytemp] = rot_point(-rbeta(ceil(jj/2)),0,-0.5*beta(ceil(jj/2))*pi/180);
-        x = x0 + xtemp;
-        y = ytemp;
-    end
-end
+% %%% DISEGNO PINTICELLI %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% for jj = 1:2:length(r_all)
+%     % DISEGNO DEI PONTICELLI RADIALI
+%     % keyboard
+%     x10 = x0 - r_all(jj) - racc_pont;                           % Coordinata x Nodo 10 ((Ponticello radiale_vertice in alto a dx)=(Punto
+%     % in basso a dx del raccordo))
+%     
+%     x11 = x0 - r_all(jj+1) + racc_pont;                         % Coordinata x Nodo 11 ((Ponticello radiale_vertice in alto a sx)=(Punto
+%     % in basso a sx del raccordo))
+%     
+%     if (x11 < x10) && (pont(ceil(jj/2))>0)                      % Se i due punti non si incrociano (raccordo non troppo grande rispetto alla
+%         % larghezza della barriera), e se lo spessore estratto dall'algoritmo per il
+%         % ponticello non è troppo piccolo, allora procedo al disegno del ponticello
+%         
+%         lpont = x10 - x11;                                      % lpont=lunghezza ponticello=larghezza barriera-2*racc_pont
+%         hpont = pont(ceil(jj/2));
+%         y10 = hpont/2;                                          % Coordinata y Nodo 10
+%         y11 = y10;                                              % Coordinata y Nodo 11
+%         
+%         XpontRadDx(ceil(jj/2))=x10; YpontRadDx(ceil(jj/2))=y10;
+%         XpontRadSx(ceil(jj/2))=x11; YpontRadSx(ceil(jj/2))=y10;
+%         
+%         x12 = x10 + 1.5 * racc_pont; y12 = y10+1.5*racc_pont;   % Punto 12 (serve solo per il disegno del raccordo: verrà cancellato)
+%         XpontRadBarDx(ceil(jj/2))=XBanqdx(ceil(jj/2)); YpontRadBarDx(ceil(jj/2))=y10+(XpontRadBarDx(ceil(jj/2))-x10);
+%         
+%         %             mi_selectnode(x12,y12);                                 % Cancello i nodi di troppo (e così anche i tratti di segmento in eccesso)
+%         %             mi_selectnode(x12,-y12);
+%         %             mi_deleteselectednodes
+%         
+%         x13 = x11 - 1.5 * racc_pont; y13 = y10+1.5*racc_pont;   % Punto 13 (serve solo per il disegno del raccordo: verrà cancellato)
+%         XpontRadBarSx(ceil(jj/2))=XBanqsx(ceil(jj/2)); YpontRadBarSx(ceil(jj/2))=y10+(x11-XpontRadBarSx(ceil(jj/2)));
+%         
+%     else                                                         % Se invece i punti 10 e 11 si incrociano (ovvero raccordo troppo grande rispetto)
+%         % alla larghezza barriera), non faccio il ponticello e disegno solo una linea di
+%         hpont = 0;
+%         XpontRadBarSx(ceil(jj/2))=XBanqsx(ceil(jj/2));
+%         YpontRadBarSx(ceil(jj/2))=0;
+%         XpontRadBarDx(ceil(jj/2))=XBanqdx(ceil(jj/2));
+%         YpontRadBarDx(ceil(jj/2))=0;
+%         XpontRadDx(ceil(jj/2))=NaN;
+%         YpontRadDx(ceil(jj/2))=0;
+%         XpontRadSx(ceil(jj/2))=NaN;
+%         YpontRadSx(ceil(jj/2))=0;
+%         
+%     end
+%     if ceil(jj/2) == 1;
+%         x = x0 - rbeta(ceil(jj/2));
+%         y = hpont(1) * 0.6;
+%         if y == 0
+%             y = pont0;
+%         end
+%     else
+%         [xtemp,ytemp] = rot_point(-rbeta(ceil(jj/2)),0,-0.5*beta(ceil(jj/2))*pi/180);
+%         x = x0 + xtemp;
+%         y = ytemp;
+%     end
+% end
 % mi_clearselected;
 %% Parametri che servono per valutare Pfe
 % baricentro guide di flusso
@@ -262,6 +262,7 @@ x2 = r+1/3*g; y2 = 0;
 geo.pont = pont;
 % geo.r_all = r_all;
 
+geo.hf = zeros(1,nlay);
 geo.hf = hf;
 % geo.beta_f = beta_f;
 % geo.r_fe = r_fe;
