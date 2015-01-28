@@ -129,9 +129,10 @@ handles.Opti = 0;
 
 % Update handles structure
 guidata(hObject, handles);
-
 axes(handles.axes4);
-imshow('syre.png');
+SyreImg = imread('syre.png'); 
+image(SyreImg);
+axis off;
 axes(handles.axes5);
 set(handles.axes5,'YTickLabel',[]);
 set(handles.axes5,'XTickLabel',[]);
@@ -188,12 +189,11 @@ dataSet.DeltaAlphaBou = round([0.5/geo.nlay 0.5] * 100)/100; % other angles [p.u
 dataSet.hcBou = [0.2 1];               % barrier ticknesses [p.u.]
 dataSet.DfeBou = [-0.75 0.75];         % barrier offset [p.u.]
 dataSet.BrBou = [0.2 0.8]; 
-dataSet.GapBou = roundn(dataSet.AirGapThickness*[0.7  1.5],-1);
-dataSet.GapRadiusBou = roundn(dataSet.AirGapRadius*[0.8  1.2],-1);
-dataSet.ToothWiBou = roundn(dataSet.ToothWidth*[0.75  1.3],-1);
-dataSet.ToothLeBou = roundn(dataSet.ToothLength*[0.8 1.2],-1);
+dataSet.GapBou = rrtd(dataSet.AirGapThickness*[0.7  1.5],-1);
+dataSet.GapRadiusBou = rrtd(dataSet.AirGapRadius*[0.8  1.2],-1);
+dataSet.ToothWiBou = rrtd(dataSet.ToothWidth*[0.75  1.3],-1);
+dataSet.ToothLeBou = rrtd(dataSet.ToothLength*[0.8 1.2],-1);
 dataSet.PhaseAngleCurrBou = bounds(end,:);          % phase angle of the current vector
-
 dataSet.Dalpha1BouCheck = 1;
 dataSet.DalphaBouCheck = 1;
 dataSet.hcBouCheck = 1;
@@ -346,6 +346,21 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+function num = rrtd(num, cfr)
+error(nargchk(2, 2, nargin, 'struct'))
+validateattributes(num, {'single', 'double'}, {}, 'ROUNDN', 'NUM')
+validateattributes(cfr, ...
+    {'numeric'}, {'scalar', 'real', 'integer'}, 'ROUNDN', 'CFR')
+if cfr < 0
+    cc = 10 ^ -cfr;
+    num = round(cc * num) / cc;
+elseif cfr > 0
+    cc = 10 ^ cfr;
+    num = cc * round(num / cc);
+else
+    num = round(num);
+end
+
 %% AUX FUNCTIONS ==========================================================
 %% SET PARAMETERS =========================================================
 function SetParameters(handles,dataIn)
@@ -457,7 +472,7 @@ h = handles.axes5;
 view = round(100*[dalpha hc])/100;
 % set(handles.ViewHcDaEdit,'String',mat2str(view));
 set(handles.AlphapuEdit,'String',mat2str(dataIn.RQ(1:dataIn.NumOfLayers)));
-set(handles.hcpuEdit,'String',mat2str(dataIn.RQ((dataIn.NumOfLayers+1):end)));
+set(handles.hcpuEdit,'String',mat2str(dataIn.RQ((dataIn.NumOfLayers+1):end-1)));
 set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataIn.NumOfLayers)));
 set(handles.hcmmEdit,'String',mat2str(view((dataIn.NumOfLayers+1):end)));
 
