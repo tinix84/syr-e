@@ -24,7 +24,7 @@
 %%
 
 
-function OUT=MODE2(options)
+function OUT=MODE2(options, dataSet)
 
 %% Reading parameters from options
 generations     = options.MAXGEN;    % Maximum number of generations.
@@ -168,7 +168,7 @@ if strcmp(options.SaveResults,'yes')
     per=options.per;
     thisfilepath = fileparts(which('data0.m'));
     filename=fullfile(thisfilepath,'results',['OUT_' datestr(now,30)]);
-    save(filename,'OUT','per','geo0'); %Results are saved
+    save(filename,'OUT','per','geo0','dataSet'); %Results are saved
     clear geo0 per
 end
 
@@ -191,9 +191,9 @@ plot(F(:,1),F(:,2),'dk','MarkerFaceColor','k');...
 disp('PostProcessing of current optimization result...');
 [~,ff]=fileparts(filename);
 if strcmp(func2str(options.CostProblem), '@(x)FEMMfitness(x,geo,per,eval_type)')
-    evalParetoFront(ff);
+    evalParetoFront(ff,dataSet);
 else
-    evalParetoFrontX(ff);
+    evalParetoFrontX(ff,dataSet);
 end
 
 % end

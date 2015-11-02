@@ -12,11 +12,8 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-
 function [geo,temp]=nodes_rotor_ISeg(geo)
-%%
-%% INIZIALIZZAZIONE DATI DI INGRESSO:
-%%
+
 r = geo.r;                    % Raggio del rotore al traferro
 x0 = geo.x0;                    % Centro fittizio
 Ar=geo.Ar;
@@ -78,15 +75,15 @@ pont_bound_conflict1=find(r_all(1:2:2*nlay)>=rbeta);
 [xcbar,ycbar] = calc_intersezione_cerchi((r-pont0-hc/2), rbeta, x0);
 % 2014/02/26 MG Problem of immaginary number for higher nlay value
 for ii=1:nlay
-if (not(isreal(xpont(ii)))||not(isreal(ypont(ii))))
-    xpont(ii)=r-pont0; ypont(ii)=0;
-    error_mex(ii)=1;
-end
-
-if (not(isreal(xcbar(ii)))||not(isreal(ycbar(ii))))
-    xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
-    error_mex(ii)=1;
-end
+    if (not(isreal(xpont(ii)))||not(isreal(ypont(ii))))
+        xpont(ii)=r-pont0; ypont(ii)=0;
+        error_mex(ii)=1;
+    end
+    
+    if (not(isreal(xcbar(ii)))||not(isreal(ycbar(ii))))
+        xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
+        error_mex(ii)=1;
+    end
 end
 
 % hfe=[r-xcbar(1)-hc(1)/2,r_all(3:2:end)-r_all(2:2:end-1),x0-r_all(end)]; %%
@@ -99,11 +96,11 @@ Bx0=x0-(rpont_x0);
 for ii=1:nlay
     [a,b,c]=retta_per_2pti(0,0,xcbar(ii),ycbar(ii));
     if (a==0 && c==0)
-     % xpont and ypont are just evaluated
+        % xpont and ypont are just evaluated
     else
-    A=1+b^2/a^2; B=2*b*c/a; C=(c^2/a^2-(r-pont0)^2);
-    ytemp=roots([A,B,C]); ypont(ii)=ytemp(find(ytemp>=0));
-    xpont(ii)=-(b*ypont(ii)+c)/a;
+        A=1+b^2/a^2; B=2*b*c/a; C=(c^2/a^2-(r-pont0)^2);
+        ytemp=roots([A,B,C]); ypont(ii)=ytemp(find(ytemp>=0));
+        xpont(ii)=-(b*ypont(ii)+c)/a;
     end
 end
 
@@ -124,21 +121,21 @@ end
 [xTraf1,yTraf1] = calc_intersezione_cerchi(r-pont0, r_all(2:2:end), x0);
 
 for ii=1:nlay
-if (not(isreal(yTraf2(ii))))
-    xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
-    error_mex(ii)=1;
-end
+    if (not(isreal(yTraf2(ii))))
+        xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
+        error_mex(ii)=1;
+    end
 end
 %% 2014/06/22 MG
 % set di istruzioni per il disegno delle barriere nel caso in cui la punta
 % della barriera sia interna alla ipotetica curva centrale di barriera...
 for ii=2:nlay
-   if (xTraf2(ii)<=xpont(ii) || yTraf2(ii)>=ypont(ii)) 
-       [xpont_temp,ypont_temp] = calc_intersezione_cerchi((r-pont0), rbeta(ii), x0);   
-       xpont(ii)=xpont_temp;
-       ypont(ii)=ypont_temp;
-       clear xpont_temp ypont_temp;
-   end
+    if (xTraf2(ii)<=xpont(ii) || yTraf2(ii)>=ypont(ii))
+        [xpont_temp,ypont_temp] = calc_intersezione_cerchi((r-pont0), rbeta(ii), x0);
+        xpont(ii)=xpont_temp;
+        ypont(ii)=ypont_temp;
+        clear xpont_temp ypont_temp;
+    end
 end
 %% Intersezione tra rette che compongono i lati delle barriere di flux:
 % retta verticale
@@ -206,11 +203,11 @@ for ii=1:nlay
         YcRibTraf1(ii)=ycbar(1);
         
         clear XCer YCer
-%             XCer=xcir+rcir*cos(linspace(angT1,angT2,20));
-%             YCer=ycir+rcir*sin(linspace(angT1,angT2,20));
-%             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
-%             figure(100);hold on;plot(xD1k,yD1k,'rs');plot(xcbar(ii),ycbar(ii),'gs'); hold off;
-%             figure(100);hold on;plot([0,xpont(ii)]',[0,ypont(ii)]','-b'); hold off;
+        %             XCer=xcir+rcir*cos(linspace(angT1,angT2,20));
+        %             YCer=ycir+rcir*sin(linspace(angT1,angT2,20));
+        %             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
+        %             figure(100);hold on;plot(xD1k,yD1k,'rs');plot(xcbar(ii),ycbar(ii),'gs'); hold off;
+        %             figure(100);hold on;plot([0,xpont(ii)]',[0,ypont(ii)]','-b'); hold off;
         
     else
         [xD1k,yD1k,xc,yc,rc]=tg_cir(XpBar1(ii),YpBar1(ii),xTraf1(ii),yTraf1(ii),xpont(ii),ypont(ii));
@@ -227,11 +224,11 @@ for ii=1:nlay
         YcRibTraf1(ii)=yc;
         
         clear XCer YCer
-%             XCer=xc+rc*cos(linspace(angT1,angT2,20));
-%             YCer=yc+rc*sin(linspace(angT1,angT2,20));
-%             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
-%             figure(100);hold on;plot(xD1k,yD1k,'rs');plot(xc,yc,'gs'); hold off;
-%             figure(100);hold on;plot([0,xpont(ii)]',[0,ypont(ii)]','-b'); hold off;
+        %             XCer=xc+rc*cos(linspace(angT1,angT2,20));
+        %             YCer=yc+rc*sin(linspace(angT1,angT2,20));
+        %             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
+        %             figure(100);hold on;plot(xD1k,yD1k,'rs');plot(xc,yc,'gs'); hold off;
+        %             figure(100);hold on;plot([0,xpont(ii)]',[0,ypont(ii)]','-b'); hold off;
     end
 end
 
@@ -258,11 +255,11 @@ for ii=1:nlay
         YcRibTraf2(ii)=ycbar(1);
         
         clear XCer YCer
-%             XCer=xcir+rcir*cos(linspace(angT1,angT2,20));
-%             YCer=ycir+rcir*sin(linspace(angT1,angT2,20));
-%             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
-%             figure(100);hold on;plot(xD1k,yD1k,'rs');plot(xcbar(ii),ycbar(ii),'gs'); hold off;
-%             figure(100);hold on;plot([0,xpont(ii)]',[0,ypont(ii)]','-b'); hold off;
+        %             XCer=xcir+rcir*cos(linspace(angT1,angT2,20));
+        %             YCer=ycir+rcir*sin(linspace(angT1,angT2,20));
+        %             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
+        %             figure(100);hold on;plot(xD1k,yD1k,'rs');plot(xcbar(ii),ycbar(ii),'gs'); hold off;
+        %             figure(100);hold on;plot([0,xpont(ii)]',[0,ypont(ii)]','-b'); hold off;
         %
         
     else
@@ -279,9 +276,9 @@ for ii=1:nlay
         xxD2k(ii)=xD2k;
         yyD2k(ii)=yD2k;
         clear XCer YCer
-%             XCer=xc+rc*cos(linspace(angT1,angT2,20));
-%             YCer=yc+rc*sin(linspace(angT1,angT2,20));
-%             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
+        %             XCer=xc+rc*cos(linspace(angT1,angT2,20));
+        %             YCer=yc+rc*sin(linspace(angT1,angT2,20));
+        %             figure(100);hold on;plot(XCer,YCer,'+m');hold off;
     end
     
 end
@@ -315,8 +312,6 @@ end
 if (error_mex(1)==1)
     temp.xc=(xxD1k(1:end)+xxD2k(1:end))/2;
     temp.yc=[0,(yyD1k(2:end)+yyD2k(2:end))/2];
-    
-    
 else
     temp.xc=(xxD1k+xxD2k)/2;
     temp.yc=(yyD1k+yyD2k)/2;
@@ -340,28 +335,42 @@ end
 % plot(xTraf2,yTraf2,'*m');
 % plot(xD1k,yD1k,'r^');
 % plot(xcir_plot,ycir_plot,'k');
-% 
+%
 % for ii=1:nlay
 %    plot([XpBar1(ii),xxD1k(ii)],[YpBar1(ii),yyD1k(ii)],'b','LineWidth',2);
 %    plot([XpBar2(ii),xxD2k(ii)],[YpBar2(ii),yyD2k(ii)],'b','LineWidth',2);
 %    plot([B1k(ii),XpBar1(ii)],[0,YpBar1(ii)],'b','LineWidth',2);
 %    plot([B2k(ii),XpBar2(ii)],[0,YpBar2(ii)],'b','LineWidth',2);
-% 
+%
 % end
 % hold off;
 % keyboard
-%%
-%%
-%%
-%% Determinazione dei punti caratteristici per il calcolo delle perdite nel
+%
+%
+%
+% Determinazione dei punti caratteristici per il calcolo delle perdite nel
 % ferro:
 calcolo_posizioni_Pfe;
-%% Valutazione ponticelli radiali:
-
+% radial ribs evaluation:
 rTemp = rbeta;
+
 calc_ribs_rad;
-%%
-%% Salvataggio dei dati finali:
+
+% determination of different magnet segment, central point and magnetization direction
+MagnetFullFill_ISeg;
+
+geo.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
+
+temp.xc=xc;
+temp.yc=yc;
+temp.xmag=xmag;
+temp.ymag=ymag;
+temp.zmag=zmag;
+% Additional division for magnet insertion in flux barrier
+temp.XpMag1B1=XpMag1B1;
+temp.YpMag1B1=YpMag1B1;
+
+% output
 temp.B1k=B1k;
 temp.B2k=B2k;
 temp.Bx0=Bx0;
@@ -389,7 +398,7 @@ temp.YcRibTraf1=YcRibTraf1;
 temp.XcRibTraf2=XcRibTraf2;
 temp.YcRibTraf2=YcRibTraf2;
 
-%% Points for radial ribs
+% Points for radial ribs
 temp.XpontRadDx=XpontRadDx;
 temp.YpontRadDx=YpontRadDx;
 temp.XpontRadSx=XpontRadSx;
@@ -408,7 +417,7 @@ geo.pont=pont;
 % barrier transverse dimension (for permeance evaluation)
 temp1_sk = calc_distanza_punti([mean([xxD1k' xxD2k'],2) mean([yyD1k' yyD2k'],2)],[mean([XpBar1' XpBar2'],2) mean([YpBar1' YpBar2'],2)]);
 temp2_sk = calc_distanza_punti([mean([B1k' B2k'],2) mean([B1k' B2k'],2)*0],[mean([XpBar1' XpBar2'],2) mean([YpBar1' YpBar2'],2)]);
-% equivalent sk = segment 1 + segment 2 + barrier end radius weighted by 1/0.7822 
+% equivalent sk = segment 1 + segment 2 + barrier end radius weighted by 1/0.7822
 sk = temp1_sk'+temp2_sk' + 1/0.7822 * hc/2;
 
 geo.sk = sk;

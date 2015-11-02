@@ -70,11 +70,12 @@ ly = 1 - (x + g) - lt;
 vdenti=2*bt*x*lt;  
 % corrente totale ^2 NORM cfr.eq.(3.3.19) pag. 3.28
 % area cave norm. alla circonferenza esterna (NORMrpi)
-io2pu = lt*(2*(1-ly)-lt)-vdenti; 
+io2pu=(6*p*q)*geo.Aslot/pi/geo.R^2;
+% io2pu = lt*(2*(1-ly)-lt)-vdenti; 
 iopu = sqrt(io2pu);
 if (geo.q<1)
-    wt = geo.wt;
-    ltestata = 0.5*(wt+pi*(1+lt/2)*sin(pi/(6*p*q)));
+    wt = geo.wt/geo.R;
+    ltestata = 2*lt+0.5*(wt+pi*(x+lt/2)*sin(pi/(6*p*q)));
 else
     % lunghezza delle testate NORMr
     % formula empirica -> prof. Tassoni
@@ -90,6 +91,4 @@ k=sqrt(kcu*kj/(rocu*lprimor));
 CoeffCorrente=pi*(geo.R/1000)^1.5*k/(3*n_spire);  
 % MODULO DI CORRENTE
 io=CoeffCorrente.*iopu;
-
-
 

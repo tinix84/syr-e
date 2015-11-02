@@ -13,28 +13,26 @@
 %    limitations under the License.
 
 function [geo,gamma] = interpretRQ(RQ,geo)
+
 % INTERPRETRQ interprets the string of the MOOA inputs (RQ)
 % and returns dalpha, hc_pu, dx, gamma
 % dalpha per unit
+
 first_index = 1;
-if strcmp(geo.RQnames{first_index},'dalpha_1')
+if strcmp(geo.RQnames{first_index},'dalpha')
     last_index = first_index + geo.nlay-1;
-    dalpha_pu = RQ(first_index:last_index);
-    % if greater than one, the sum of pu angles is rescaled to one
-    % the angle of the first barrier is not scaled but only the angles from the
-    % second barrier onwards
-    if sum(dalpha_pu) > (1-0.05) % 0.05 is the angular space guaranteed for the spider
-        dalpha_pu(2:end) = dalpha_pu(2:end)/sum(dalpha_pu(2:end))*(1-0.05-dalpha_pu(1));
-    end
+    geo.dalpha_pu = RQ(first_index:last_index);
 else
-    last_index = 0;
-    dalpha_pu = geo.dalpha_pu;
-    geo = rmfield(geo,'dalpha_pu');
+     last_index = 0;
 end
 
-dalpha_temp = dalpha_pu * (90/geo.p);
-% all dalpha in mec degrees
-geo.dalpha = dalpha_temp(1:end);
+% the sum of pu angles is rescaled to one
+% alpha1 is not rescaled: only the angles from the second barrier onwards
+if sum(geo.dalpha_pu) > (1-0.05) % 0.05 is the angular space guaranteed for the spider
+    geo.dalpha_pu(2:end) = geo.dalpha_pu(2:end)/sum(geo.dalpha_pu(2:end))*(1-0.05-geo.dalpha_pu(1));
+end
+
+geo.dalpha = geo.dalpha_pu*(90/geo.p);  % [mec degrees]
 
 first_index = last_index + 1;
 if strcmp(geo.RQnames{first_index},'hc')
@@ -43,18 +41,23 @@ if strcmp(geo.RQnames{first_index},'hc')
     size(RQ);
     getComputerName();
     geo.hc_pu = RQ(first_index:last_index);
+    % debug
+    geo.hc_pu = sort(geo.hc_pu);
 end
+
 first_index = last_index + 1;
 if strcmp(geo.RQnames{first_index},'dx')
     % dx per unit
     last_index = first_index + geo.nlay - 1;
     geo.dx = RQ(first_index:last_index);
 end
-% if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg'))
-%     first_index = last_index + 1;
-%     last_index = first_index + geo.nlay - 1;
-%     geo.dx = RQ(first_index:last_index);
-% end
+
+first_index = last_index + 1;
+if strcmp(geo.RQnames{first_index},'Br')
+    % Br [T]
+    last_index = first_index + geo.nlay - 1;
+    geo.Br = RQ(first_index:last_index);
+end
 
 if length(geo.RQnames)>(last_index+1)
     for k = last_index+1:length(geo.RQnames)-1

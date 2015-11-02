@@ -12,16 +12,14 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
+function rotore = build_matrix_Circ(temp,geo)
 
-%% Assigns points for circular barriers
-%%%%%%%%%%%%%%%%%%%%
-% Preassegnazione strati di barriera:
 x0=geo.x0;
 
-XBan1dx=temp.XBanqdx;  
-XBan1sx=temp.XBanqsx;   
-xc=temp.XcBan;
-yc=temp.YcBan;
+XBan1dx=temp.XBanqdx;
+XBan1sx=temp.XBanqsx;
+xc=temp.xc;
+yc=temp.yc;
 XBan3dx=temp.X3;
 YBan3dx=temp.Y3;
 XBan3sx=temp.X4;
@@ -39,11 +37,6 @@ YpontRadBarSx=temp.YpontRadBarSx;
 YBan1dx=temp.YpontRadBarDx;
 YBan1sx=temp.YpontRadBarSx;
 error_mex=temp.error_mex;
-
-
-
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 rotore=[];
@@ -51,19 +44,25 @@ rotore=[];
 for ii=1:geo.nlay
     
     if (YpontRadSx(ii)~=0)
-       rotore=[rotore;XpontRadSx(ii),YpontRadSx(ii),XpontRadDx(ii),YpontRadDx(ii),NaN,NaN,0;...
-               XpontRadSx(ii),YpontRadSx(ii),XBan1sx(ii),YBan1sx(ii),NaN,NaN,0;...
-               XpontRadDx(ii),YpontRadDx(ii),XBan1dx(ii),YBan1dx(ii),NaN,NaN,0];
+        rotore=[rotore;XpontRadSx(ii),YpontRadSx(ii),XpontRadDx(ii),YpontRadDx(ii),NaN,NaN,0;...
+            XpontRadSx(ii),YpontRadSx(ii),XBan1sx(ii),YBan1sx(ii),NaN,NaN,0;...
+            XpontRadDx(ii),YpontRadDx(ii),XBan1dx(ii),YBan1dx(ii),NaN,NaN,0];
     end
     if(error_mex(ii)==0)
-    rotore=[ rotore;
+        rotore=[ rotore;
+            xc(ii) yc(ii) XBan3dx(ii) YBan3dx(ii) XBan3sx(ii) YBan3sx(ii) 1;
             x0 0 XBan3sx(ii) YBan3sx(ii) XBan1sx(ii) YBan1sx(ii) 1];
-    rotore=[rotore;
-        x0 0 XBan3dx(ii) YBan3dx(ii) XBan1dx(ii) YBan1dx(ii) 1];
+        rotore=[rotore;
+            x0 0 XBan3dx(ii) YBan3dx(ii) XBan1dx(ii) YBan1dx(ii) 1];
+    else
+        rotore=[rotore;
+            xc(ii) 0 XBan3dx(ii) YBan3dx(ii) XBan3sx(ii) YBan3sx(ii) 1];
+        
     end
-    rotore=[rotore;
-        xc(ii) yc(ii) XBan3dx(ii) YBan3dx(ii) XBan3sx(ii) YBan3sx(ii) 1];
+    
+    if (YpontRadSx(ii)==0)
+        rotore=[rotore;
+            XBan1sx(ii) YBan1sx(ii) XBan1dx(ii) YBan1dx(ii) NaN NaN 0];
+    end
 end
-
-clear temp
 

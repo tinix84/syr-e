@@ -14,12 +14,12 @@
 
 function [cost,geo,out,dirName] = FEMMfitness(RQ,geo,per,eval_type,filemot)
 
+
 currentDir=pwd;
 [thisfilepath,dirName]=createTempDir();
 
 % if in optimization, RQ defines the candidate machine
 if ~isempty(RQ)
-    
     RQ=RQ';
     if  strcmp(eval_type,'MO_GA')
         RQ=RQ';
@@ -39,6 +39,9 @@ if ~isempty(RQ)
         options.currentgen=generation;
     end
     
+    % debug .. when syre crashes it is useful to have visibility of last RQ
+    RQ
+    % debug .. end
     [geo,gamma] = interpretRQ(RQ,geo);
     
     if exist([thisfilepath filesep 'empty_case.fem'],'file')>1
@@ -52,20 +55,22 @@ if ~isempty(RQ)
     
     openfemm
     [geo] = draw_motor_in_FEMM(geo,eval_type);
-    
 else
+    % if in post proc, loads the existing geometry
     openfemm
     opendocument([filemot]);
     mi_saveas('mot0.fem'); % saves the file with name ’filename’
 end
 
-%% evaluates the candidate machine (T, DT, fd, fq)
+% evaluates the candidate machine (T, DT, fd, fq)
 iAmp = per.overload*calc_io(geo,per);
 if isempty(RQ)
     gamma=per.gamma;
 end
-iAmpCoil=iAmp*geo.Nbob;
+iAmpCoil = iAmp*geo.Nbob;
 
+geo1 = geo;
+save geo geo1       % save geo before sim
 [SOL] = simulate_xdeg(geo,iAmpCoil,gamma,eval_type);
 
 out.id = mean(SOL(:,2));
@@ -77,7 +82,7 @@ out.dTpu = std(SOL(:,6))/out.T;
 % out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
 out.SOL = SOL;
 
-%% Cost functions
+%% Cost functions 
 cost1 = -out.T;
 cost2 = out.dTpu*100;
 cost  = [cost1 cost2];
@@ -93,8 +98,17 @@ if (strcmp(eval_type,'MO_OA')||strcmp(eval_type,'MO_GA'))
         cost(2)=cost(2)*10;
     end
 end
-
-save geo out
+if ~isempty(RQ) 
+    geo.RQ = RQ;
+    dataSetPath = [thisfilepath filesep 'dataSet.mat'];
+    copyfile(dataSetPath,'.');
+    load('dataSet');
+    [dataSet] = SaveInformation(geo,dataSet);
+    delete('dataSet.mat');
+    save('mot0','geo','cost','per','dataSet');   % save geo and out
+else
+    save('geo','geo','out','-append');   % save geo and out
+end
 
 % if (strcmp(geo.RemoveTMPfile,'ON')&&(strcmp(eval_type,'MO_OA')||strcmp(eval_type,'MO_GA')))
 %     pause(0.1);

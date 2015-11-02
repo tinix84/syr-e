@@ -35,17 +35,20 @@ switch eval_type
         gamma = gamma_in;
         nsim = geo.nsim_MOOA;
         xdeg = geo.delta_sim_MOOA;
+        randFactor = geo.randFactor;
     case 'MO_GA'
         gamma = gamma_in;
         nsim = geo.nsim_MOOA;
         xdeg = geo.delta_sim_MOOA;
+        randFactor = geo.randFactor;
     case 'singt'
         nsim = geo.nsim_singt; xdeg = geo.delta_sim_singt;gamma = gamma_in;
+        randFactor = 0;
     case 'singm'
-        nsim = geo.nsim_singt; xdeg = geo.delta_sim_singt;gamma = gamma_in;       
+        nsim = geo.nsim_singt; xdeg = geo.delta_sim_singt;gamma = gamma_in;
+        randFactor = 0;
 end
 
-% pathname = geo.pathname;
 pathname = cd;
 
 th0 = geo.th0;
@@ -55,14 +58,15 @@ gap = geo.g;
 ns  = geo.ns;
 pc  = 360/(ns*p)/2;
 ps  = geo.ps;
-% l = geo.l;
-%% simulation angle
+
+% simulation angle
 gradi_da_sim=180/p*ps;
 
 id = io * cos(gamma * pi/180);
 iq = io * sin(gamma * pi/180);
 
-Hc = geo.Hc;
+% Hc = geo.Hc;
+Hc = geo.Br/(4e-7*pi);
 
 SOL = [];
 
@@ -80,6 +84,8 @@ else
 end
 
 teta=offset:sim_step:xdeg+offset;
+teta=teta+(0.5-rand(1,length(teta)))*randFactor;
+
 
 % disregard the last position
 th=th0+[teta(1:nsim) teta(1)];
@@ -102,6 +108,7 @@ end
         th_m = (th(jj) - th0)/p;
        
         openfemm
+        %main_minimize
         opendocument([pathname,'\mot0.fem']);
         
         % assign the phase current values to the FEMM circuits
@@ -115,8 +122,10 @@ end
         mi_modifycircprop('fase3',1,i3);
         mi_modifycircprop('fase3n',1,-i3);
         
-        % assign the Hc property to the bonded magnets
-        mi_modifymaterial('Bonded-Magnet',3,Hc);
+        % assign the Hc property to each of the bonded magnets
+        for j = 1:length(Hc)
+            mi_modifymaterial(['Bonded-Magnet' num2str(j)],3,Hc(j));
+        end
         
         % delete the airgap arc prior to moving the rotor
         mi_selectgroup(20), mi_deleteselectedarcsegments;

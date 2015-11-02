@@ -26,9 +26,8 @@
 %%
 tic
 
-clc, clear all;
+clc
 [bounds, geo, per] = data0();
-
 dat.geo0=geo;
 dat.per=per;
 
@@ -56,12 +55,12 @@ dat.CostProblem = FitnessFunction;           % Cost function instance
 % 4 - 31.
 
 NOBJ = 2;                                    % Number of objectives
-XPOP = 4;                                    % Population size
+XPOP = 32;                                    % Population size
 Esc = 0.75;                                  % Scaling factor
 Pm= 0.2;                                     % Croosover Probability
 
 NVAR = size(bounds,1);                       % Number of decision variables
-MAXGEN = 2;                                  % Generation bound
+MAXGEN = 70;                                  % Generation bound
 MAXFUNEVALS = 20000*NVAR*NOBJ;               % Function evaluations bound
     
 %% Variables regarding the optimization problem

@@ -12,12 +12,8 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-%% %%%%%%
-%% 2013/11/04 MG file that assigns barrier points  
-%% for ISeg geo and Seg geo
-%% %%%%%%
-%% i successivi export
-%% Assegna_punti_banane_FluidBar
+function rotore = build_matrix_ISeg(temp,geo)
+
 Bx0=temp.Bx0;
 B1k=temp.B1k;
 B2k=temp.B2k;
@@ -44,7 +40,7 @@ XcRibTraf1=temp.XcRibTraf1;
 YcRibTraf1=temp.YcRibTraf1;
 XcRibTraf2=temp.XcRibTraf2;
 YcRibTraf2=temp.YcRibTraf2;
-
+% radial ribs coordinate
 XpontRadSx=temp.XpontRadSx;
 YpontRadSx=temp.YpontRadSx;
 XpontRadDx=temp.XpontRadDx;
@@ -53,17 +49,12 @@ XpontRadBarDx=temp.XpontRadBarDx;
 YpontRadBarDx=temp.YpontRadBarDx;
 XpontRadBarSx=temp.XpontRadBarSx;
 YpontRadBarSx=temp.YpontRadBarSx;
-%% Next 4 statements are redundant but ensures compatibility with script
-%% that assigns points at circular barriers
-XBan1dx=temp.B2k;  
-YBan1dx=temp.YpontRadBarDx;
-XBan1sx=temp.B1k;    
-YBan1sx=temp.YpontRadBarSx;
-%% Error mex no linear barrier boundary
-error_mex=temp.error_mex;
+% Additional point for magnet
+XpMag1B1=temp.XpMag1B1;
+YpMag1B1=temp.YpMag1B1;
 
-xc=temp.xc;
-yc=temp.yc;
+% Error mex no linear barrier boundary
+error_mex=temp.error_mex;
 
 rotore=[];
 
@@ -93,6 +84,15 @@ for ii=1:geo.nlay
         
     end
     
+    if (ii>1)
+        rotore=[rotore;
+            XpBar2(ii) YpBar2(ii) XpMag1B1(ii) YpMag1B1(ii) NaN NaN 0];
+    end
+    
+    if (YpontRadSx(ii)==0)
+        rotore=[rotore;
+            B1k(ii),0,B2k(ii),0,NaN,NaN,0];
+    end
+    
 end
 
-clear temp

@@ -13,20 +13,13 @@
 %    limitations under the License.
 
 %% Matteo 31/10/2011
-%Intersezione retta circonferenza:
-function [x y]=intersezione_retta_circonferenza(x0,y0,r)
+%intersection line and circumference:
+function [x,y]=intersezione_retta_circonferenza(xc,yc,r,m2,q2)
 
-[v]=roots([1, 1*(y0-x0), 1/2*(y0^2+x0^2-2*y0*x0-r^2)]);
-
-t=1;
-for i=1:length(v)
-    if v(i)>=0
-        w(t)=v(i);
-    else
-        
-    end
-    t=t+1;
-end
-x=w;
-y=y0+x-x0;
+A=1+m2^2;
+B=2*m2*q2-2*xc-2*m2*yc;
+C=xc^2+q2^2+yc^2-2*q2*yc-r^2;
+tmp=roots([A B C]);
+x=tmp(1);
+y=m2*x+q2;
 

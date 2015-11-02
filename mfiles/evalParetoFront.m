@@ -1,12 +1,4 @@
-
-% re-evaluates all the machines of the Pareto front in 15 rotor
-% positions (instead of the 5 positions with random offset used by MODE)
-
-% pivot_cost: selects how to sort the machines of the front
-% pivot_cost = 1 (default), COST_sorted is ordered according to the values of T
-% pivot_cost = 2, COST_sorted is ordered according to the values of dT
 % Copyright 2014
-%
 %    Licensed under the Apache License, Version 2.0 (the "License");
 %    you may not use this file except in compliance with the License.
 %    You may obtain a copy of the License at
@@ -19,7 +11,14 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function evalParetoFront(filename)
+function evalParetoFront(filename,dataSet)
+
+% re-evaluates all the machines of the Pareto front in 15 rotor
+% positions (instead of the 5 positions with random offset used by MODE)
+
+% pivot_cost: selects how to sort the machines of the front
+% pivot_cost = 1 (default), COST_sorted is ordered according to the values of T
+% pivot_cost = 2, COST_sorted is ordered according to the values of dT
 
 pivot_cost = 1;
 
@@ -52,24 +51,52 @@ per_temp=per;   % re-assign because matlabpool don't work...
 COST = [];
 
 % filter duplicate solutions
-[PSet,iA] = unique(OUT.PSet,'rows')
+[PSet,iA] = unique(OUT.PSet,'rows');
 x = PSet;
-%%
 
-HC = zeros(size(x,1),geo.nlay); ALPHA = HC; PONT = HC; NR = zeros(size(x,1),geo.nlay+1); HF = zeros(size(x,1),geo.nlay+1); Delta_X=[];
-T = zeros(size(x,1),1); dT = T; PFES = T; PFER = T; FD90 = T;
+% RQ variables, set of optimization inputs
+k = 0; y = 0; t = 0; u = 0;
+for j = 1:length(geo0.RQnames)
+    nameTemp{j} = upper(eval(['geo0.RQnames{j}']));
+    if strcmp(nameTemp{j},'DALPHA')
+        k = k +1;
+        nameTemp{j} = [nameTemp{j} num2str(k)];
+    end
+    if strcmp(nameTemp{j},'HC')
+        y = y +1;
+        nameTemp{j} = [nameTemp{j} num2str(y)];
+    end
+    if strcmp(nameTemp{j},'DX')
+        t = t +1;
+        nameTemp{j} = [nameTemp{j} num2str(t)];
+    end
+    if strcmp(nameTemp{j},'BR')
+        u = u +1;
+        nameTemp{j} = [nameTemp{j} num2str(u)];
+    end
+    eval([nameTemp{j} ' = zeros(size(x,1),1)']);
+end
 
+% goals
+T = zeros(size(x,1),1); dT = T; % PFES = T; PFER = T; FD90 = T;
+
+geo.nsim_singt = 2; % debug    
 parfor m = 1:size(x,1)
     
     mot_index = num2str(m);
     disp(['Evaluating machine ' mot_index ' of ' num2str(size(x,1))])
-         
-    % FEA evaluates each machine of the front
-    [cost{m},geometry{m},~,~] = FEMMfitness(x(m,:)',geo,per_temp,eval_type);
-
-end
     
-for m=1:size(x,1)         
+    % FEA evaluates each machine of the front
+    
+    [cost{m},geometry{m},~,~] = FEMMfitness(x(m,:)',geo,per_temp,eval_type);
+    
+    % debug
+    %     cost{m} = x(m,end-1:end);
+    %     geometry{m} = geo;
+    % debug
+end
+
+for m=1:size(x,1)
     clear geo
     mot_index = num2str(m);
     if m<10
@@ -77,15 +104,18 @@ for m=1:size(x,1)
     end
     
     geo=geometry{m};
-    if exist([syreRoot filesep 'empty_case.fem'],'file')>1
-        empty_case_path = [syreRoot filesep 'empty_case.fem'];
-    else
-        empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
-    end
-
+%     if exist([syreRoot filesep 'empty_case.fem'],'file')>1
+%         empty_case_path = [syreRoot filesep 'empty_case.fem'];
+%     else
+%         empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
+%     end
+    
     openfemm
+    [geo] = interpretRQ(x(m,:),geo);
     [geo] = draw_motor_in_FEMM(geo,eval_type);
-    %% end drawing procedure....    
+    
+    
+    % end drawing procedure....
     % Save png file mot
     mi_zoomnatural;
     mi_savebitmap([pathname '\mot_'  mot_index '.bmp']);
@@ -93,65 +123,97 @@ for m=1:size(x,1)
     movefile([syreRoot,'\mot0.fem'],[pathname '\mot_'  mot_index '.fem']);
     % Save data geometry mot
     geo.RQ = x(m,:);
-    save([pathname '\mot_' mot_index '.mat'],'geo','cost','per');
-        %% %%%%%%%
+
+    dataSet.AirGapThickness = geo.g; % airgap thickness
+    dataSet.AirGapThickness = roundn(dataSet.AirGapThickness,-2);
+    dataSet.AirGapRadius = geo.r; % machine airgap radius
+    dataSet.AirGapRadius = roundn(dataSet.AirGapRadius,-2);
+    dataSet.ToothLength = geo.lt; % tooth length
+    dataSet.ToothLength = roundn(dataSet.ToothLength,-2);
+    dataSet.StatorSlotOpen = geo.acs; % stator slot open in [p.u.]
+    dataSet.StatorSlotOpen = roundn(dataSet.StatorSlotOpen,-2);
+    dataSet.ToothWidth = geo.wt; % Bgap/Btooth (determines tooth width^-1, yoke width^-1)
+    dataSet.ToothWidth = roundn(dataSet.ToothWidth,-2);
+    dataSet.ToothTangDepth = geo.ttd; % tooth tang depth [mm]
+    dataSet.ToothTangDepth = roundn(dataSet.ToothTangDepth,-2);
+    dataSet.Br = geo.Br; % Br
+    dataSet.Br = roundn(dataSet.Br,-2);
+    dataSet.ALPHApu = geo.dalpha_pu;
+    dataSet.ALPHApu = roundn(dataSet.ALPHApu,-2);
+    dataSet.HCpu = geo.hc_pu;
+    dataSet.HCpu = roundn(dataSet.HCpu,-2);
+    dataSet.DepthOfBarrier = geo.dx;    % the depth of the barriers radial-wise in per unit
+    dataSet.DepthOfBarrier = roundn(dataSet.DepthOfBarrier,-2);
+    dataSet.RQ = geo.RQ;
+    save([pathname '\mot_' mot_index '.mat'],'geo','cost','per','dataSet');
+    %% %%%%%%%
     COST=[COST; cost{m}];
     if m<10
         mot_index = ['0' mot_index];
     end
-    % geometry
-    HC(m,:) = geo.hc;
-%     HF(m,:) = geo.hf;
-    ALPHA(m,:) = geo.alpha;
-    PONT(m,:) = geo.pont0;
-    NR(m,:) = geo.nr;
     
-    % cost functions
+%     geo.Br
+    % geometry summary of the re evaluated Pareto front
+    % replace fields od geo0 with content of RQ
+%     k = 0; y = 0; t = 0; u = 0;
+    for j = 1:length(nameTemp)
+        eval([nameTemp{j} '(m) = x(m,j);']);
+        
+%         if strfind(nameTemp{j},'DALPHA')
+%             k = k +1;
+%             % line for nlay-dimensional RQ variables
+%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(k);']);
+%         elseif strfind(nameTemp{j},'HC')
+%             y = y +1;
+%             % line for nlay-dimensional RQ variables
+%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(y);']);
+%         elseif strfind(nameTemp{j},'DX')
+%             t = t+1;
+%             % line for nlay-dimensional RQ variables
+%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(t);']);
+%         elseif strfind(nameTemp{j},'BR')
+%             u = u+1,
+%             % line for nlay-dimensional RQ variables
+%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(u);']);
+%         elseif strcmp(nameTemp{j},'GAMMA')
+%             % line for gamma (end of x)
+%             eval([nameTemp{j} '(m) = x(m,end);']);
+%         else
+%             % line for all 1-dimensional variables
+%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j}]);
+%         end
+
+    end
+    
+    % cost functions (modify in the future)
     T(m,1) = COST(m,1); %out.Tn;
     dT(m,1) = COST(m,2); %out.ripple_pu;
+    
     close;
 end
 
 [STATUS,MESSAGE,MESSAGEID] = copyfile([pathname_ini,filename],[pathname,'\']);
 
-geo_all = struct('ALPHA', ALPHA, 'HC', HC, 'HF', HF, 'PONT', PONT, 'NR', NR);
-
-if (strcmp(geo.RotType,'Seg'))
-    geo_all = struct('ALPHA', ALPHA, 'HC', HC, 'HF', HF, 'PONT', PONT, 'NR', NR,'Delta_X',Delta_X);
-end
-
 out_all = struct('T', T, 'dT', dT); %, 'PFES', PFES, 'PFER', PFER, 'FD90', FD90);
 
-%% orders the solutions of the Front according to one of the goals (T or dT)
+% sort the solutions of the Front according to T or dT
 n_mot = size(COST,1);
 [Y,I] = sort(COST(:,pivot_cost));
 
 COST_sorted = [COST(I,:) I];
 x_sorted = x(I,:);
 
-ALPHA_s = geo_all.ALPHA(I,:);
-HC_s = geo_all.HC(I,:);
-HF_s = geo_all.HF(I,:);
-PONT_s = geo_all.PONT(I,:);
-NR_s = geo_all.NR(I,:);
-% DFE_s=geo_all.DFE(I,:);
-
 T_s = out_all.T(I,:);
 DT_s = out_all.dT(I,:);
 
-geo_all_sorted = struct('ALPHA', ALPHA_s, 'HC', HC_s, 'HF', HF_s, 'PONT', PONT_s, 'NR', NR_s); %,'DFE',DFE_s,'ERROR_CODE',ERROR_CODE_s);
 out_all_sorted = struct('T', T_s, 'dT', DT_s);
-
-alpha = geo_all_sorted.ALPHA;
-dalpha = diff(alpha,1,2);
-dalpha = [alpha(:,1) dalpha];
 
 name_output = strrep(filename,'end_','sort_');
 name_output = strrep(name_output,'.mat','');
 
 name_case = strrep(name_output,'sort_','');
 
-%% Pareto front
+% Pareto front
 close
 figure(1), hold on
 for ii=1:n_mot
@@ -180,45 +242,128 @@ figure_title = [geo.RotType ' nlay = ' num2str(geo.nlay) ' p = ' num2str(geo.p) 
 title(figure_title)
 saveas(gcf,[pathname '\Pareto - ' name_case '.fig']);
 
-%% Bar charts
-figure(2), 
+% Bar charts
+% 1) build a bar chart for each element of nameTemp
+% 2) build a bar chart for each goal
 bw = 0.7;   % bar width
-set(gca,'xTickLabel',I);
-subplot(3,2,1)
-bar(dalpha,bw,'stacked'), grid,
-legenda=[];
-for kk=1:geo.nlay
-    legenda{kk}=['\Delta\alpha',num2str(kk)];
+
+% RQ elements: they are not yet sorted
+k = 0; y = 0; t = 0; u = 0;
+for j = 1:length(nameTemp)
+    if strfind(nameTemp{j},'DALPHA')
+        k = k +1;
+        figure(2)
+        set(gca,'xTickLabel',I);subplot(geo.nlay,1,k);
+        bar(eval(nameTemp{j}),bw,'r'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Machanical Deg');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_DALPHA.fig']);
+    elseif strfind(nameTemp{j},'HC')
+        y = y +1;
+        figure(3)
+        set(gca,'xTickLabel',I);subplot(geo.nlay,1,y);
+        bar(eval(nameTemp{j}),bw,'g'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Barrier Width [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_HC.fig']);
+    elseif strfind(nameTemp{j},'DX')
+        t = t +1;
+        figure(4)
+        set(gca,'xTickLabel',I);subplot(geo.nlay,1,t);
+        bar(eval(nameTemp{j}),bw,'y'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Barrier Depth [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_DX.fig']);
+    elseif strfind(nameTemp{j},'BR')
+        u = u +1;
+        figure(5);
+        set(gca,'xTickLabel',I); subplot(geo.nlay,1,u);
+        bar(eval(nameTemp{j}),bw,'w'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Br [T]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_BR.fig']);
+    elseif strcmp(nameTemp{j},'G')
+        figure;
+        set(gca,'xTickLabel',I);
+        bar(eval(nameTemp{j}),bw,'c'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Airgap Thickness [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    elseif strcmp(nameTemp{j},'R')
+        figure;
+        set(gca,'xTickLabel',I);
+        bar(eval(nameTemp{j}),bw,'m'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Airgap Radius [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    elseif strcmp(nameTemp{j},'WT')
+        figure;
+        set(gca,'xTickLabel',I);
+        bar(eval(nameTemp{j}),bw,'k'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Tooth Width [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    elseif strcmp(nameTemp{j},'LT')
+        figure;
+        set(gca,'xTickLabel',I);subplot()
+        bar(eval(nameTemp{j}),bw,'y'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Tooth Length [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    elseif strcmp(nameTemp{j},'ACS')
+        figure;
+        set(gca,'xTickLabel',I);subplot()
+        bar(eval(nameTemp{j}),bw,'r'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Slot Open [p.u.]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    elseif strcmp(nameTemp{j},'TTD')
+        figure;
+        set(gca,'xTickLabel',I);subplot()
+        bar(eval(nameTemp{j}),bw,'g'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Tooth Tang Depth [mm]');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    else
+        figure;
+        set(gca,'xTickLabel',I);
+        bar(eval(nameTemp{j}),bw,'b'), grid,
+        xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+        legend(nameTemp{j});
+        xlabel('Machine Number'); ylabel('Electrical Deg');
+        saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_' nameTemp{j} '.fig']);
+    end
 end
-leg=legend(legenda);set(leg);
+
+% cost functions (already sorted)
+k=dir(strcat(pathname,'/*.fig'));
+y=length(k)+1;
+figure(y);
+set(gca,'xTickLabel',I); subplot(2,1,1);
+bar(-T_s,bw,'y'), grid,
 xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
-ylabel('Mechanical Deg');
-name_output(name_output == '_') = '-';
+xlabel('Machine Number'), ylabel('Torque [Nm]')
+legend('Torque');
+title('Torque in descending order');
 
-figure(2), subplot(3,2,3)
-bar(geo_all_sorted.HC,bw,'stack'), grid,
-legenda=[];
-for kk=1:geo.nlay
-    legenda{kk}=['air (hc',num2str(kk),')'];
-end
-leg = legend(legenda);
-set(leg);
-xlim([0 n_mot+1]);
-set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I));
-ylabel('mm');
+figure(y);
+set(gca,'xTickLabel',I);subplot(2,1,2);
+bar(DT_s,bw,'b'), grid,
+xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
+xlabel('Machine Number'), ylabel('Torque Ripple %');
+legend('Torque Ripple');
 
-figure(2), subplot(3,2,5)
-bar(x_sorted(:,end)), grid, legend('Current Angle \gamma'), xlim([0 n_mot+1]);
-set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),ylabel('Electrical Deg')
-
-[Y I]=sort(-dT);
-COSTf=[abs(T(I,:)),dT(I,:)];
-
-figure(2), subplot(3,2,2:2:6)
-bar(COSTf,'Group'), grid, legend('Torque Nm','ripple pu')
-xlim([0 n_mot+1]); set(gca,'xTicklabel',I);set(gca,'xTick',1:1:length(I));
-title('ripple in descending order')
-saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '.fig']);
+saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_T&dT.fig']);
 
 %% Evaluation of the Progressive distribution of the Pareto Front
 
@@ -240,7 +385,7 @@ saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '.fig'
 %     plot(Fit(nmot_actual_front,1,jk),Fit(nmot_actual_front,2,jk),'*','Color',color{ii});
 %     legenda{ii}=['front ',num2str(jk),' of ',num2str(size(Fit,3))];
 %     ii=ii+1;
-%     
+%
 % end
 % hold off;grid on; xlabel('Torque [Nm]'); ylabel('ripple [%]'); title('Evolution of the Pareto Front during the optimization process'); legend(legenda);
 % saveas(gcf,[pathname '\pareto2x_evolution_during_optimization-' name_case '.fig']);

@@ -79,7 +79,7 @@ end
 iAmpCoil=iAmp*geo.Nbob;
 
 [SOL,FemmProblem] = simulate_xdegX(FemmProblem,geo,iAmpCoil,gamma,eval_type);
-
+%SOL=zeros(1,6);
 out.id = mean(SOL(:,2));
 out.iq = mean(SOL(:,3));
 out.fd = mean(SOL(:,4));

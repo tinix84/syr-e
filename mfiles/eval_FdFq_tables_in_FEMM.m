@@ -51,7 +51,6 @@ filemot = strrep(filemot,'.mat','.fem');
 
 %io_femm=io*geo.Nbob;
 iAmpCoil=iAmp*geo.Nbob;
-gamma = angle(I) * 180/pi;
 
 Fd = zeros(size(Id)); Fq = Fd; T = Fd; dT = Fd;
 for rr = 1:size(iAmp,1)

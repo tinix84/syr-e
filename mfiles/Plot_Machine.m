@@ -1,4 +1,4 @@
-function [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot)
+function [hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot)
 % Copyright 2014
 %
 %    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,67 +15,44 @@ function [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot)
 
 %% Plot GUI
 
-axes(h);
-cla(h);
-
+axes(h); cla(h);
 [bounds, geo, per] = data0(dataSet);
-RQ = dataSet.RQ;
-p = geo.p;                      % paia poli
-nlay = geo.nlay;                % numero delle barriere
+RQ = dataSet.RQ
+p = geo.p;                      
+nlay = geo.nlay;                
 [geo,gamma] = interpretRQ(RQ,geo);
 geo.x0 = geo.r/cos(pi/2/geo.p);
 ns = geo.ns;
-p = geo.p;
-% rotor offset angle
-th_m0 = 0;                          % [mec deg]
-% offset angle: for coordinate transformations
-geo.th0 = th_m0*p - 0;     % [elt deg]
-%%
-%% evaluation of the number of poles to simulate and corresponding periodicity
-%%
-Q = geo.ns*geo.p;
-t = gcd(round(ns*geo.p),geo.p);  % periodicity
-if ((6*t/Q)>1)
-    ps = 2*p/t;
-    Qs = Q/t;
-else
-    ps = p/t;
-    Qs = Q/2/t;
-end
-%assign to variable geo, number of poles and slots simulated.
-geo.Qs = Qs;
-geo.ps = ps;
+Ar = geo.Ar;
+r  = geo.r;
+th_m0 = 0;                 % rotor offset angle [mec deg]
+geo.th0 = th_m0*p - 0;     % offset angle [elt deg] (for coordinate transformations)
 fem.res = 0;
 fem.res_traf = 0;
-%% ROTOR
-% build the matrices that describe the rotor
-ROTmatr;
+
+% nodes
+[rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem);
+[geo,statore,BLKLABELSstat] = STATmatr(geo,fem);
 
 dalpha = geo.dalpha;            % Angoli dalpha
 hc = geo.hc;                    % Altezze in mm
 
-%% STATOR
-% builds the matrices that describe the stator
-STATmatr;
-
 %% === PLOT ===============================================================
 if strcmp(flag_plot,'Y')
     
-    Mat = [rotore; CavaMat];
+    Mat = [rotor; statore];
     
     [nrig,ncol] = size(Mat);
     for i = 1 : nrig
         if Mat(i,ncol) == 0
-            x1 = Mat(i,3);
-            y1 = Mat(i,4);
-            x2 = Mat(i,1);
-            y2 = Mat(i,2);
+            % draw lines
+            x1 = Mat(i,3); y1 = Mat(i,4);
+            x2 = Mat(i,1); y2 = Mat(i,2);
             plot(h,[x1,x2],[y1,y2],'Linewidth',2,'Color','k');
-            hold on
-            grid on
-            grid minor
-            axis equal
+            hold on, grid on
+            grid minor, axis equal
         else
+            % draw arcs
             dati = Mat(i,:);
             % centro
             x0 = dati(1); y0 = dati(2);
@@ -109,14 +86,12 @@ if strcmp(flag_plot,'Y')
             x = [x1 x_n x2];
             y = [y1 y_n y2];
             plot(h,x,y,'Linewidth',2,'Color','k');
-            hold on
-            grid on
-            grid minor
-            axis equal
+            hold on, grid on
+            grid minor, axis equal
         end
     end
     hold off
 end
 
-end
+% end
 

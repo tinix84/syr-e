@@ -20,10 +20,11 @@ T = F_map.T;
 dT = F_map.dT;
 
 i_d=linspace(id(1),id(end),n2);
-i_q=linspace(id(1),iq(end),n2);
+i_q=linspace(iq(1),iq(end),n2);
 
 [Id,Iq]=meshgrid(i_d,i_q);
 
+% refine maps to the 256 x 256 standard resolution
 Fd = interp2(idvect,iqvect,Fd0,Id,Iq,'cubic');
 Fq = interp2(idvect,iqvect,Fq0,Id,Iq,'cubic');
 

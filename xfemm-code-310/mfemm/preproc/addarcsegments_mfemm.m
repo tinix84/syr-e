@@ -73,6 +73,12 @@ function [FemmProblem, arcseginds] = addarcsegments_mfemm(FemmProblem, n0, n1, a
 if (n0==n1)
     return
 end
+% if length(n0)==1
+%     nodeDistance=norm(FemmProblem.Nodes(n0+1).Coords-FemmProblem.Nodes(n1+1).Coords);
+%     if (nodeDistance < 1e-6)
+%         return
+%     end
+% end
 if (numel(n0)>1)
     arcseginds=[];
     for i=1:numel(n0)
@@ -167,7 +173,7 @@ if go
     %arc=FemmProblem.ArcSegments(j);
     nodelist = FemmProblem.Nodes;
     [c,R]=getCircle(FemmProblem,arc);
-    dmin=abs(R*pi*arc.ArcLength/180.)*1.e-05;
+    dmin=abs(R*pi*arc.ArcLength/180.)*1.e-08;
     arclist = FemmProblem.ArcSegments;
     k=numel(arclist);
     for i=1:numel(nodelist)

@@ -14,7 +14,7 @@
 
 function varargout = GUI_Syre(varargin)
 % GUI_SYRE MATLAB code for GUI_Syre.fig
-%      GUI_SYRE, by itself, creates a new GUI_SYRE or raises the existing
+%      GUI_SYRE,by itself, creates a new GUI_SYRE or raises the existing
 %      singleton*.
 %
 %      H = GUI_SYRE returns the handle to a new GUI_SYRE or the handle to
@@ -24,7 +24,7 @@ function varargout = GUI_Syre(varargin)
 %      function named CALLBACK in GUI_SYRE.M with the given input arguments.
 %
 %      GUI_SYRE('Property','Value',...) creates a new GUI_SYRE or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
+%         existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before GUI_Syre_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
 %      stop.  All inputs are passed to GUI_Syre_OpeningFcn via varargin.
@@ -36,10 +36,11 @@ function varargout = GUI_Syre(varargin)
 
 % Edit the above text to modify the response to help GUI_Syre
 
-% Last Modified by GUIDE v2.5 14-Oct-2014 12:29:31
+% Last Modified by GUIDE v2.5 20-Jul-2015 19:49:34
 
 % Begin initialization code - DO NOT EDIT
 % clc
+
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
     'gui_Singleton',  gui_Singleton, ...
@@ -86,7 +87,7 @@ set(handles.OptimizationTab,'BackgroundColor',handles.unselectedTabColor);
 set(handles.PostProcTab,'BackgroundColor',handles.unselectedTabColor);
 
 handles.pan1pos = get(handles.OptimizationPanel,'Position');
-handles.left_right_corner = handles.pan1pos(2) + handles.pan1pos(4);
+handles.left_right_corner = handles.pan1pos(2) + handles.pan1pos(4);  % height
 handles.pan2pos = get(handles.GeoPanel,'Position');
 handles.pan3pos = get(handles.StatorPanel,'Position');
 handles.pan4pos = get(handles.WindingsPanel,'Position');
@@ -94,8 +95,6 @@ handles.pan5pos = get(handles.OptionsPanel,'Position');
 handles.pan6pos = get(handles.MaterialPanel,'Position');
 handles.pan7pos = get(handles.PostProcePanel,'Position');
 handles.pan8pos = get(handles.RotorGeometryPanel,'Position');
-
-
 set(handles.GeoPanel,'Position',[handles.pan1pos(1) (handles.left_right_corner-handles.pan2pos(4)) handles.pan2pos(3) handles.pan2pos(4)])
 set(handles.StatorPanel,'Position',[handles.pan1pos(1) (handles.left_right_corner-handles.pan3pos(4)) handles.pan3pos(3) handles.pan3pos(4)])
 set(handles.WindingsPanel,'Position',[handles.pan1pos(1) (handles.left_right_corner-handles.pan4pos(4)) handles.pan4pos(3) handles.pan4pos(4)])
@@ -119,8 +118,10 @@ set(handles.RotorGeometryPanel,'Visible','off')
 
 set(handles.AlphadegreeEdit,'Enable','off');
 set(handles.hcmmEdit,'Enable','off');
+set(handles.EstimatedCoppTemp,'Enable','off');
+set(handles.CalculatedRatedCurrent,'Enable','off');
 
-%% === FLAG ===============================================================
+%% === FLAG VARI ==========================================================
 handles.MatrixWinFlag = 1;
 handles.UpdateData0 = 0;
 handles.Opti = 0;
@@ -164,9 +165,11 @@ dataSet.ShaftMaterial = geo.BLKLABELSmaterials{7}; % shaft material
 dataSet.RotorCondMaterial = geo.BLKLABELSmaterials{8}; % rotor conductor material
 dataSet.SlotFillFactor = geo.kcu; % slot fill factor
 dataSet.PitchShortFac = geo.kracc; % pitch short factor
-dataSet.TurnsInSeries= geo.Ns; % turns in series
+dataSet.TurnsInSeries = geo.Ns; % turns in series
 dataSet.AdmiJouleLosses = per.Loss; % admitted Joule Losses [W]
-dataSet.CopperTemp = per.tempcu; % copper temperature [C]
+dataSet.TargetCopperTemp = per.tempcu; % target copper temperature [C]
+dataSet.HousingTemp = per.temphous; % housing temperature [C]
+dataSet.EstimatedCopperTemp = per.tempcuest; % Estimated Copper Temperature [C]
 dataSet.CurrOverLoad = per.overload; % Current overload
 dataSet.NumOfLayers = geo.nlay; % Number of Layers (bars)
 dataSet.OverSpeed = geo.nmax; % overspeed in [rpm]
@@ -176,12 +179,20 @@ dataSet.MinExpTorque = per.min_exp_torque; % Minimum expected torque
 dataSet.MaxRippleTorque = per.max_exp_ripple; % Maximum ripple torque
 dataSet.MinMechTol = geo.pont0; % minimum mechanical tolerance [mm]
 dataSet.SimPoMOOA = geo.nsim_MOOA; % simulated positions (6-1)
+dataSet.randFactor = geo.randFactor;  % Noise factor for position number reduction
 dataSet.RotPoMOOA = geo.delta_sim_MOOA; % rotor position span [elt degrees]
 dataSet.SimPoFine = geo.nsim_singt; % simulated positions (16-1)
 dataSet.RotPoFine = geo.delta_sim_singt; % rotor position span [elt degrees]
 dataSet.Mesh = geo.K_mesh; % Mesh
 dataSet.Mesh_MOOA = geo.K_mesh_MOOA; % Mesh MOOA
 dataSet.RQnames = geo.RQnames;
+dataSet.MagLoadingYoke = geo.b;  % Bgap/Bfe,yoke  (back-iron p.u. size)
+dataSet.MagLoadingTooth = geo.bt;  % Bgap/Bfe,tooth (tooth p.u. size)
+dataSet.ThicknessOfPM = geo.lm;     % the thickness of permanent magnet
+dataSet.AngleSpanOfPM =  geo.phi;       % the angle range of permanent magnet
+dataSet.DepthOfBarrier = geo.dx;    % the depth of the barriers radial-wise in per unit
+dataSet.ALPHApu = geo.dalpha_pu;
+dataSet.HCpu = geo.hc_pu;
 
 %% ==== BOUNDS ============================================================
 dataSet.Alpha1Bou = [22.5 45]/90;
@@ -191,16 +202,35 @@ dataSet.DfeBou = [-0.75 0.75];         % barrier offset [p.u.]
 dataSet.BrBou = [0.2 0.8]; 
 dataSet.GapBou = rrtd(dataSet.AirGapThickness*[0.7  1.5],-1);
 dataSet.GapRadiusBou = rrtd(dataSet.AirGapRadius*[0.8  1.2],-1);
-dataSet.ToothWiBou = rrtd(dataSet.ToothWidth*[0.75  1.3],-1);
-dataSet.ToothLeBou = rrtd(dataSet.ToothLength*[0.8 1.2],-1);
+dataSet.ToothWiBou = rrtd(dataSet.ToothWidth*[0.75  1.25],-1);
+dataSet.StatorSlotOpenBou = rrtd(dataSet.StatorSlotOpen*[0.8 1.2],-1);   
+dataSet.ToothTangDepthBou = rrtd(dataSet.ToothTangDepth*[0.8 1.2],-1);
+
+% dataSet.ToothLeBou = rrtd(dataSet.ToothLength*[0.8 1.2],-1);
+temp = dataSet.ToothLength*[0.8 1.2];
+if temp(2)>(dataSet.StatorOuterRadius - dataSet.AirGapRadius)
+    temp(2) = dataSet.StatorOuterRadius - dataSet.AirGapRadius;
+end
+dataSet.ToothLeBou = rrtd(temp,-1);
+
 dataSet.PhaseAngleCurrBou = bounds(end,:);          % phase angle of the current vector
 dataSet.Dalpha1BouCheck = 1;
-dataSet.DalphaBouCheck = 1;
+if (dataSet.NumOfLayers==1)
+    dataSet.DalphaBouCheck = 0;
+    set(handles.DeltaAlphaBouEdit,'Enable','off');
+else
+    dataSet.DalphaBouCheck = 1;
+    set(handles.DeltaAlphaBouEdit,'Enable','on');
+end
 dataSet.hcBouCheck = 1;
 if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg'))
-    dataSet.DxBouCheck = 1;
+    dataSet.DxBouCheck = 0;
+    set(handles.DxEdit,'Enable','on');
+    set(handles.DfeBouEdit,'Enable','on');
 else
     dataSet.DxBouCheck = 0;
+    set(handles.DxEdit,'Enable','off');
+    set(handles.DfeBouEdit,'Enable','off');
 end
 dataSet.GammaBouCheck = 1;
 dataSet.GapBouCheck = 0;
@@ -208,6 +238,8 @@ dataSet.BrBouCheck = 0;
 dataSet.AirgapRadiusBouCheck = 0;
 dataSet.ToothWidthBouCheck = 0;
 dataSet.ToothLengthBouCheck = 0;
+dataSet.StatorSlotOpenBouCheck = 0;   
+dataSet.ToothTangDepthBouCheck = 0;
 
 %% ==== OPTIMIZATION ======================================================
 dataSet.MaxGen = 3;
@@ -255,26 +287,15 @@ else
 end
 dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
 %% ==== RQ per plot =======================================================
-data = buildDefaultRQ(dataSet,bounds);
-% set(handles.RQPlotEdit,'String',mat2str(data));
+data = buildDefaultRQ(bounds);
 dataSet.RQ = data;
-dataSet.HCpu = data((dataSet.NumOfLayers+1):end-1);
-dataSet.ALPHApu = data(1:dataSet.NumOfLayers);
+% dataSet.HCpu = data((dataSet.NumOfLayers+1):end-1);
+% dataSet.ALPHApu = data(1:dataSet.NumOfLayers);
 
 %% ========================================================================
 handles.dataSet = dataSet; % data structure
 SetParameters(handles,dataSet) % aux. function for set the values in the edit boxes
 %% ======= Matrix of winding visual =======================================
-p = dataSet.NumOfPolePairs;
-Q = dataSet.NumOfSlots*6*p;
-%dataSet.WinMatr = Windings; % winding matrix
-t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
-if ((6*t/Q)>1)
-    Qs = Q/t;   % periodic machine
-else
-    Qs = Q/2/t; % anti-periodic machine
-end
-dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
 columnName = cell(1,floor(Qs));
 for i = 1 : floor(Qs)
     columnName{i} = ['Slot n° ',num2str(i)];
@@ -284,6 +305,9 @@ rowName{2} = 'Layer 2';
 set(handles.WinTable,'rowname',rowName);
 set(handles.WinTable,'columnname',columnName);
 set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
+per.tempcuest = temp_est_simpleMod(geo,per);
+set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
+
 %% ========================================================================
 guidata(hObject,handles);
 
@@ -298,6 +322,7 @@ function varargout = GUI_Syre_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 function PolePairsEdit_Callback(hObject, eventdata, handles)
+% Number of pole pairs(geo.p)
 % hObject    handle to PolePairsEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -308,7 +333,7 @@ dataSet.NumOfPolePairs = str2double(get(hObject,'String'));
 p = dataSet.NumOfPolePairs;
 Q = round(dataSet.NumOfSlots*6*p);
 yq = dataSet.PitchShortFac*dataSet.NumOfSlots*3;
-path = pwd
+path = pwd;
 cd(fullfile (path,'koil'));
 system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
 cd(path);
@@ -330,6 +355,9 @@ rowName{2} = 'Layer 2';
 set(handles.WinTable,'rowname',rowName);
 set(handles.WinTable,'columnname',columnName);
 set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
+dataSet.ToothLength = dataSet.StatorOuterRadius * (1-dataSet.AirGapRadius/dataSet.StatorOuterRadius*(1+dataSet.MagLoadingYoke/dataSet.NumOfPolePairs));
+dataSet.ToothLength = roundn(dataSet.ToothLength,-4);
+set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
@@ -346,6 +374,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% round to a set number of decimals cfr
 function num = rrtd(num, cfr)
 error(nargchk(2, 2, nargin, 'struct'))
 validateattributes(num, {'single', 'double'}, {}, 'ROUNDN', 'NUM')
@@ -387,12 +416,17 @@ set(handles.SlotFillFacEdit,'String',num2str(dataIn.SlotFillFactor));
 set(handles.PitchWindEdit,'String',num2str(dataIn.PitchShortFac));
 set(handles.TurnsSeriesEdit,'String',num2str(dataIn.TurnsInSeries));
 set(handles.JouleLossesEdit,'String',num2str(dataIn.AdmiJouleLosses));
-set(handles.CopperTempEdit,'String',num2str(dataIn.CopperTemp));
+set(handles.CopperTempEdit,'String',num2str(dataIn.TargetCopperTemp));
+set(handles.HousingTempEdit,'String',num2str(dataIn.HousingTemp));
+set(handles.EstimatedCoppTemp,'String',num2str(dataIn.EstimatedCopperTemp));
 % set(handles.DCLinkVolEdit,'String',num2str(dataIn.DCVoltage));
 set(handles.CurrentOverLoadEdit,'String',num2str(dataIn.CurrOverLoad));
 set(handles.NumberOfLayersEdit,'String',num2str(dataIn.NumOfLayers));
 set(handles.OverSpeedEdit,'String',num2str(dataIn.OverSpeed));
-set(handles.BrPMEdit,'String',num2str(dataIn.Br));
+
+set(handles.BrPMEdit,'String',mat2str(dataIn.Br));
+set(handles.BrPPEdit,'String',mat2str(dataIn.Br));
+
 set(handles.MaxGenEdit,'String',num2str(dataIn.MaxGen));
 set(handles.XPopEdit,'String',num2str(dataIn.XPop));
 set(handles.MinExpTorEdit,'String',num2str(dataIn.MinExpTorque));
@@ -417,12 +451,15 @@ set(handles.BrBouEdit,'String',mat2str(dataIn.BrBou));
 set(handles.AirgapRadiusBouEdit,'String',mat2str(dataIn.GapRadiusBou));
 set(handles.ToothWidthBouEdit,'String',mat2str(dataIn.ToothWiBou));
 set(handles.ToothLenBouEdit,'String',mat2str(dataIn.ToothLeBou));
-set(handles.BrPPEdit,'String',mat2str(dataIn.BrPP));
+set(handles.StatorSlotOpenBouEdit,'String',mat2str(dataIn.StatorSlotOpenBou)); 
+set(handles.ToothTangDepthBouEdit,'String',mat2str(dataIn.ToothTangDepthBou));
 set(handles.CurrLoPPEdit,'String',mat2str(dataIn.CurrLoPP));
 set(handles.GammaPPEdit,'String',mat2str(dataIn.GammaPP));
+set(handles.DxEdit,'String',mat2str(dataIn.DepthOfBarrier));
 % set(handles.RQPlotEdit,'String',mat2str(dataIn.RQ));
 set(handles.AlphapuEdit,'String',mat2str(dataIn.ALPHApu));
 set(handles.hcpuEdit,'String',mat2str(dataIn.HCpu));
+
 %% CHECK BOU ==============================================================
 set(handles.Dalpha1BouCheck,'Value',dataIn.Dalpha1BouCheck);
 set(handles.DalphaBouCheck,'Value',dataIn.DalphaBouCheck);
@@ -434,6 +471,9 @@ set(handles.BrBouCheck,'Value',dataIn.BrBouCheck);
 set(handles.AirgapRadiusBouCheck,'Value',dataIn.AirgapRadiusBouCheck);
 set(handles.ToothWidthBouCheck,'Value',dataIn.ToothWidthBouCheck);
 set(handles.ToothLengthBouCheck,'Value',dataIn.ToothLengthBouCheck);
+set(handles.StatorSlotOpenBouCheck,'Value',dataIn.StatorSlotOpenBouCheck);
+set(handles.ToothTangDepthBouCheck,'Value',dataIn.ToothTangDepthBouCheck);
+
 %% ========================================================================
 
 if strcmp(dataIn.RMVTmp,'OFF')
@@ -466,19 +506,69 @@ for k = 1 : N
 end
 set(handles.TypeOfRotorList,'Value',idx);
 %% === Values for the edit text Plot ======================================
+[bounds, geo, per] = data0(dataIn);
+if isempty(bounds)
+    if sum(strcmp(dataIn.RQnames,'dalpha')) >= 1
+        dataIn.Dalpha1BouCheck = 1;
+        dataIn.DalphaBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'hc')) >= 1
+        dataIn.hcBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'Br')) >= 1
+        dataIn.BrBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'g')) >= 1
+        dataIn.GapBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'r')) >= 1
+        dataIn.AirgapRadiusBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'wt')) >= 1
+        dataIn.ToothWidthBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'lt')) >= 1
+        dataIn.ToothLengthBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'acs')) >= 1
+        dataIn.StatorSlotOpenBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'ttd')) >= 1
+        dataIn.ToothTangDepthBouCheck = 1;
+    end
+    if sum(strcmp(dataIn.RQnames,'gamma')) >= 1
+        dataIn.ToothTangDepthBouCheck = 1;
+    end 
+end
 flag_plot = 'Y';
 h = handles.axes5;
-[hc,dalpha] = Plot_Machine(h,dataIn,flag_plot);
+[hc,dalpha,geo] = Plot_Machine(h,dataIn,flag_plot);
 view = round(100*[dalpha hc])/100;
+per.tempcuest = temp_est_simpleMod(geo,per);
+set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
 % set(handles.ViewHcDaEdit,'String',mat2str(view));
-set(handles.AlphapuEdit,'String',mat2str(dataIn.RQ(1:dataIn.NumOfLayers)));
-set(handles.hcpuEdit,'String',mat2str(dataIn.RQ((dataIn.NumOfLayers+1):end-1)));
+% set(handles.AlphapuEdit,'String',mat2str(dataIn.RQ(1:dataIn.NumOfLayers)));
+% set(handles.hcpuEdit,'String',mat2str(dataIn.RQ((dataIn.NumOfLayers+1):end-1)));
 set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataIn.NumOfLayers)));
 set(handles.hcmmEdit,'String',mat2str(view((dataIn.NumOfLayers+1):end)));
-
-
+per.io = calc_io(geo,per);
+set(handles.CalculatedRatedCurrent,'String',num2str(per.io));
+%% === VISIBLE & ENABLE ===================================================
+if strcmp(dataIn.TypeOfRotor,'SPM')
+    set(handles.AlphadegreeEdit,'Enable','on');
+    set(handles.hcmmEdit,'Enable','on');
+    set(handles.hcpuEdit,'String',mat2str(0));
+    set(handles.hcpuEdit,'Enable','off');
+    set(handles.AlphapuEdit,'String',mat2str(0));
+    set(handles.AlphapuEdit,'Enable','off');
+    set(handles.NumberOfLayersEdit,'String',mat2str(0));
+    set(handles.NumberOfLayersEdit,'Enable','off');
+    set(handles.AlphadegreeEdit,'String',mat2str(dataIn.AngleSpanOfPM));
+    set(handles.hcmmEdit,'String',mat2str(dataIn.ThicknessOfPM));
+end
 
 function GapThiEdit_Callback(hObject, eventdata, handles)
+% Airgap Thickness[mm](geo.g)
 % hObject    handle to GapThiEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -503,6 +593,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function StatorOuterRadEdit_Callback(hObject, eventdata, handles)
+% Stator outer radius[mm](geo.R)
 % hObject    handle to StatorOuterRadEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -510,6 +601,10 @@ function StatorOuterRadEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of StatorOuterRadEdit as a double
 dataSet = handles.dataSet;
 dataSet.StatorOuterRadius = str2double(get(hObject,'String'));
+dataSet.ToothLength = dataSet.StatorOuterRadius * (1-dataSet.AirGapRadius/dataSet.StatorOuterRadius*(1+dataSet.MagLoadingYoke/dataSet.NumOfPolePairs));
+dataSet.ToothLength = roundn(dataSet.ToothLength,-4);
+set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
+set(handles.ToothLenBouEdit,'String',mat2str(dataSet.ToothLeBou));
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
@@ -527,6 +622,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function AirGapRadiusEdit_Callback(hObject, eventdata, handles)
+% Airgap Radius [mm](geo.r)
 % hObject    handle to AirGapRadiusEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -534,6 +630,9 @@ function AirGapRadiusEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of AirGapRadiusEdit as a double
 dataSet = handles.dataSet;
 dataSet.AirGapRadius = str2double(get(hObject,'String'));
+dataSet.ToothLength = dataSet.StatorOuterRadius * (1-dataSet.AirGapRadius/dataSet.StatorOuterRadius*(1+dataSet.MagLoadingYoke/dataSet.NumOfPolePairs));
+dataSet.ToothLength = roundn(dataSet.ToothLength,-4);
+set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
@@ -551,6 +650,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function ShaftRadEdit_Callback(hObject, eventdata, handles)
+% Shaft radius [mm] (geo.Ar)
 % hObject    handle to ShaftRadEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -575,6 +675,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function StackLenghtEdit_Callback(hObject, eventdata, handles)
+% Stack length [mm] (geo.l)
 % hObject    handle to StackLenghtEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -583,6 +684,7 @@ function StackLenghtEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.StackLength = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -599,6 +701,7 @@ end
 
 % --- Executes on selection change in TypeOfRotorList.
 function TypeOfRotorList_Callback(hObject, eventdata, handles)
+% Type of rotor (geo.RotType)
 % hObject    handle to TypeOfRotorList (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -608,22 +711,55 @@ contents = get(hObject,'String');
 s = contents{get(hObject,'Value')};
 dataSet = handles.dataSet;
 dataSet.TypeOfRotor = s;
-[bounds, geo, per] = data0(dataSet);
-data = buildDefaultRQ(dataSet,bounds);
-set(handles.hcpuEdit,'String',mat2str(data((dataSet.NumOfLayers+1):end-1)));
-set(handles.AlphapuEdit,'String',mat2str(data(1:dataSet.NumOfLayers)));
-[truefalse, index] = ismember('dx', geo.RQnames);
-if truefalse 
-    dataSet.DfeBou = bounds(index,:);            % barrier offset [p.u.]
+if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg'))
+    dataSet.DxBouCheck = 0;
+    set(handles.DxBouCheck,'Value',dataSet.DxBouCheck);
+    set(handles.DxEdit,'Enable','on');
+    set(handles.DfeBouEdit,'Enable','on');
+else
+    dataSet.DxBouCheck = 0;
+    set(handles.DxBouCheck,'Value',dataSet.DxBouCheck);
+    set(handles.DxEdit,'Enable','off');
+    set(handles.DfeBouEdit,'Enable','off');
 end
-dataSet.RQ = data;
-flag_plot = 'Y';
-h = handles.axes5;
-[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
-view = round(100*[dalpha hc])/100;
-set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
-set(handles.hcmmEdit,'String',mat2str(view((dataSet.NumOfLayers+1):end)));
-set(handles.DfeBouEdit,'String',mat2str(dataSet.DfeBou));
+if strcmp(dataSet.TypeOfRotor,'SPM')
+    set(handles.AlphadegreeEdit,'Enable','on');
+    set(handles.hcmmEdit,'Enable','on');
+    set(handles.hcpuEdit,'String',mat2str(0));
+    set(handles.hcpuEdit,'Enable','off');
+    set(handles.AlphapuEdit,'String',mat2str(0));
+    set(handles.AlphapuEdit,'Enable','off');
+    set(handles.NumberOfLayersEdit,'String',mat2str(0));
+    set(handles.NumberOfLayersEdit,'Enable','off');
+    set(handles.AlphadegreeEdit,'String',mat2str(dataSet.AngleSpanOfPM));
+    set(handles.hcmmEdit,'String',mat2str(dataSet.ThicknessOfPM));
+else
+    set(handles.AlphadegreeEdit,'Enable','off');
+    set(handles.hcmmEdit,'Enable','off');
+    set(handles.hcpuEdit,'Enable','on');
+    set(handles.AlphapuEdit,'Enable','on');
+    set(handles.NumberOfLayersEdit,'Enable','on');
+    set(handles.NumberOfLayersEdit,'String',mat2str(dataSet.NumOfLayers));
+    [bounds, geo, per] = data0(dataSet);
+    data = buildDefaultRQ(bounds);
+    set(handles.hcpuEdit,'String',mat2str(data((dataSet.NumOfLayers+1):end-1)));
+    set(handles.AlphapuEdit,'String',mat2str(data(1:dataSet.NumOfLayers)));
+    if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg'))
+        set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
+    end
+    [truefalse, index] = ismember('dx', geo.RQnames);
+    if truefalse
+        dataSet.DfeBou = bounds(index,:);            % barrier offset [p.u.]
+    end
+    dataSet.RQ = data;
+    flag_plot = 'Y';
+    h = handles.axes5;
+    [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
+    view = round(100*[dalpha hc])/100;
+    set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
+    set(handles.hcmmEdit,'String',mat2str(view((dataSet.NumOfLayers+1):end)));
+    set(handles.DfeBouEdit,'String',mat2str(dataSet.DfeBou));
+end
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles);
@@ -642,6 +778,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function NumOfSlotsEdit_Callback(hObject, eventdata, handles)
+% Number of slots/(poles*phases) (geo.q)
 % hObject    handle to NumOfSlotsEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -693,6 +830,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function ToothLengEdit_Callback(hObject, eventdata, handles)
+% Tooth length [mm](geo.lt)
 % hObject    handle to ToothLengEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -700,6 +838,10 @@ function ToothLengEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ToothLengEdit as a double
 dataSet = handles.dataSet;
 dataSet.ToothLength = str2double(get(hObject,'String'));
+if dataSet.ToothLength>(dataSet.StatorOuterRadius - dataSet.AirGapRadius-dataSet.AirGapThickness)
+    dataSet.ToothLength = dataSet.StatorOuterRadius - dataSet.AirGapRadius-dataSet.AirGapThickness;
+    set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
+end
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
@@ -717,6 +859,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function StatorSlotOpeEdit_Callback(hObject, eventdata, handles)
+% Stator slot opening [p.u.] (geo.acs)
 % hObject    handle to StatorSlotOpeEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -741,6 +884,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function ToothWidthEdit_Callback(hObject, eventdata, handles)
+% Tooth width [mm](geo.wt)
 % hObject    handle to ToothWidthEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -765,6 +909,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function ToothTanDepEdit_Callback(hObject, eventdata, handles)
+% Tooth tang. depth [mm](geo.ttd)
 % hObject    handle to ToothTanDepEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -789,6 +934,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function ToothTangAngleEdit_Callback(hObject, eventdata, handles)
+% Tooth tang. angle [mech. deg.](geo.tta)
 % hObject    handle to ToothTangAngleEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -813,6 +959,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function FillCorSlotEdit_Callback(hObject, eventdata, handles)
+% Fillet at the back iron corner of the slot[mm](geo.SFR)
 % hObject    handle to FillCorSlotEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -836,6 +983,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function SlotFillFacEdit_Callback(hObject, eventdata, handles)
+% Slot filling factor(geo.Kcu)
 % hObject    handle to SlotFillFacEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -844,6 +992,7 @@ function SlotFillFacEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.SlotFillFactor = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -859,6 +1008,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function PitchWindEdit_Callback(hObject, eventdata, handles)
+% Pitch shortening factor(geo.Kracc)
 % hObject    handle to PitchWindEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -892,6 +1042,7 @@ set(handles.WinTable,'rowname',rowName);
 set(handles.WinTable,'columnname',columnName);
 set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -907,6 +1058,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function TurnsSeriesEdit_Callback(hObject, eventdata, handles)
+% Turns in series per phase(geo.Ns)
 % hObject    handle to TurnsSeriesEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -915,6 +1067,7 @@ function TurnsSeriesEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.TurnsInSeries = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -930,6 +1083,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function JouleLossesEdit_Callback(hObject, eventdata, handles)
+% permitted Joule losses at stall (per.Loss)
 % hObject    handle to JouleLossesEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -937,7 +1091,9 @@ function JouleLossesEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of JouleLossesEdit as a double
 dataSet = handles.dataSet;
 dataSet.AdmiJouleLosses = str2double(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -952,14 +1108,16 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function CopperTempEdit_Callback(hObject, eventdata, handles)
+% copper temperature
 % hObject    handle to CopperTempEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hints: get(hObject,'String') returns contents of CopperTempEdit as text
 %        str2double(get(hObject,'String')) returns contents of CopperTempEdit as a double
 dataSet = handles.dataSet;
-dataSet.CopperTemp = str2double(get(hObject,'String'));
+dataSet.TargetCopperTemp = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -997,6 +1155,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function CurrentOverLoadEdit_Callback(hObject, eventdata, handles)
+% current overload factor used for optimization (per overload)
 % hObject    handle to CurrentOverLoadEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1020,6 +1179,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function NumberOfLayersEdit_Callback(hObject, eventdata, handles)
+% Number of rotor barriers(geo.nlay)
 % hObject    handle to NumberOfLayersEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1027,11 +1187,22 @@ function NumberOfLayersEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NumberOfLayersEdit as a double
 dataSet = handles.dataSet;
 dataSet.NumOfLayers = str2double(get(hObject,'String'));
+if (dataSet.NumOfLayers==1)
+    dataSet.DalphaBouCheck = 0;
+    set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+    set(handles.DeltaAlphaBouEdit,'Enable','off');
+else
+    dataSet.DalphaBouCheck = 1;
+    set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+    set(handles.DeltaAlphaBouEdit,'Enable','on');
+end
 [bounds, geo, per] = data0(dataSet);
-dataSet.RQnames = geo.RQnames;
-data = buildDefaultRQ(dataSet,bounds);
+% dataSet.RQnames = geo.RQnames;
+data = buildDefaultRQ(bounds);
 set(handles.hcpuEdit,'String',mat2str(data((dataSet.NumOfLayers+1):end-1)));
 set(handles.AlphapuEdit,'String',mat2str(data(1:dataSet.NumOfLayers)));
+dataSet.DepthOfBarrier = zeros(1,dataSet.NumOfLayers);
+set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
 dataSet.RQ = data;
 flag_plot = 'Y';
 h = handles.axes5;
@@ -1040,6 +1211,7 @@ view = round(100*[dalpha hc])/100;
 set(handles.hcmmEdit,'String',mat2str(view((dataSet.NumOfLayers+1):end)));
 set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
 set(handles.DfeBouEdit,'String',mat2str(dataSet.DfeBou));
+% DrawPush_Callback(hObject, eventdata, handles);
 handles.dataSet = dataSet;
 guidata(hObject,handles)
 
@@ -1056,6 +1228,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function OverSpeedEdit_Callback(hObject, eventdata, handles)
+% overspeed (geo.nmax)
 % hObject    handle to OverSpeedEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1080,14 +1253,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function BrPMEdit_Callback(hObject, eventdata, handles)
+% Br for PMs
 % hObject    handle to BrPMEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hints: get(hObject,'String') returns contents of BrPMEdit as text
 %        str2double(get(hObject,'String')) returns contents of BrPMEdit as a double
 dataSet = handles.dataSet;
-dataSet.Br = str2double(get(hObject,'String'));
+% dataSet.Br = str2double(get(hObject,'String'));
+dataSet.Br = str2num(get(hObject,'String'));
+dataSet.BrPP = dataSet.Br;
+SetParameters(handles,dataSet);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -1127,6 +1305,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function MinExpTorEdit_Callback(hObject, eventdata, handles)
+% Minimum expected torque (per.min_exp_torque)
 % hObject    handle to MinExpTorEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1150,6 +1329,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function MaxExpeRippleTorEdit_Callback(hObject, eventdata, handles)
+% Maximum expected torque ripple during optimization [p.u.](per.max_exp_ripple)
 % hObject    handle to MaxExpeRippleTorEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1173,6 +1353,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function MecTolerEdit_Callback(hObject, eventdata, handles)
+% minimum mechanical tolerance (geo.pont0)
 % hObject    handle to MecTolerEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1197,6 +1378,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function SimPosFinerEdit_Callback(hObject, eventdata, handles)
+% Rotor position for Pareto(geo.nsim_singt) 
 % hObject    handle to SimPosFinerEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1220,6 +1402,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function RotorPosFinerEdit_Callback(hObject, eventdata, handles)
+% Rotor angular excursion for Pareto
 % hObject    handle to RotorPosFinerEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1243,6 +1426,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function SimPosMOEdit_Callback(hObject, eventdata, handles)
+% Simuluated position for MODE(geo.nsim_MOOA)
 % hObject    handle to SimPosMOEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1266,6 +1450,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function RotorPosiMOEdit_Callback(hObject, eventdata, handles)
+% Rotor angular excursion for MODE (geo.delta_sim_MOOA)
 % hObject    handle to RotorPosiMOEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1289,6 +1474,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function SlotMatEdit_Callback(hObject, eventdata, handles)
+% Slot material(geo.BLKLABELSmaterials)
 % hObject    handle to SlotMatEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1312,6 +1498,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function StatorMatEdit_Callback(hObject, eventdata, handles)
+% stator material(geo.BLKLABELSmaterials)
 % hObject    handle to StatorMatEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1335,6 +1522,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function RotorMatEdit_Callback(hObject, eventdata, handles)
+% rotor material (geo.BLKLABELSmaterials)
 % hObject    handle to RotorMatEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1358,6 +1546,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function FluxBarMatEdit_Callback(hObject, eventdata, handles)
+% flux barrier material (geo.BLKLABELSmaterials)
 % hObject    handle to FluxBarMatEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1381,6 +1570,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function ShaftMatEdit_Callback(hObject, eventdata, handles)
+% shaft material (geo.BLKLABELSmaterials)
 % hObject    handle to ShaftMatEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1404,6 +1594,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function RotorConMatEdit_Callback(hObject, eventdata, handles)
+% rotor conductor winding material (geo.BLKLABELSmaterials)
 % hObject    handle to RotorConMatEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1428,6 +1619,7 @@ end
 
 % --- Executes on button press in LibraryMaterPush.
 function LibraryMaterPush_Callback(hObject, eventdata, handles)
+% Open Library Material
 % hObject    handle to LibraryMaterPush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1476,10 +1668,13 @@ guidata(hObject,handles)
 
 % --- Executes on button press in OptimizePush.
 function OptimizePush_Callback(hObject, eventdata, handles)
+% Optimize pushbutton
 % hObject    handle to OptimizePush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
 dataSet = handles.dataSet;
+save('dataSet','dataSet');
 figure()
 [bounds, geo, per] = data0(dataSet);
 dat.geo0 = geo;
@@ -1522,11 +1717,12 @@ dat.SaveResults='yes';
 dat.CounterGEN=0;
 dat.CounterFES=0;
 % Run the algorithm.
-OUT = MODE2(dat);
+OUT = MODE2(dat, dataSet);
+delete('dataSet.mat');
 % guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
-function YqEdit_CreateFcn(hObject, eventdata, handles)
+function YqEdit_CreateFcn(hObject, eventdata, handles)  
 % hObject    handle to YqEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -1567,6 +1763,8 @@ function LoadPushTool_ClickedCallback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 [FileName,PathName] = uigetfile('*.mat');
 load([PathName FileName]);
+dataSet.RQ = roundn(dataSet.RQ,-4);
+GeometricTab_Callback(hObject, eventdata, handles)
 SetParameters(handles,dataSet);
 handles.dataSet = dataSet;
 %% ======= Matrix of winding ==============================================
@@ -1580,6 +1778,7 @@ rowName{2} = 'Layer 2';
 set(handles.WinTable,'rowname',rowName);
 set(handles.WinTable,'columnname',columnName);
 set(handles.WinTable,'data',dataSet.WinMatr);
+
 %% ========================================================================
 guidata(hObject,handles);
 
@@ -1663,7 +1862,7 @@ set(handles.OptionsPanel,'Visible','off')
 set(handles.PostProcePanel,'Visible','off')
 set(handles.MaterialPanel,'Visible','on')
 set(handles.OptimizationPanel,'Visible','off')
-set(handles.RotorGeometryPanel,'Visible','off');
+set(handles.RotorGeometryPanel,'Visible','off')
 
 guidata(hObject,handles)
 
@@ -1688,7 +1887,7 @@ set(handles.OptionsPanel,'Visible','off')
 set(handles.MaterialPanel,'Visible','off')
 set(handles.PostProcePanel,'Visible','off')
 set(handles.OptimizationPanel,'Visible','off')
-set(handles.RotorGeometryPanel,'Visible','off');
+set(handles.RotorGeometryPanel,'Visible','off')
 
 guidata(hObject,handles)
 
@@ -1748,6 +1947,7 @@ guidata(hObject,handles)
 
 % --- Executes on button press in SaveConfPush.
 function SaveConfPush_Callback(hObject, eventdata, handles)
+% Save Configuration pushbutton
 % hObject    handle to SaveConfPush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1792,6 +1992,7 @@ function WinTable_KeyPressFcn(hObject, eventdata, handles)
 
 % --- Executes when entered data in editable cell(s) in WinTable.
 function WinTable_CellEditCallback(hObject, eventdata, handles)
+% winding layout
 % hObject    handle to WinTable (see GCBO)
 % eventdata  structure with the following fields (see UITABLE)
 %	Indices: row and column indices of the cell(s) edited
@@ -1809,12 +2010,16 @@ function DrawPush_Callback(hObject, eventdata, handles)
 flag_plot = 'Y';
 h = handles.axes5;
 dataSet = handles.dataSet;
-[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
-view = round(100*[dalpha hc])/100;
-set(handles.ViewHcDaEdit,'String',mat2str(view));
+[bounds, geo, per] = data0(dataSet);
+[hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot);
+per.tempcuest = temp_est_simpleMod(geo,per);
+set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
+per.io = calc_io(geo,per);
+set(handles.CalculatedRatedCurrent,'String',num2str(per.io));
 guidata(hObject,handles)
 
 function MeshEdit_Callback(hObject, eventdata, handles)
+% mesh (geo.K_mesh)
 % hObject    handle to MeshEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1841,6 +2046,7 @@ end
 
 
 function MeshMOOAEdit_Callback(hObject, eventdata, handles)
+% Mesh MOOA (geo.K_mesh_MOOA)
 % hObject    handle to MeshMOOAEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1867,6 +2073,7 @@ end
 
 
 function NumOfRotorPosiPPEdit_Callback(hObject, eventdata, handles)
+% Number of rotor positions
 % hObject    handle to NumOfRotorPosiPPEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1892,6 +2099,7 @@ end
 
 
 function SpanEltPPEdit_Callback(hObject, eventdata, handles)
+% Rotor angular excursion[elect. deg.]
 % hObject    handle to SpanEltPPEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1944,6 +2152,7 @@ guidata(hObject,handles)
 
 
 function Alpha1BouEdit_Callback(hObject, eventdata, handles)
+% first barrier airgap angle or dalpha 1 (bounds_dalpha_1)
 % hObject    handle to Alpha1BouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1956,7 +2165,10 @@ if m*n > 2 || m*n == 1
     disp('Must be vector 2x1')
     return
 end
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
@@ -1976,6 +2188,7 @@ end
 
 
 function DeltaAlphaBouEdit_Callback(hObject, eventdata, handles)
+% Other barriers angles [p.u.](bounds_dalpha)
 % hObject    handle to DeltaAlphaBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1988,7 +2201,10 @@ if m*n > 2 || m*n == 1
     disp('Must be vector 2x1')
     return
 end
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -2006,6 +2222,7 @@ end
 
 
 function hcBouEdit_Callback(hObject, eventdata, handles)
+% hc[p.u.](bounds_hc)
 % hObject    handle to hcBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2018,7 +2235,10 @@ if m*n > 2 || m*n == 1
     disp('Must be vector 2x1')
     return
 end
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
@@ -2037,6 +2257,7 @@ end
 
 
 function DfeBouEdit_Callback(hObject, eventdata, handles)
+% dx [p.u.](bounds_Dx)
 % hObject    handle to DfeBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2049,7 +2270,10 @@ if m*n > 2 || m*n == 1
     disp('Must be vector 2x1')
     return
 end
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
@@ -2067,6 +2291,7 @@ end
 
 
 function PhaseAngleCurrBouEdit_Callback(hObject, eventdata, handles)
+% Current phase angle  [elect. deg.](bounds_gamma)
 % hObject    handle to PhaseAngleCurrBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2126,6 +2351,7 @@ end
 
 % --- Executes on button press in RemTMPRadio.
 function RemTMPRadio_Callback(hObject, eventdata, handles)
+% remove TMP file (geo.RemoveTMPfile)it only works with XFEMM
 % hObject    handle to RemTMPRadio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2142,6 +2368,7 @@ guidata(hObject,handles)
 
 
 function BrPPEdit_Callback(hObject, eventdata, handles)
+% Br [T]
 % hObject    handle to BrPPEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2149,11 +2376,11 @@ function BrPPEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of BrPPEdit as a double
 
 dataSet = handles.dataSet;
-try
-    dataSet.BrPP = str2num((get(hObject,'String')));
-catch
-    dataSet.BrPP = str2double((get(hObject,'String')));
-end
+dataSet.BrPP = str2num((get(hObject,'String')));
+dataSet.Br = dataSet.BrPP;
+SetParameters(handles,dataSet);
+dataSet = handles.dataSet;
+% dataSet.Br = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
 guidata(hObject,handles)
 
@@ -2174,6 +2401,7 @@ end
 
 
 function GammaPPEdit_Callback(hObject, eventdata, handles)
+% Current phase angle[elect. deg.]
 % hObject    handle to GammaPPEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2207,6 +2435,7 @@ end
 
 
 function CurrLoPPEdit_Callback(hObject, eventdata, handles)
+% Current load [p.u.]
 % hObject    handle to CurrLoPPEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2236,6 +2465,7 @@ end
 
 % --- Executes on button press in StartPProPush.
 function StartPProPush_Callback(hObject, eventdata, handles)
+% Start pushbutton of post processing
 % hObject    handle to StartPProPush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2251,6 +2481,7 @@ guidata(hObject,handles)
 
 % --- Executes on button press in PostProcXFEMMCheck.
 function PostProcXFEMMCheck_Callback(hObject, eventdata, handles)
+% Post Processing with XFEMM check box
 % hObject    handle to PostProcXFEMMCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2268,6 +2499,7 @@ guidata(hObject,handles)
 
 % --- Executes on button press in XFEMMOptRadio.
 function XFEMMOptRadio_Callback(hObject, eventdata, handles)
+% XFEMM option check box
 % hObject    handle to XFEMMOptRadio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2325,6 +2557,7 @@ end
 
 % --- Executes on button press in MatrixOfData0Push.
 function MatrixOfData0Push_Callback(hObject, eventdata, handles)
+% Matrix of data0
 % hObject    handle to MatrixOfData0Push (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2356,6 +2589,7 @@ guidata(hObject,handles)
 
 
 function MaxGenEdit_Callback(hObject, eventdata, handles)
+% Maximum number of generations
 % hObject    handle to MaxGenEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2379,6 +2613,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function XPopEdit_Callback(hObject, eventdata, handles)
+% Population Size
 % hObject    handle to XPopEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2414,6 +2649,7 @@ guidata(hObject,handles)
 
 
 function NGridPPEdit_Callback(hObject, eventdata, handles)
+% Number of points in [0 Imax] (n_grid)
 % hObject    handle to NGridPPEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2442,6 +2678,7 @@ end
 
 % --- Executes on button press in ClearCachePush.
 function ClearCachePush_Callback(hObject, eventdata, handles)
+% Empty \tmp folder pushbutton
 % hObject    handle to ClearCachePush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2503,9 +2740,12 @@ end
 
 % --- Executes on button press in SaveMachinePush.
 function SaveMachinePush_Callback(hObject, eventdata, handles)
+% Save machine pushbutton
 % hObject    handle to SaveMachinePush (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+dataSet = handles.dataSet;
+handles.dataSet = dataSet;
 DrawPushMachine;
 handles.dataSet = dataSet;
 guidata(hObject,handles)
@@ -2530,22 +2770,32 @@ guidata(hObject,handles)
 
 
 function AlphapuEdit_Callback(hObject, eventdata, handles)
+% alpha [p.u.]
 % hObject    handle to AlphapuEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% Hints: get(hObject,'String') returns contents of AlphapuEdit as text
+% Hints: get(hO bject,'String') returns contents of AlphapuEdit as text
 %        str2double(get(hObject,'String')) returns contents of AlphapuEdit as a double
 dataSet = handles.dataSet;
 dataSet.ALPHApu = str2num(get(hObject,'String'));
-dataSet.HCpu = str2num(get(handles.hcpuEdit,'String'));
-dataSet.RQ = [dataSet.ALPHApu dataSet.HCpu];
+dataSet.Dalpha1BouCheck = 0;
+dataSet.DalphaBouCheck = 0;
+set(handles.Dalpha1BouCheck,'Value',dataSet.Dalpha1BouCheck);
+set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
-flag_plot = 'Y';
-h = handles.axes5;
-[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
-view = round(100*[dalpha hc])/100;
-set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
+% dataSet.HCpu = str2num(get(handles.hcpuEdit,'String'));
+% dataSet.RQ = [dataSet.ALPHApu dataSet.HCpu];
+% handles.dataSet = dataSet;
+% flag_plot = 'Y';
+% h = handles.axes5;
+% [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
+% view = round(100*[dalpha hc])/100;
+% set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
+% guidata(hObject,handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -2563,11 +2813,19 @@ end
 
 
 function AlphadegreeEdit_Callback(hObject, eventdata, handles)
+% alpha [degrees]
 % hObject    handle to AlphadegreeEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hints: get(hObject,'String') returns contents of AlphadegreeEdit as text
 %        str2double(get(hObject,'String')) returns contents of AlphadegreeEdit as a double
+dataSet = handles.dataSet;
+dataSet.AngleSpanOfPM = str2double(get(hObject,'String'));
+handles.dataSet = dataSet;
+flag_plot = 'Y';
+h = handles.axes5;
+[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
+guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
 function AlphadegreeEdit_CreateFcn(hObject, eventdata, handles)
@@ -2582,8 +2840,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function hcpuEdit_Callback(hObject, eventdata, handles)
+% hc [p.u.]
 % hObject    handle to hcpuEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2591,14 +2849,12 @@ function hcpuEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of hcpuEdit as a double
 dataSet = handles.dataSet;
 dataSet.HCpu = str2num(get(hObject,'String'));
-dataSet.ALPHApu = str2num(get(handles.AlphapuEdit,'String'));
-dataSet.RQ = [dataSet.ALPHApu dataSet.HCpu];
+dataSet.hcBouCheck = 0;
+set(handles.hcBouCheck,'Value',dataSet.hcBouCheck);
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
-h = handles.axes5;
-flag_plot = 'Y';
-[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
-view = round(100*[dalpha hc])/100;
-set(handles.hcmmEdit,'String',mat2str(view((dataSet.NumOfLayers+1):end)));
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
@@ -2615,15 +2871,23 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function hcmmEdit_Callback(hObject, eventdata, handles)
+% hc [mm]
 % hObject    handle to hcmmEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hints: get(hObject,'String') returns contents of hcmmEdit as text
 %        str2double(get(hObject,'String')) returns contents of hcmmEdit as a double
+dataSet = handles.dataSet;
+dataSet.ThicknessOfPM = str2double(get(hObject,'String'));
+handles.dataSet = dataSet;
+flag_plot = 'Y';
+h = handles.axes5;
+[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
+guidata(hObject,handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function hcmmEdit_CreateFcn(hObject, eventdata, handles)
+function hcmmEdit_CreateFcn(hObject, ~, handles)
 % hObject    handle to hcmmEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -2637,6 +2901,7 @@ end
 
 
 function BrBouEdit_Callback(hObject, eventdata, handles)
+% Br [T](bounds_Br)
 % hObject    handle to BrBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2645,10 +2910,11 @@ function BrBouEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of BrBouEdit as a double
 dataSet = handles.dataSet;
 dataSet.BrBou = str2num(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
-
-
 
 
 % --- Executes during object creation, after setting all properties.
@@ -2666,19 +2932,25 @@ end
 
 % --- Executes on button press in BrBouCheck.
 function BrBouCheck_Callback(hObject, eventdata, handles)
+% Br [T] (bounds_Br)
 % hObject    handle to BrBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of BrBouCheck
 dataSet = handles.dataSet;
 dataSet.BrBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
 
 
 function AirgapRadiusBouEdit_Callback(hObject, eventdata, handles)
+% Airgap radius [mm](bounds_xr)
 % hObject    handle to AirgapRadiusBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2687,10 +2959,11 @@ function AirgapRadiusBouEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of AirgapRadiusBouEdit as a double
 dataSet = handles.dataSet;
 dataSet.GapRadiusBou = str2num(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
-
-
 
 
 % --- Executes during object creation, after setting all properties.
@@ -2708,6 +2981,7 @@ end
 
 % --- Executes on button press in AirgapRadiusBouCheck.
 function AirgapRadiusBouCheck_Callback(hObject, eventdata, handles)
+% Airgap radius [mm](bounds_xr)check box
 % hObject    handle to AirgapRadiusBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2715,12 +2989,14 @@ function AirgapRadiusBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of AirgapRadiusBouCheck
 dataSet = handles.dataSet;
 dataSet.AirgapRadiusBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
-
-
 function ToothWidthBouEdit_Callback(hObject, eventdata, handles)
+% Tooth width [mm](bounds_wt)
 % hObject    handle to ToothWidthBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2729,7 +3005,10 @@ function ToothWidthBouEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ToothWidthBouEdit as a double
 dataSet = handles.dataSet;
 dataSet.ToothWiBou = str2num(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -2747,6 +3026,7 @@ end
 
 % --- Executes on button press in ToothWidthBouCheck.
 function ToothWidthBouCheck_Callback(hObject, eventdata, handles)
+% Tooth width [mm](bounds_wt)check box
 % hObject    handle to ToothWidthBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2754,11 +3034,15 @@ function ToothWidthBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of ToothWidthBouCheck
 dataSet = handles.dataSet;
 dataSet.ToothWidthBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
 function ToothLenBouEdit_Callback(hObject, eventdata, handles)
+% Tooth length [mm](bounds_lt)
 % hObject    handle to ToothLenBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2767,7 +3051,14 @@ function ToothLenBouEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of ToothLenBouEdit as a double
 dataSet = handles.dataSet;
 dataSet.ToothLeBou = str2num(get(hObject,'String'));
+if dataSet.ToothLeBou(2)>(dataSet.StatorOuterRadius - dataSet.AirGapRadius-dataSet.AirGapThickness)
+    dataSet.ToothLeBou(2) = dataSet.StatorOuterRadius - dataSet.AirGapRadius-dataSet.AirGapThickness;
+    set(handles.ToothLenBouEdit,'String',mat2str(dataSet.ToothLeBou));
+end
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -2785,6 +3076,7 @@ end
 
 % --- Executes on button press in ToothLengthBouCheck.
 function ToothLengthBouCheck_Callback(hObject, eventdata, handles)
+% Tooth length [mm] (bounds_lt) check box
 % hObject    handle to ToothLengthBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2792,18 +3084,28 @@ function ToothLengthBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of ToothLengthBouCheck
 dataSet = handles.dataSet;
 dataSet.ToothLengthBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
 function GapBouEdit_Callback(hObject, eventdata, handles)
+% Airgap thickness[mm](bounds_g)
 % hObject    handle to GapBouEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of GapBouEdit as text
 %        str2double(get(hObject,'String')) returns contents of GapBouEdit as a double
-
+dataSet = handles.dataSet;
+dataSet.GapBou = str2num(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
 function GapBouEdit_CreateFcn(hObject, eventdata, handles)
@@ -2820,6 +3122,7 @@ end
 
 % --- Executes on button press in Dalpha1BouCheck.
 function Dalpha1BouCheck_Callback(hObject, eventdata, handles)
+% 1st barrier airgap angle [p.u.](bounds_dalpha_1)check box
 % hObject    handle to Dalpha1BouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2827,11 +3130,21 @@ function Dalpha1BouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of Dalpha1BouCheck
 dataSet = handles.dataSet;
 dataSet.Dalpha1BouCheck = get(hObject,'Value');
+if dataSet.Dalpha1BouCheck ==0
+    dataSet.DalphaBouCheck = 0;
+else
+    dataSet.DalphaBouCheck = 1;
+end
+set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes on button press in DalphaBouCheck.
 function DalphaBouCheck_Callback(hObject, eventdata, handles)
+% Other barriers angles [p.u.](bounds_dalpha)
 % hObject    handle to DalphaBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2839,11 +3152,21 @@ function DalphaBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of DalphaBouCheck
 dataSet = handles.dataSet;
 dataSet.DalphaBouCheck = get(hObject,'Value');
+if dataSet.DalphaBouCheck ==0
+    dataSet.Dalpha1BouCheck = 0;
+else
+    dataSet.Dalpha1BouCheck = 1;
+end
+set(handles.Dalpha1BouCheck,'Value',dataSet.Dalpha1BouCheck);
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes on button press in hcBouCheck.
 function hcBouCheck_Callback(hObject, eventdata, handles)
+% hc [p.u.](bounds_hc) check box
 % hObject    handle to hcBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2851,11 +3174,15 @@ function hcBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of hcBouCheck
 dataSet = handles.dataSet;
 dataSet.hcBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes on button press in DxBouCheck.
 function DxBouCheck_Callback(hObject, eventdata, handles)
+% dx [p.u.](bounds_Dx)
 % hObject    handle to DxBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2863,12 +3190,16 @@ function DxBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of DxBouCheck
 dataSet = handles.dataSet;
 dataSet.DxBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
 % --- Executes on button press in GammaBouCheck.
 function GammaBouCheck_Callback(hObject, eventdata, handles)
+% Current phase angle[elect. deg.](bounds_gamma)
 % hObject    handle to GammaBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -2876,16 +3207,219 @@ function GammaBouCheck_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of GammaBouCheck
 dataSet = handles.dataSet;
 dataSet.GammaBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 % --- Executes on button press in GapBouCheck.
 function GapBouCheck_Callback(hObject, eventdata, handles)
+% Airgap thickness[mm](bounds_g)
 % hObject    handle to GapBouCheck (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of GapBouCheck
 dataSet = handles.dataSet;
 dataSet.GapBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
+
+
+function ToothTangDepthBouEdit_Callback(hObject, eventdata, handles)
+% tooth tang depth[mm]  (bounds_ttd)
+% hObject    handle to ToothTangDepthBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ToothTangDepthBouEdit as text
+%        str2double(get(hObject,'String')) returns contents of ToothTangDepthBouEdit as a double
+dataSet = handles.dataSet;
+dataSet.ToothTangDepthBou = str2num(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function ToothTangDepthBouEdit_CreateFcn(hObject, eventdata, handles)
+% tooth tang depth[mm]  (bounds_ttd)
+% hObject    handle to ToothTangDepthBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in StatorSlotOpenBouCheck.
+function StatorSlotOpenBouCheck_Callback(hObject, eventdata, handles)
+% stator slot open [p.u.] (bounds_acs)
+% hObject    handle to StatorSlotOpenBouCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of StatorSlotOpenBouCheck
+dataSet = handles.dataSet;
+dataSet.StatorSlotOpenBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes on button press in ToothTangDepthBouCheck.
+function ToothTangDepthBouCheck_Callback(hObject, eventdata, handles)
+% tooth tang depth[mm]  (bounds_ttd)
+% hObject    handle to ToothTangDepthBouCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ToothTangDepthBouCheck
+dataSet = handles.dataSet;
+dataSet.ToothTangDepthBouCheck = get(hObject,'Value');
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+
+function StatorSlotOpenBouEdit_Callback(hObject, eventdata, handles)
+% stator slot open [p.u.] (bounds_acs)
+% hObject    handle to StatorSlotOpenBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of StatorSlotOpenBouEdit as text
+%        str2double(get(hObject,'String')) returns contents of StatorSlotOpenBouEdit as a double
+dataSet = handles.dataSet;
+dataSet.StatorSlotOpenBou = str2num(get(hObject,'String'));
+[bounds, geo, per] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function StatorSlotOpenBouEdit_CreateFcn(hObject, eventdata, handles)
+% stator slot open [p.u.] (bounds_acs)
+% hObject    handle to StatorSlotOpenBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function EstimatedCoppTemp_Callback(hObject, eventdata, handles)
+% hObject    handle to EstimatedCoppTemp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of EstimatedCoppTemp as text
+%        str2double(get(hObject,'String')) returns contents of EstimatedCoppTemp as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function EstimatedCoppTemp_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to EstimatedCoppTemp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function HousingTempEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to HousingTempEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of HousingTempEdit as text
+%        str2double(get(hObject,'String')) returns contents of HousingTempEdit as a double
+dataSet = handles.dataSet;
+dataSet.HousingTemp = str2double(get(hObject,'String'));
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function HousingTempEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to HousingTempEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function DxEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to DxEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of DxEdit as text
+%        str2double(get(hObject,'String')) returns contents of DxEdit as a double
+dataSet = handles.dataSet;
+dataSet.DepthOfBarrier = str2num(get(hObject,'String'));
+handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function DxEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DxEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function CalculatedRatedCurrent_Callback(hObject, eventdata, handles)
+% hObject    handle to CalculatedRatedCurrent (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of CalculatedRatedCurrent as text
+%        str2double(get(hObject,'String')) returns contents of CalculatedRatedCurrent as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function CalculatedRatedCurrent_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to CalculatedRatedCurrent (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

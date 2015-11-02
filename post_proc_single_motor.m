@@ -26,7 +26,7 @@ function post_proc_single_motor(CurrLoPP,GammaPP,BrPP,NumOfRotPosPP,AngularSpanP
 %%          NumGrid: number of points in [0 Imax] for the single machine post-processing
 %%=========================================================================
 
-%% singt mode 
+%% singt mode
 % simulates single or multiple (id,iq) conditions
 % example inputs:
 % single condition: CurrLoPP = 1, GammaPP = 45
@@ -41,7 +41,7 @@ function post_proc_single_motor(CurrLoPP,GammaPP,BrPP,NumOfRotPosPP,AngularSpanP
 %% input dialog box
 if (nargin) == 0
     %% input dialog box
-    temp = inputdlg({'current load [p.u.]';'gamma [deg]';'Br [T]';'number of rotor positions';'angular span (elt. deg.)';'points in [0 Imax]'},'INPUT',1,{'1';'60';'0';'17';'60';'5'});
+    temp = inputdlg({'current load [p.u.]';'gamma [deg]';'Br [T]';'number of rotor positions';'angular span (elt. deg.)';'points in [0 Imax]'},'INPUT',1,{'[1 1 1 1 1 1 1 1]';'[40 45 50 55 60 65 70 75]';'0';'6';'60';'5'});
     
     CurrLoPP = eval(cell2mat(temp(1)));         % current to be simulated
     GammaPP = eval(cell2mat(temp(2)));          % current phase angle
@@ -52,7 +52,7 @@ if (nargin) == 0
 elseif nargin ~= 6
     disp('Wrong number of inputs')
     return
-end 
+end
 
 clc;
 syreRoot = fileparts(which('MODEstart.m'));
@@ -83,7 +83,7 @@ switch eval_type
     
     case 'singt'
         
-        % simulation
+        % single or multiple simulation
         performance = cell(1,length(overload_temp));
         output = cell(1,length(overload_temp));
         geometry = cell(1,length(overload_temp));
@@ -95,8 +95,8 @@ switch eval_type
         end
         
         geo.RemoveTMPfile = 'OFF';
-        parfor i = 1:length(overload_temp)
-            [~,geometry{i},output{i},tempDirName{i}] = FEMMfitness([],geo,performance{i},eval_type,[pathname filemot]);
+        for i = 1:length(overload_temp)
+            [~,geometry{i},output{i},tempDirName{i}] = FEMMfitness([],geo,performance{i},eval_type,[pathname,filemot]);
         end
         
         % save output into individual folders
@@ -115,17 +115,16 @@ switch eval_type
                 gammaStr = [gammaStr 'd'];
             end
             
+            
             FILENAME = [filemot(1:end-4) '_T_eval_',iStr,'_',gammaStr];
             [success,message,messageid] = mkdir(pathname,FILENAME);
             newDir=[pathname,FILENAME,'\'];
             
             save([newDir,FILENAME,'.mat'],'geo','per','out');
-            movefile([syreRoot '\tmp\' dirName '\mot0.fem'],[newDir FILENAME '.fem']);
-            
-            % plot and save figs
+            movefile([syreRoot '\tmp\' dirName '\mot_temp.fem'],[newDir FILENAME '.fem']);
+            %             plot and save figs
             klength = 1; kturns = 1; delta_sim_singt = geo.delta_sim_singt;
             plot_singt(out,klength,kturns,delta_sim_singt,newDir,filemot);
-            
         end
         
         % extra figs, if input current is array
@@ -137,7 +136,7 @@ switch eval_type
             dTpu = zeros(1,length(overload_temp));
             fd = zeros(1,length(overload_temp));
             fq = zeros(1,length(overload_temp));
-
+            
             for i = 1:length(overload_temp)
                 id(i) = output{i}.id;
                 iq(i) = output{i}.iq;
@@ -146,6 +145,8 @@ switch eval_type
                 fd(i) = output{i}.fd;
                 fq(i) = output{i}.fq;
             end
+            dirPower=[pathname,filemot(1:end-4),'singT\'];
+            mkdir(dirPower);
             
             x = 1:length(overload_temp);
             figure(10), subplot(2,1,1)
@@ -153,31 +154,41 @@ switch eval_type
             subplot(2,1,2)
             plot(x,dTpu.*T,'-x'), grid on, ylabel('torque ripple [Nm]')
             xlabel('simulation #'),
-            saveas(gcf,[pathname '\torque_sens.fig'])
-
+            saveas(gcf,[dirPower,filemot(1:end-4),'_torque_sens.fig'])
             
             figure(11), subplot(2,1,1)
             plot(x,fd,'-x',x,fq,'-x'), grid on, ylabel('[Vs]'), legend('\lambda_d','\lambda_q'),
             subplot(2,1,2)
             plot(x,sin(atan(iq./id)-atan(fq./fd)),'-x'), grid on, ylabel('IPF')
             xlabel('simulation #'),
-            saveas(gcf,[pathname '\fdq_IPF_sens.fig'])
- 
+            saveas(gcf,[dirPower,filemot(1:end-4),'_fdq_IPF_sens.fig'])
+            
         end
         
     case 'singm'
-
+        
+        % flux map over a grid of id,iq combinations
         n_grid = NumGrid;     % number of points in [0 Imax] for the single machine post-processing
         iAmp = overload_temp*calc_io(geo,per);
         switch length(iAmp)
-            case 1
-                idvect = linspace(0,iAmp,n_grid);
-                iqvect = linspace(0,iAmp,n_grid);
-            case 2
-                idvect = linspace(0,iAmp(1),n_grid);
-                iqvect = linspace(0,iAmp(2),n_grid);
+            case 1  % square domain
+                if strcmp(geo.RotType,'SPM')
+                    idvect = linspace(-iAmp,0,n_grid);
+                    iqvect = linspace(0,iAmp,n_grid);
+                else
+                    idvect = linspace(0,iAmp,n_grid);
+                    iqvect = linspace(0,iAmp,n_grid);
+                end
+            case 2  % rectangular domain
+                if strcmp(geo.RotType,'SPM')
+                    idvect = linspace(-iAmp(1),0,n_grid);
+                    iqvect = linspace(0,iAmp(2),n_grid);
+                else
+                    idvect = linspace(0,iAmp,n_grid);
+                    iqvect = linspace(0,iAmp,n_grid);
+                end
         end
-       
+        
         F_map = eval_FdFq_tables_in_FEMM(geo,per,idvect,iqvect,eval_type,[pathname filemot]);
         
         % builds a new folder for each id, iq simulation
@@ -195,7 +206,7 @@ switch eval_type
         [success,message,messageid] = mkdir(pathname,[FILENAME '_' Idstr 'x' Iqstr]);
         NewDir=[pathname,[FILENAME '_' Idstr 'x' Iqstr],'\'];
         save([NewDir,FILENAME,'.mat'],'F_map');
-                    
+        
         % interp and then plots the magnetic curves
         n_interp = 256;    % number of points in [0 Imax] for data interpolation
         klength = 1; kturns = 1; n2=n_interp;
@@ -203,3 +214,5 @@ switch eval_type
         plot_singm;
         
 end
+
+

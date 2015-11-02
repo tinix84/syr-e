@@ -1,7 +1,7 @@
-%% 
+%%
 
 switch geo.RotType
-
+    
     case 'Circular'
         A = [];
         rG = [];  % Distanza da (0,0) dei baricentri dei volumi appesi ai ponticelli
@@ -117,21 +117,24 @@ switch geo.RotType
             end
         end
         %% PARTE AGGIUNTIVA PM 2 ====================================================
-%        Var = ones(1,nlay);
-%        rG_PM = zeros(1,nlay);
-%        t = 0;
-%        while abs((sum(rG_PM) - sum(Var))) > 1e-3
-%            t = t + 1;
-%            if t >= 2
-%                Var = rG_PM;
-%            end
+        %        Var = ones(1,nlay);
+        %        rG_PM = zeros(1,nlay);
+        %        t = 0;
+        %        while abs((sum(rG_PM) - sum(Var))) > 1e-3
+        %            t = t + 1;
+        %            if t >= 2
+        %                Var = rG_PM;
+        %            end
         for i = 1 : nlay
             tmp_theta(i) = atan2(YpontRadBarDx(i),x0-XpontRadBarDx(i));
             thetaArco(i) = theta(i) - tmp_theta(i);
         end
         area_barr_withoutPM = AreaBarr;
-        if geo.Br > 0 && geo.Br <= geo.Br_commercial
-            area_barr_withPM = area_barr_withoutPM*geo.Br/geo.Br_commercial; % geo.Br_commercial is the Br of the real magnet
+        
+        tempBr = mean(unique(geo.Br));  % c'è magnete o aria?? (gp .. temporaneo ott 16, 2015 )
+        
+        if tempBr > 0 && tempBr <= geo.Br_commercial
+            area_barr_withPM = area_barr_withoutPM.*geo.Br/geo.Br_commercial; % geo.Br_commercial is the Br of the real magnet
             for i = 1 : 2: length(r_all)
                 idx = ceil(i/2);
                 rPM = (2/3*sin(0.5*thetaArco(idx))/(0.5*thetaArco(idx))*(r_all(2*idx)^3 - r_all(2*idx - 1)^3)/(r_all(2*idx)^2 - r_all(2*idx - 1)^2));
@@ -157,7 +160,7 @@ switch geo.RotType
                     xG_semiCircleR = 4/3*r_semi(idx)/pi;
                     rG_semiCircleA = sqrt(xG_semiCircleR^2 + (x_circle^2 + y_circle^2));
                     theta_tmp1 = asin(xG_semiCircleR/rG_semiCircleA);
-                    xG_semiCircle = x0 - rG_semiCircleA*cos(theta_tmp1 + theta_tmp);   
+                    xG_semiCircle = x0 - rG_semiCircleA*cos(theta_tmp1 + theta_tmp);
                     AreaRes = (0.5*area_barr_withPM(idx) - 0.5*(r_all(2*idx)^2 - r_all(2*idx - 1)^2)*thetaArco(idx) - 0.5*pi*r_semi(idx)^2);
                     rG_PM(idx) = (xG*(r_all(2*idx)^2 - r_all(2*idx - 1)^2)*thetaArco(idx)*0.5 + xG_semiCircle*0.5*pi*r_semi(idx)^2 + mean([XpontRadDx XpontRadSx])*AreaRes)/(0.5*area_barr_withPM(idx));
                 end
@@ -228,7 +231,7 @@ switch geo.RotType
                     pont(jj) = 0;
                 end
             end
-                
+            
             for jj = 1 : 2 : length(r_all)
                 % DISEGNO DEI PONTICELLI RADIALI
                 % keyboard
@@ -275,7 +278,7 @@ switch geo.RotType
             end
         elseif geo.Br > geo.Br_commercial
             disp('Error: wrong Br value');
-        end        
+        end
         
     otherwise
         
@@ -383,106 +386,108 @@ switch geo.RotType
         % Y_U2barr=[yyD1k(3) yyD2k(3) YpBar2(3) 0 0 YpBar1(3)];
         % % areaU2=2*polyarea(X_U2barr,Y_U2barr)+pi*((B2k(3)-B1k(3))/2)^2-flag_PM(3)*(B2k(3)-B1k(3))*(XpontRadBarDx(3)-XpontRadBarSx(3)); % area totale della barriera a U interna
         % areaU2=(2*YpBar2(3)*hc(3))-flag_PM(3)*(B2k(3)-B1k(3))*(XpontRadBarDx(3)-XpontRadBarSx(3)); %  area della barriera a U in cui inserire i magneti (escludo i due semicerchi all'estremità della barriera e le due "gambe" della "U")
-        
-        % barriere ad U
-        for kk=2:nlay
-            areaUbars(kk-1) = (2*YpBar2(kk)*hc(kk))-flag_PM(kk)*(B2k(kk)-B1k(kk))*(XpontRadBarDx(kk)-XpontRadBarSx(kk)); %area della barriera a U in cui inserire i magneti (escludo i due semicerchi all'estremità della barriera e le due "gambe" della "U")
+        if nlay == 1
+            area_barr_withoutPM = [areaI];
+        else
+            % barriere ad U
+            for kk=2:nlay
+                areaUbars(kk-1) = (2*YpBar2(kk)*hc(kk))-flag_PM(kk)*(B2k(kk)-B1k(kk))*(XpontRadBarDx(kk)-XpontRadBarSx(kk)); %area della barriera a U in cui inserire i magneti (escludo i due semicerchi all'estremità della barriera e le due "gambe" della "U")
+            end
+            area_barr_withoutPM = [areaI areaUbars];
         end
         
-        area_barr_withoutPM = [areaI areaUbars];
-        
-        if (geo.Br>0 && geo.Br<=geo.Br_commercial)
-            %     areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-            %     areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-            %     areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-            %     area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
-            
-            area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-            
-            rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
-            %ricalcolo i baricentri delle masse di ferro e magnete
-            for ii=1:nlay
-                rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
-            end
-            
-            %% ripeto le righe 36-78 per ricalcolare i ponticelli radiali in presenza di magneti (da qui fino alla fine dello script)
-            M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
-            A_PM=cumsum(area_barr_withPM);
-            %     A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
-            
-            M_PM = A_PM*l* 1e-9 *geo.rhoPM;
-            F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
-            sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
-            
-            pont = F_centrifuga/(sigma_max * l);    % mm
-            
-            for jj=1:nlay
-                if (pont(jj) < geo.pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione
-                    pont(jj)=0;
-                end
-                
-                % controllo per vedere se ho a disposizione area a sufficienza per
-                % il magnete
-                while (area_barr_withoutPM(jj) < area_barr_withPM(jj) + pont(jj)*hc(jj))
-                    geo.Br = 0.99*geo.Br;
-                    %             areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-                    %             areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-                    %             areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-                    %             area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
-                    area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-                    
-                    rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
-                    %ricalcolo i baricentri delle masse di ferro e magnete
-                    for ii=1:nlay
-                        rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
-                    end
-                    
-                    M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
-                    A_PM=cumsum(area_barr_withPM);
-                    %             A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
-                    M_PM = A_PM*l* 1e-9 *geo.rhoPM;
-                    F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
-                    sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
-                    
-                    pont = F_centrifuga/(sigma_max * l);    % mm
-                end
-                
-            end
-            
-            
-            hpont=pont;
-            rac_pont=abs(B1k-B2k)/4;
-            
-            for ii=1:nlay
-                
-                if hpont(ii)>0
-                    XpontRadBarSx(ii)=B1k(ii);
-                    YpontRadBarSx(ii)=hpont(ii)+rac_pont(ii);
-                    XpontRadBarDx(ii)=B2k(ii);
-                    YpontRadBarDx(ii)=hpont(ii)+rac_pont(ii);
-                    XpontRadDx(ii)=B2k(ii)-rac_pont(ii);
-                    YpontRadDx(ii)=hpont(ii);
-                    XpontRadSx(ii)=B1k(ii)+rac_pont(ii);
-                    YpontRadSx(ii)=hpont(ii);
-                    
-                else
-                    
-                    
-                    XpontRadBarSx(ii)=B1k(ii);
-                    YpontRadBarSx(ii)=0;
-                    XpontRadBarDx(ii)=B2k(ii);
-                    YpontRadBarDx(ii)=0;
-                    XpontRadDx(ii)=NaN;
-                    YpontRadDx(ii)=0;
-                    XpontRadSx(ii)=NaN;
-                    YpontRadSx(ii)=0;
-                end
-                
-            end
-            %%
-        elseif geo.Br>geo.Br_commercial
-            disp('Error: wrong Br value')
-            
-        end
+%         if (geo.Br>0 && geo.Br<=geo.Br_commercial)
+%             %     areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+%             %     areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+%             %     areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+%             %     area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
+%             
+%             area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+%             
+%             rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
+%             %ricalcolo i baricentri delle masse di ferro e magnete
+%             for ii=1:nlay
+%                 rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
+%             end
+%             
+%             %% ripeto le righe 36-78 per ricalcolare i ponticelli radiali in presenza di magneti (da qui fino alla fine dello script)
+%             M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
+%             A_PM=cumsum(area_barr_withPM);
+%             %     A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
+%             
+%             M_PM = A_PM*l* 1e-9 *geo.rhoPM;
+%             F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
+%             sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
+%             
+%             pont = F_centrifuga/(sigma_max * l);    % mm
+%             
+%             for jj=1:nlay
+%                 if (pont(jj) < geo.pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione
+%                     pont(jj)=0;
+%                 end
+%                 
+%                 % controllo per vedere se ho a disposizione area a sufficienza per
+%                 % il magnete
+%                 while (area_barr_withoutPM(jj) < area_barr_withPM(jj) + pont(jj)*hc(jj))
+%                     geo.Br = 0.99*geo.Br;
+%                     %             areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+%                     %             areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+%                     %             areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+%                     %             area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
+%                     area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+%                     
+%                     rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
+%                     %ricalcolo i baricentri delle masse di ferro e magnete
+%                     for ii=1:nlay
+%                         rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
+%                     end
+%                     
+%                     M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
+%                     A_PM=cumsum(area_barr_withPM);
+%                     %             A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
+%                     M_PM = A_PM*l* 1e-9 *geo.rhoPM;
+%                     F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
+%                     sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
+%                     
+%                     pont = F_centrifuga/(sigma_max * l);    % mm
+%                 end
+%                 
+%             end
+%             
+%             
+%             hpont=pont;
+%             rac_pont=abs(B1k-B2k)/4;
+%             
+%             for ii=1:nlay
+%                 
+%                 if hpont(ii)>0
+%                     XpontRadBarSx(ii)=B1k(ii);
+%                     YpontRadBarSx(ii)=hpont(ii)+rac_pont(ii);
+%                     XpontRadBarDx(ii)=B2k(ii);
+%                     YpontRadBarDx(ii)=hpont(ii)+rac_pont(ii);
+%                     XpontRadDx(ii)=B2k(ii)-rac_pont(ii);
+%                     YpontRadDx(ii)=hpont(ii);
+%                     XpontRadSx(ii)=B1k(ii)+rac_pont(ii);
+%                     YpontRadSx(ii)=hpont(ii);
+%                     
+%                 else
+%                     
+%                     
+%                     XpontRadBarSx(ii)=B1k(ii);
+%                     YpontRadBarSx(ii)=0;
+%                     XpontRadBarDx(ii)=B2k(ii);
+%                     YpontRadBarDx(ii)=0;
+%                     XpontRadDx(ii)=NaN;
+%                     YpontRadDx(ii)=0;
+%                     XpontRadSx(ii)=NaN;
+%                     YpontRadSx(ii)=0;
+%                 end
+%                 
+%             end
+%             %%
+%         elseif geo.Br>geo.Br_commercial
+%             disp('Error: wrong Br value')
+%             
+%         end
 end
 

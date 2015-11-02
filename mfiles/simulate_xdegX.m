@@ -35,14 +35,18 @@ switch eval_type
         gamma = gamma_in;
         nsim = geo.nsim_MOOA;
         xdeg = geo.delta_sim_MOOA;
+        randFactor = geo.randFactor;
     case 'MO_GA'
         gamma = gamma_in;
         nsim = geo.nsim_MOOA;
         xdeg = geo.delta_sim_MOOA;
+        randFactor = geo.randFactor;
     case 'singt'
         nsim = geo.nsim_singt; xdeg = geo.delta_sim_singt;gamma = gamma_in;
+        randFactor = 0;
     case 'singm'
-        nsim = geo.nsim_singt; xdeg = geo.delta_sim_singt;gamma = gamma_in;       
+        nsim = geo.nsim_singt; xdeg = geo.delta_sim_singt;gamma = gamma_in;
+        randFactor = 0;
 end
 
 % pathname = geo.pathname;
@@ -80,6 +84,8 @@ else
 end
 
 teta=offset:sim_step:xdeg+offset;
+teta=teta+(0.5-rand(1,length(teta)))*randFactor;
+
 
 % disregard the last position
 th=th0+[teta(1:nsim) teta(1)];

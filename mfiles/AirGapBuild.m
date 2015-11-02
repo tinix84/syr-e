@@ -14,7 +14,7 @@
 
 %% 2013/08/21 MG contruction of arc and line of the airgap, bordo mobile dwaun apart...
 
-function AirGapBuild(Qs,ps,p,g,pc,r,res_traf,groupStat,groupRot)
+function AirGapBuild(Qs,ps,p,g,pc,r,res_traf,groupStat,groupRot,lm,BLKLABELSrot,RotType)
 
 [xArcStat1,yArcStat1] = rot_point(r+2/3*g,0,-pc*pi/180);
 [xArcStat2,yArcStat2] = rot_point(r+2/3*g,0,(2*Qs-1)*pc*pi/180);
@@ -72,8 +72,13 @@ mi_clearselected;
 
 [xArcRot1,yArcRot1] = rot_point(r+1/3*g,0,0);
 [xArcRot2,yArcRot2] = rot_point(r+1/3*g,0,ps*180/p*pi/180);
-[xRot1,yRot1] = rot_point(r,0,0);
-[xRot2,yRot2] = rot_point(r,0,ps*180/p*pi/180);
+if strcmp(RotType,'SPM')
+    [xRot1,yRot1] = rot_point(r-lm,0,0);
+    [xRot2,yRot2] = rot_point(r-lm,0,ps*180/p*pi/180);
+else
+    [xRot1,yRot1] = rot_point(r,0,0);
+    [xRot2,yRot2] = rot_point(r,0,ps*180/p*pi/180);
+end
 mi_clearselected;
 
 mi_drawline(xRot1,yRot1,xArcRot1,yArcRot1);

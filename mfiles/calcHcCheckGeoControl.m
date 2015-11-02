@@ -18,7 +18,7 @@
 
 function geo = calcHcCheckGeoControl(geo)
 
-r = geo.r;             % Raggio del rotore al traferro
+r = geo.r;              % Raggio del rotore al traferro
 p = geo.p;              % Paia poli
 nlay = geo.nlay;        % N° layers
 R = geo.R;              % Raggio ext
@@ -35,31 +35,24 @@ if strcmp(geo.RotType,'ISeg_HS')<1
     hfe_min=hfe_min*ones(1,geo.nlay);
 end
 
-% x0 is the coordinate of the center of the circular barriers
-% x0 = r/cos(pi/2/p);
-x0 = geo.x0;
-% max allowed shaft radius
-Ar = x0 - r * tan(pi/2/p);
-geo.ArMaxAdmis = Ar;  
-% rotor space available radialwise (air + steel)
-htot = r - Ar;
-ly = R - r - g - lt;       % stator yoke
-lyr = 1.0 * ly;             % lower limit of the total steel tickness
-la = r - Ar -lyr;          % upper limit of the total air insulation
-% 2014/02/24 MG determination of the minimum thickness of air
-% length...
-    hc_half_min = la/nlay/8;      % occhio che nn deve essere troppo piccolo se no le barriere verranno sempre eccessivamente piccole, ma?! :-|
-%     hc_half_min=0.5*pont0;
+x0 = geo.x0;                % center of the circular barriers profiles
+Ar = x0 - r * tan(pi/2/p);  % max allowed shaft radius
+% geo.ArMaxAdmis = Ar;  
+htot = r - Ar;              % rotor space available radialwise (air + steel)
+ly = R - r - g - lt;        % stator yoke
+lyr = 1.0 * ly;             % rotor yoke ( = ly)
+la = r - Ar -lyr;           % maximum allowed insulation (total air, base value)
+hc_half_min = la/nlay/8;    % min hc/2
+% hc_half_min = pont0;
  
-beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,r,x0);
-rbeta = (x0 - r * cos(alpha*pi/180))./(cos(beta*pi/180));
-% Per il momento la taratura è a mano:
+beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,r,x0);   % arc angles respect to center x0
+rbeta = (x0 - r * cos(alpha*pi/180))./(cos(beta*pi/180));   % radius of circular barriers profiles
 
 delta=(1/(nlay)*sum(hc_pu));
-hfeqMax=rbeta(end)-rbeta(1)-(nlay-1)*2*hc_half_min;
-hfeqMin=(nlay-1)*hfe_min;
-% hfeq=hfeqMax-(hfeqMax-hfeqMin)/0.8*(delta-0.2);
-hfeq=hfeqMax-(hfeqMax-hfeqMin)*(delta);
+hfeqMax=rbeta(end)-rbeta(1)-(nlay-1)*2*hc_half_min;         % total Fe, max (accounts for nlay-1 flux carriers)
+hfeqMin=(nlay-1)*hfe_min;                                   % total Fe, min
+
+hfeq=hfeqMax-(hfeqMax-hfeqMin)*(delta);                     
 
 la=rbeta(end)-rbeta(1)-hfeq;
 coeff_gamma=hc_pu(1)/2+hc_pu(nlay)/2+sum(hc_pu(2:nlay-1));
@@ -70,18 +63,14 @@ coeff_gamma=hc_pu(1)/2+hc_pu(nlay)/2+sum(hc_pu(2:nlay-1));
 hc = [];
 error_type1=1;
 conta=1;
-% while (sum(error_type1)==1)
-%     if conta==5
-%         break
-%     end
 if (nlay==1)
     
-    %% max hc according to alpha min
+    % max hc according to alpha min
     hc_half_max1 = (alpha*pi/180/(1+alpha*pi/180)*(r-pont0));
     % (needs division by 2 .. don't know why but it works)
     hc_half_max1 = hc_half_max1 * 2;
     
-    %% max hc according to alpha max (27 Jan 2011)
+    % max hc according to alpha max (27 Jan 2011)
     temp_alpha_hfemin = hfe_min/r; % rad
     temp_alpha_hc_2 = pi/(2*p) - alpha*pi/180 - temp_alpha_hfemin;
     hc_half_max2 = (temp_alpha_hc_2/(1+temp_alpha_hc_2)*(r-pont0));

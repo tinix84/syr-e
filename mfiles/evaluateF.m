@@ -22,7 +22,8 @@
 %% Main call
 function [J]=evaluateF(X,Dat)
 
-numberOfIndividuals = Dat.XPOP;
+%numberOfIndividuals = Dat.XPOP;
+numberOfIndividuals = size(X,1);
 
 J=zeros(numberOfIndividuals,Dat.NOBJ);
 f=Dat.CostProblem;
