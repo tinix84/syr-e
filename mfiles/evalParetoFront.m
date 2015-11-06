@@ -189,7 +189,7 @@ for m=1:size(x,1)
     T(m,1) = COST(m,1); %out.Tn;
     dT(m,1) = COST(m,2); %out.ripple_pu;
     
-    close;
+%     close;
 end
 
 [STATUS,MESSAGE,MESSAGEID] = copyfile([pathname_ini,filename],[pathname,'\']);

@@ -30,8 +30,7 @@ nlay = geo.nlay;                % N° layers
 
 dalpha = geo.dalpha;            % Angoli dalpha
 % Eval alpha
-alpha = integral_fx(1:length(dalpha),dalpha);
-geo.alpha=alpha;
+alpha = cumsum(dalpha);
 racc_pont = geo.racc_pont;      % racc_pont=1*pont0 <- per i ponticelli radiali.
 ang_pont0 = geo.ang_pont0;      % Ampiezza dell'angolo (in gradi) da spazzare con  raggio r in modo da ottenre un arco lungo pont0
 

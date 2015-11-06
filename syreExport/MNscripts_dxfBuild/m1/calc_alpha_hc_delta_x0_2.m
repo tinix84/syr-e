@@ -33,7 +33,7 @@ hc_pu = geo.hc_pu;
 
 %% CALCOLO 'alpha' E LI SALVO IN GEO.
 alpha = integra_fx(1:length(dalpha),dalpha);
-geo.alpha = alpha;
+% geo.alpha = alpha;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % figure, plot(alpha_sum), hold on, plot(dalpha,'r'), hold off, keyboard

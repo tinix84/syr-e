@@ -23,12 +23,10 @@
 
 % rev: July 22, 2015
 
-clear all, close all, addpath C:\Matlab_functions\
-
+clear all, close all, addpath mfiles %addpath C:\Matlab_functions\
 load LastPath
-[FileName,pathname] = uigetfile([pathname '/*_n*.mat'],'Scegli il file dei risultati')
-load([pathname FileName]); % exp
-run([pathname 'ReadParameters'])
+[FileName,pathname] = uigetfile([pathname '/*_n*.mat'],'LOAD DATA')
+load([pathname FileName]); % run([pathname 'ReadParameters'])
 save LastPath pathname
 
 if not(exist('ID'))
@@ -36,24 +34,34 @@ if not(exist('ID'))
     IQ = Iq;
 end
 
-if not(exist('T'))
-    T = 1.5 * p * (Fd.*Iq - Fq.*Id);
+if exist('T')
+    TI = abs(T);
+    p = round(abs(2/3 * T(2,2)./(Fd(2,2) .* Iq(2,2) - Fq(2,2) .* Id(2,2))));   % pole pairs reconstruction
+else
+    run([pathname 'ReadParameters']);
+    TI = 3/2 * p * (Fd .* Iq - Fq .* Id);   % torque
 end
 
 Imax_interp = max(max(max(abs(Id))),max(max(abs(Iq))));
-ILevel = Imax_interp * [0.25 0.5 0.75];    % current amplitude levels
+ILevel = Imax_interp * [0.25 0.5 0.75 1.00];    % current amplitude levels
 
-% ILevel = 10;
 gamma = linspace(0,90,20);
 
 id = ILevel' * cosd(gamma);
 iq = ILevel' * sind(gamma);
+
+if sum(Id(:,1)) < 0
+        axes_type = 'PM';  % PM style
+    else
+        axes_type = 'SR';  % SyR style
+end
+
 if axes_type == 'PM'
     id = ILevel * -sind(gamma);
     iq = ILevel * cosd(gamma);
 end
     
-t = interp2(ID,IQ,T,id,iq);
+t = interp2(ID,IQ,TI,id,iq);
 fd = interp2(ID,IQ,Fd,id,iq);
 fq = interp2(ID,IQ,Fq,id,iq);
 PF = sind(atand(iq./id) - atand(fq./fd));

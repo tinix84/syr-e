@@ -13,16 +13,20 @@
 %    limitations under the License.
 
 %% == NEW SCRIPT FOR SAVING A MACHINE FROM GUI MANUAL ENTRIES ==
-
 %% ==== TAKE THE DIR AND THE STRUCT DATASET ===============================
+
+function dataSet = DrawPushMachine(handles,filename,dname)
 
 dataSet = handles.dataSet;
 
-[filename,dname] = uiputfile('newmachine.fem','input machine name and location');
-dname = dname(1:end-1);
+if nargin < 2
+    [filename,dname] = uiputfile(['newmachine.fem'],'input machine name and location');
+    dname = dname(1:end-1);
+else
+    filename = [filename '.fem'];
+end
 
 %% ==== FIRST PART FROM FEMMFitnessX ======================================
-
 [bounds, geo, per] = data0(dataSet);
 RQ = dataSet.RQ;
 currentDir = pwd;
@@ -44,7 +48,6 @@ FemmProblem.BlockLabels = [];
 FemmProblem.PointProps = [];
 eval_type = 'MO_OA';
 cd
-% [geo,FemmProblem] = draw_motor_in_XFEMM(geo,eval_type,FemmProblem);
 openfemm
 [geo] = draw_motor_in_FEMM(geo,eval_type);
 delete('mot0.fem');

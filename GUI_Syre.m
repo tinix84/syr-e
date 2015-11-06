@@ -48,6 +48,7 @@ gui_State = struct('gui_Name',       mfilename, ...
     'gui_OutputFcn',  @GUI_Syre_OutputFcn, ...
     'gui_LayoutFcn',  [] , ...
     'gui_Callback',   []);
+
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -69,7 +70,6 @@ function GUI_Syre_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to GUI_Syre (see VARARGIN)
 
 addpath('./mfiles');
-% addpath('./geo');
 
 % Set the colors indicating a selected/unselected tab
 handles.unselectedTabColor = 0.9*[1  1  1];
@@ -129,9 +129,9 @@ handles.Opti = 0;
 
 
 % Update handles structure
-guidata(hObject, handles);
+% guidata(hObject, handles);
 axes(handles.axes4);
-SyreImg = imread('syre.png'); 
+SyreImg = imread('syre.png');
 image(SyreImg);
 axis off;
 axes(handles.axes5);
@@ -141,172 +141,164 @@ box on;
 
 % UIWAIT makes GUI_Syre wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-[bounds, geo, per] = data0();
-
-dataSet.NumOfPolePairs = geo.p; % number of pole pairs
-dataSet.AirGapThickness = geo.g; % airgap thickness
-dataSet.StatorOuterRadius = geo.R; % stator outer radius
-dataSet.AirGapRadius = geo.r; % machine airgap radius
-dataSet.ShaftRadius = geo.Ar; % shaft radius
-dataSet.StackLength = geo.l; % stack length
-dataSet.TypeOfRotor = geo.RotType; % type of rotor
-dataSet.NumOfSlots = geo.q; % number of slots
-dataSet.ToothLength = geo.lt; % tooth length
-dataSet.StatorSlotOpen = geo.acs; % stator slot open in [p.u.]
-dataSet.ToothWidth = geo.wt; % Bgap/Btooth (determines tooth width^-1, yoke width^-1)
-dataSet.ToothTangDepth = geo.ttd; % tooth tang depth [mm]
-dataSet.ToothTangAngle = geo.tta; %  tooth tang angle (mech degree)
-dataSet.FilletCorner = geo.SFR; % fillet at the back corner of the slot [mm]
-dataSet.SlotMaterial = geo.BLKLABELSmaterials{3}; % slot material
-dataSet.StatorMaterial = geo.BLKLABELSmaterials{4}; % stator material
-dataSet.RotorMaterial = geo.BLKLABELSmaterials{5}; % rotor material
-dataSet.FluxBarrierMaterial = geo.BLKLABELSmaterials{6}; % flux barrier material
-dataSet.ShaftMaterial = geo.BLKLABELSmaterials{7}; % shaft material
-dataSet.RotorCondMaterial = geo.BLKLABELSmaterials{8}; % rotor conductor material
-dataSet.SlotFillFactor = geo.kcu; % slot fill factor
-dataSet.PitchShortFac = geo.kracc; % pitch short factor
-dataSet.TurnsInSeries = geo.Ns; % turns in series
-dataSet.AdmiJouleLosses = per.Loss; % admitted Joule Losses [W]
-dataSet.TargetCopperTemp = per.tempcu; % target copper temperature [C]
-dataSet.HousingTemp = per.temphous; % housing temperature [C]
-dataSet.EstimatedCopperTemp = per.tempcuest; % Estimated Copper Temperature [C]
-dataSet.CurrOverLoad = per.overload; % Current overload
-dataSet.NumOfLayers = geo.nlay; % Number of Layers (bars)
-dataSet.OverSpeed = geo.nmax; % overspeed in [rpm]
-dataSet.Br = geo.Br; % Br
-dataSet.Hc = geo.Hc; % Hc
-dataSet.MinExpTorque = per.min_exp_torque; % Minimum expected torque
-dataSet.MaxRippleTorque = per.max_exp_ripple; % Maximum ripple torque
-dataSet.MinMechTol = geo.pont0; % minimum mechanical tolerance [mm]
-dataSet.SimPoMOOA = geo.nsim_MOOA; % simulated positions (6-1)
-dataSet.randFactor = geo.randFactor;  % Noise factor for position number reduction
-dataSet.RotPoMOOA = geo.delta_sim_MOOA; % rotor position span [elt degrees]
-dataSet.SimPoFine = geo.nsim_singt; % simulated positions (16-1)
-dataSet.RotPoFine = geo.delta_sim_singt; % rotor position span [elt degrees]
-dataSet.Mesh = geo.K_mesh; % Mesh
-dataSet.Mesh_MOOA = geo.K_mesh_MOOA; % Mesh MOOA
-dataSet.RQnames = geo.RQnames;
-dataSet.MagLoadingYoke = geo.b;  % Bgap/Bfe,yoke  (back-iron p.u. size)
-dataSet.MagLoadingTooth = geo.bt;  % Bgap/Bfe,tooth (tooth p.u. size)
-dataSet.ThicknessOfPM = geo.lm;     % the thickness of permanent magnet
-dataSet.AngleSpanOfPM =  geo.phi;       % the angle range of permanent magnet
-dataSet.DepthOfBarrier = geo.dx;    % the depth of the barriers radial-wise in per unit
-dataSet.ALPHApu = geo.dalpha_pu;
-dataSet.HCpu = geo.hc_pu;
+% [bounds, geo, per] = data0();
+load mot_01.mat
+% dataSet.NumOfPolePairs = geo.p;     % number of pole pairs
+% dataSet.AirGapThickness = geo.g;    % airgap thickness
+% dataSet.StatorOuterRadius = geo.R;  % stator outer radius
+% dataSet.AirGapRadius = geo.r;       % machine airgap radius
+% dataSet.ShaftRadius = geo.Ar;       % shaft radius
+% dataSet.StackLength = geo.l;        % stack length
+% dataSet.TypeOfRotor = geo.RotType;  % type of rotor
+% dataSet.NumOfSlots = geo.q;         % number of slots
+% dataSet.ToothLength = geo.lt;       % tooth length
+% dataSet.StatorSlotOpen = geo.acs;   % stator slot open in [p.u.]
+% dataSet.ToothWidth = geo.wt;        % Bgap/Btooth (determines tooth width^-1, yoke width^-1)
+% dataSet.ToothTangDepth = geo.ttd;   % tooth tang depth [mm]
+% dataSet.ToothTangAngle = geo.tta;   % tooth tang angle (mech degree)
+% dataSet.FilletCorner = geo.SFR;     % fillet at the back corner of the slot [mm]
+% dataSet.SlotMaterial = geo.BLKLABELSmaterials{3};   % slot material
+% dataSet.StatorMaterial = geo.BLKLABELSmaterials{4}; % stator material
+% dataSet.RotorMaterial = geo.BLKLABELSmaterials{5};  % rotor material
+% dataSet.FluxBarrierMaterial = geo.BLKLABELSmaterials{6}; % flux barrier material
+% dataSet.ShaftMaterial = geo.BLKLABELSmaterials{7}; % shaft material
+% dataSet.RotorCondMaterial = geo.BLKLABELSmaterials{8}; % rotor conductor material
+% dataSet.SlotFillFactor = geo.kcu; % slot fill factor
+% dataSet.PitchShortFac = geo.kracc; % pitch short factor
+% dataSet.TurnsInSeries = geo.Ns; % turns in series
+% dataSet.AdmiJouleLosses = per.Loss; % admitted Joule Losses [W]
+% dataSet.TargetCopperTemp = per.tempcu; % target copper temperature [C]
+% dataSet.HousingTemp = per.temphous; % housing temperature [C]
+% dataSet.EstimatedCopperTemp = per.tempcuest; % Estimated Copper Temperature [C]
+% dataSet.CurrOverLoad = per.overload; % Current overload
+% dataSet.NumOfLayers = geo.nlay; % Number of Layers (bars)
+% dataSet.OverSpeed = geo.nmax; % overspeed in [rpm]
+% dataSet.Br = geo.Br; % Br
+% dataSet.Hc = geo.Hc; % Hc
+% dataSet.MinExpTorque = per.min_exp_torque; % Minimum expected torque
+% dataSet.MaxRippleTorque = per.max_exp_ripple; % Maximum ripple torque
+% dataSet.MinMechTol = geo.pont0; % minimum mechanical tolerance [mm]
+% dataSet.SimPoMOOA = geo.nsim_MOOA; % simulated positions (6-1)
+% dataSet.randFactor = geo.randFactor;  % Noise factor for position number reduction
+% dataSet.RotPoMOOA = geo.delta_sim_MOOA; % rotor position span [elt degrees]
+% dataSet.SimPoFine = geo.nsim_singt; % simulated positions (16-1)
+% dataSet.RotPoFine = geo.delta_sim_singt; % rotor position span [elt degrees]
+% dataSet.Mesh = geo.K_mesh; % Mesh
+% dataSet.Mesh_MOOA = geo.K_mesh_MOOA; % Mesh MOOA
+% dataSet.RQnames = geo.RQnames;
+% dataSet.MagLoadingYoke = geo.b;  % Bgap/Bfe,yoke  (back-iron p.u. size)
+% dataSet.MagLoadingTooth = geo.bt;  % Bgap/Bfe,tooth (tooth p.u. size)
+% dataSet.ThicknessOfPM = geo.lm;     % the thickness of permanent magnet
+% dataSet.AngleSpanOfPM =  geo.phi;       % the angle range of permanent magnet
+% dataSet.DepthOfBarrier = geo.dx;    % the depth of the barriers radial-wise in per unit
+% dataSet.ALPHApu = geo.dalpha_pu;
+% dataSet.HCpu = geo.hc_pu;
 
 %% ==== BOUNDS ============================================================
-dataSet.Alpha1Bou = [22.5 45]/90;
-dataSet.DeltaAlphaBou = round([0.5/geo.nlay 0.5] * 100)/100; % other angles [p.u.]
-dataSet.hcBou = [0.2 1];               % barrier ticknesses [p.u.]
-dataSet.DfeBou = [-0.75 0.75];         % barrier offset [p.u.]
-dataSet.BrBou = [0.2 0.8]; 
-dataSet.GapBou = rrtd(dataSet.AirGapThickness*[0.7  1.5],-1);
-dataSet.GapRadiusBou = rrtd(dataSet.AirGapRadius*[0.8  1.2],-1);
-dataSet.ToothWiBou = rrtd(dataSet.ToothWidth*[0.75  1.25],-1);
-dataSet.StatorSlotOpenBou = rrtd(dataSet.StatorSlotOpen*[0.8 1.2],-1);   
-dataSet.ToothTangDepthBou = rrtd(dataSet.ToothTangDepth*[0.8 1.2],-1);
+% dataSet.Alpha1Bou = [22.5 45]/90;
+% dataSet.DeltaAlphaBou = round([0.5/geo.nlay 0.5] * 100)/100; % other angles [p.u.]
+% dataSet.hcBou = [0.2 1];               % barrier ticknesses [p.u.]
+% dataSet.DfeBou = [-0.75 0.75];         % barrier offset [p.u.]
+% dataSet.BrBou = [0.2 0.8];
+% dataSet.GapBou = rrtd(dataSet.AirGapThickness*[0.7  1.5],-1);
+% dataSet.GapRadiusBou = rrtd(dataSet.AirGapRadius*[0.8  1.2],-1);
+% dataSet.ToothWiBou = rrtd(dataSet.ToothWidth*[0.75  1.25],-1);
+% dataSet.StatorSlotOpenBou = rrtd(dataSet.StatorSlotOpen*[0.8 1.2],-1);
+% dataSet.ToothTangDepthBou = rrtd(dataSet.ToothTangDepth*[0.8 1.2],-1);
 
 % dataSet.ToothLeBou = rrtd(dataSet.ToothLength*[0.8 1.2],-1);
-temp = dataSet.ToothLength*[0.8 1.2];
-if temp(2)>(dataSet.StatorOuterRadius - dataSet.AirGapRadius)
-    temp(2) = dataSet.StatorOuterRadius - dataSet.AirGapRadius;
-end
-dataSet.ToothLeBou = rrtd(temp,-1);
-
-dataSet.PhaseAngleCurrBou = bounds(end,:);          % phase angle of the current vector
-dataSet.Dalpha1BouCheck = 1;
-if (dataSet.NumOfLayers==1)
-    dataSet.DalphaBouCheck = 0;
-    set(handles.DeltaAlphaBouEdit,'Enable','off');
-else
-    dataSet.DalphaBouCheck = 1;
-    set(handles.DeltaAlphaBouEdit,'Enable','on');
-end
-dataSet.hcBouCheck = 1;
-if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg'))
-    dataSet.DxBouCheck = 0;
-    set(handles.DxEdit,'Enable','on');
-    set(handles.DfeBouEdit,'Enable','on');
-else
-    dataSet.DxBouCheck = 0;
-    set(handles.DxEdit,'Enable','off');
-    set(handles.DfeBouEdit,'Enable','off');
-end
-dataSet.GammaBouCheck = 1;
-dataSet.GapBouCheck = 0;
-dataSet.BrBouCheck = 0;
-dataSet.AirgapRadiusBouCheck = 0;
-dataSet.ToothWidthBouCheck = 0;
-dataSet.ToothLengthBouCheck = 0;
-dataSet.StatorSlotOpenBouCheck = 0;   
-dataSet.ToothTangDepthBouCheck = 0;
+% temp = dataSet.ToothLength*[0.8 1.2];
+% if temp(2)>(dataSet.StatorOuterRadius - dataSet.AirGapRadius)
+%     temp(2) = dataSet.StatorOuterRadius - dataSet.AirGapRadius;
+% end
+% dataSet.ToothLeBou = rrtd(temp,-1);
+%
+% dataSet.PhaseAngleCurrBou = bounds(end,:);          % phase angle of the current vector
+% dataSet.Dalpha1BouCheck = 1;
+% if (dataSet.NumOfLayers==1)
+%     dataSet.DalphaBouCheck = 0;
+%     set(handles.DeltaAlphaBouEdit,'Enable','off');
+% else
+%     dataSet.DalphaBouCheck = 1;
+%     set(handles.DeltaAlphaBouEdit,'Enable','on');
+% end
+% dataSet.hcBouCheck = 1;
+% if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg'))
+%     dataSet.DxBouCheck = 0;
+%     set(handles.DxEdit,'Enable','on');
+%     set(handles.DfeBouEdit,'Enable','on');
+% else
+%     dataSet.DxBouCheck = 0;
+%     set(handles.DxEdit,'Enable','off');
+%     set(handles.DfeBouEdit,'Enable','off');
+% end
+% dataSet.GammaBouCheck = 1;
+% dataSet.GapBouCheck = 0;
+% dataSet.BrBouCheck = 0;
+% dataSet.AirgapRadiusBouCheck = 0;
+% dataSet.ToothWidthBouCheck = 0;
+% dataSet.ToothLengthBouCheck = 0;
+% dataSet.StatorSlotOpenBouCheck = 0;
+% dataSet.ToothTangDepthBouCheck = 0;
 
 %% ==== OPTIMIZATION ======================================================
-dataSet.MaxGen = 3;
-dataSet.XPop = 4;
+% dataSet.MaxGen = 3;
+% dataSet.XPop = 4;
 
 %% ========================================================================
 %% ==== For Post Processing ===============================================
-
-dataSet.CurrLoPP = 1; % [p.u.] current load post processing
-dataSet.GammaPP = 60; % [deg] current load post processing
-dataSet.BrPP = 0; % [T] Br
-dataSet.NumGrid = 5; % number of points in [0 Imax] for the single machine post-processing
-% dataSet.NumInter = per.n_interp;  % number of points in [0 Imax] for data interpolation
-dataSet.NumOfRotPosPP = 20;
-dataSet.AngularSpanPP = 60;
-%% ==== RQ per plot =======================================================
-% data = buildDefaultRQ(dataSet,bounds);
-% set(handles.RQPlotEdit,'String',mat2str(data));
-% dataSet.RQ = data;
+% dataSet.CurrLoPP = 1; % [p.u.] current load post processing
+% dataSet.GammaPP = 60; % [deg] current load post processing
+% dataSet.BrPP = 0; % [T] Br
+% dataSet.NumGrid = 5; % number of points in [0 Imax] for the single machine post-processing
+% % dataSet.NumInter = per.n_interp;  % number of points in [0 Imax] for data interpolation
+% dataSet.NumOfRotPosPP = 20;
+% dataSet.AngularSpanPP = 60;
 
 %% ========================================================================
-dataSet.XFEMMOpt = 'N';
-dataSet.XFEMMPPMot = 'N';
-% if exist('bounds_Delta_X')
-%     dataSet.DeltaXBou = bounds_Delta_X; % p.u. displacement of the 1st layer (Seg only)
-% else
-%     dataSet.DeltaXBou = [1 1];
-% end
-dataSet.RMVTmp = geo.RemoveTMPfile; %  for removing the motor folders in tmp
+% dataSet.XFEMMOpt = 'N';
+% dataSet.XFEMMPPMot = 'N';
+% dataSet.RMVTmp = geo.RemoveTMPfile; %  for removing the motor folders in tmp
+
 %% ==== Matrix of winding =================================================
-p = dataSet.NumOfPolePairs;
-Q = round(dataSet.NumOfSlots*6*p);
-yq = dataSet.PitchShortFac*dataSet.NumOfSlots*3;
-path = pwd;
-cd(fullfile (path,'koil'));
-system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
-cd(path);
-Windings = MatrixWin();
-%dataSet.WinMatr = Windings; % winding matrix
-t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
-if ((6*t/Q)>1)
-    Qs = Q/t;   % periodic machine
-else
-    Qs = Q/2/t; % anti-periodic machine
-end
-dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
-%% ==== RQ per plot =======================================================
-data = buildDefaultRQ(bounds);
-dataSet.RQ = data;
-% dataSet.HCpu = data((dataSet.NumOfLayers+1):end-1);
-% dataSet.ALPHApu = data(1:dataSet.NumOfLayers);
+% p = dataSet.NumOfPolePairs;
+% Q = round(dataSet.NumOfSlots*6*p);
+% yq = dataSet.PitchShortFac*dataSet.NumOfSlots*3;
+% path = pwd;
+% cd(fullfile (path,'koil'));
+% system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
+% cd(path);
+% Windings = MatrixWin();
+% %dataSet.WinMatr = Windings; % winding matrix
+% t = gcd(round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs),dataSet.NumOfPolePairs);  % periodicity
+% if ((6*t/Q)>1)
+%     Qs = Q/t;   % periodic machine
+% else
+%     Qs = Q/2/t; % anti-periodic machine
+% end
+% dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
+%
+% %% ==== RQ =======================================================
+% data = buildDefaultRQ(bounds);
+% dataSet.RQ = data;
 
 %% ========================================================================
 handles.dataSet = dataSet; % data structure
 SetParameters(handles,dataSet) % aux. function for set the values in the edit boxes
+DrawPush_Callback(hObject, eventdata, handles);
+
 %% ======= Matrix of winding visual =======================================
-columnName = cell(1,floor(Qs));
-for i = 1 : floor(Qs)
-    columnName{i} = ['Slot n° ',num2str(i)];
-end
-rowName{1} = 'Layer 1';
-rowName{2} = 'Layer 2';
-set(handles.WinTable,'rowname',rowName);
-set(handles.WinTable,'columnname',columnName);
-set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
-per.tempcuest = temp_est_simpleMod(geo,per);
-set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
+% columnName = cell(1,floor(geo.Qs));
+% for i = 1 : floor(geo.Qs)
+%     columnName{i} = ['Slot n° ',num2str(i)];
+% end
+% rowName{1} = 'Layer 1';
+% rowName{2} = 'Layer 2';
+% set(handles.WinTable,'rowname',rowName);
+% set(handles.WinTable,'columnname',columnName);
+% set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(geo.Qs)));
+% per.tempcuest = temp_est_simpleMod(geo,per);
+% set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
 
 %% ========================================================================
 guidata(hObject,handles);
@@ -451,7 +443,7 @@ set(handles.BrBouEdit,'String',mat2str(dataIn.BrBou));
 set(handles.AirgapRadiusBouEdit,'String',mat2str(dataIn.GapRadiusBou));
 set(handles.ToothWidthBouEdit,'String',mat2str(dataIn.ToothWiBou));
 set(handles.ToothLenBouEdit,'String',mat2str(dataIn.ToothLeBou));
-set(handles.StatorSlotOpenBouEdit,'String',mat2str(dataIn.StatorSlotOpenBou)); 
+set(handles.StatorSlotOpenBouEdit,'String',mat2str(dataIn.StatorSlotOpenBou));
 set(handles.ToothTangDepthBouEdit,'String',mat2str(dataIn.ToothTangDepthBou));
 set(handles.CurrLoPPEdit,'String',mat2str(dataIn.CurrLoPP));
 set(handles.GammaPPEdit,'String',mat2str(dataIn.GammaPP));
@@ -473,7 +465,6 @@ set(handles.ToothWidthBouCheck,'Value',dataIn.ToothWidthBouCheck);
 set(handles.ToothLengthBouCheck,'Value',dataIn.ToothLengthBouCheck);
 set(handles.StatorSlotOpenBouCheck,'Value',dataIn.StatorSlotOpenBouCheck);
 set(handles.ToothTangDepthBouCheck,'Value',dataIn.ToothTangDepthBouCheck);
-
 %% ========================================================================
 
 if strcmp(dataIn.RMVTmp,'OFF')
@@ -505,6 +496,7 @@ for k = 1 : N
     end
 end
 set(handles.TypeOfRotorList,'Value',idx);
+
 %% === Values for the edit text Plot ======================================
 [bounds, geo, per] = data0(dataIn);
 if isempty(bounds)
@@ -538,21 +530,25 @@ if isempty(bounds)
     end
     if sum(strcmp(dataIn.RQnames,'gamma')) >= 1
         dataIn.ToothTangDepthBouCheck = 1;
-    end 
+    end
 end
-flag_plot = 'Y';
-h = handles.axes5;
-[hc,dalpha,geo] = Plot_Machine(h,dataIn,flag_plot);
-view = round(100*[dalpha hc])/100;
-per.tempcuest = temp_est_simpleMod(geo,per);
-set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
-% set(handles.ViewHcDaEdit,'String',mat2str(view));
-% set(handles.AlphapuEdit,'String',mat2str(dataIn.RQ(1:dataIn.NumOfLayers)));
-% set(handles.hcpuEdit,'String',mat2str(dataIn.RQ((dataIn.NumOfLayers+1):end-1)));
-set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataIn.NumOfLayers)));
-set(handles.hcmmEdit,'String',mat2str(view((dataIn.NumOfLayers+1):end)));
-per.io = calc_io(geo,per);
-set(handles.CalculatedRatedCurrent,'String',num2str(per.io));
+
+% update the display
+% flag_plot = 'Y';
+% h = handles.axes5;
+% [hc,dalpha,geo] = Plot_Machine(h,dataIn,flag_plot);
+
+% view = round(100*[dalpha hc])/100;
+% set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataIn.NumOfLayers)));
+% set(handles.hcmmEdit,'String',mat2str(view((dataIn.NumOfLayers+1):end)));
+
+% per.tempcuest = temp_est_simpleMod(geo,per);
+% set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
+% 
+% per.io = calc_io(geo,per);
+% set(handles.CalculatedRatedCurrent,'String',num2str(per.io));
+
+
 %% === VISIBLE & ENABLE ===================================================
 if strcmp(dataIn.TypeOfRotor,'SPM')
     set(handles.AlphadegreeEdit,'Enable','on');
@@ -740,10 +736,10 @@ else
     set(handles.AlphapuEdit,'Enable','on');
     set(handles.NumberOfLayersEdit,'Enable','on');
     set(handles.NumberOfLayersEdit,'String',mat2str(dataSet.NumOfLayers));
+    
     [bounds, geo, per] = data0(dataSet);
     data = buildDefaultRQ(bounds);
-    set(handles.hcpuEdit,'String',mat2str(data((dataSet.NumOfLayers+1):end-1)));
-    set(handles.AlphapuEdit,'String',mat2str(data(1:dataSet.NumOfLayers)));
+    dataSet.RQ = data;
     if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg'))
         set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
     end
@@ -751,7 +747,6 @@ else
     if truefalse
         dataSet.DfeBou = bounds(index,:);            % barrier offset [p.u.]
     end
-    dataSet.RQ = data;
     flag_plot = 'Y';
     h = handles.axes5;
     [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
@@ -1187,32 +1182,36 @@ function NumberOfLayersEdit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of NumberOfLayersEdit as a double
 dataSet = handles.dataSet;
 dataSet.NumOfLayers = str2double(get(hObject,'String'));
-if (dataSet.NumOfLayers==1)
-    dataSet.DalphaBouCheck = 0;
-    set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
-    set(handles.DeltaAlphaBouEdit,'Enable','off');
-else
-    dataSet.DalphaBouCheck = 1;
-    set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
-    set(handles.DeltaAlphaBouEdit,'Enable','on');
-end
+% if (dataSet.NumOfLayers==1)
+%     dataSet.DalphaBouCheck = 0;
+%     set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+%     set(handles.DeltaAlphaBouEdit,'Enable','off');
+% else
+%     dataSet.DalphaBouCheck = 1;
+%     set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+%     set(handles.DeltaAlphaBouEdit,'Enable','on');
+% end
 [bounds, geo, per] = data0(dataSet);
-% dataSet.RQnames = geo.RQnames;
 data = buildDefaultRQ(bounds);
-set(handles.hcpuEdit,'String',mat2str(data((dataSet.NumOfLayers+1):end-1)));
-set(handles.AlphapuEdit,'String',mat2str(data(1:dataSet.NumOfLayers)));
-dataSet.DepthOfBarrier = zeros(1,dataSet.NumOfLayers);
-set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
 dataSet.RQ = data;
-flag_plot = 'Y';
-h = handles.axes5;
-[hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
-view = round(100*[dalpha hc])/100;
-set(handles.hcmmEdit,'String',mat2str(view((dataSet.NumOfLayers+1):end)));
-set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
-set(handles.DfeBouEdit,'String',mat2str(dataSet.DfeBou));
-% DrawPush_Callback(hObject, eventdata, handles);
+if(dataSet.DalphaBouCheck)
+    last_index = dataSet.NumOfLayers;
+    dataSet.ALPHApu = data(1:last_index);
+else
+    last_index = 0;
+    dataSet.ALPHApu = ones(1,dataSet.NumOfLayers)*roundn(1/(dataSet.NumOfLayers+0.5),-2);
+end
+if(dataSet.hcBouCheck)
+    dataSet.HCpu = data((last_index+1):end-1);
+else
+    dataSet.HCpu = ones(1,dataSet.NumOfLayers)*0.5;
+end
+dataSet.DepthOfBarrier = zeros(1,dataSet.NumOfLayers);
+set(handles.AlphapuEdit,'String',mat2str(dataSet.ALPHApu));
+set(handles.hcpuEdit,'String',mat2str(dataSet.HCpu));
+set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
 handles.dataSet = dataSet;
+DrawPush_Callback(hObject, eventdata, handles)
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -1263,7 +1262,13 @@ dataSet = handles.dataSet;
 % dataSet.Br = str2double(get(hObject,'String'));
 dataSet.Br = str2num(get(hObject,'String'));
 dataSet.BrPP = dataSet.Br;
-SetParameters(handles,dataSet);
+
+set(handles.BrPMEdit,'String',mat2str(dataSet.Br));
+set(handles.BrPPEdit,'String',mat2str(dataSet.Br));
+dataSet.BrBouCheck = 0;
+set(handles.BrBouCheck,'Value',dataSet.BrBouCheck);
+
+% SetParameters(handles,dataSet);
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
@@ -1378,7 +1383,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function SimPosFinerEdit_Callback(hObject, eventdata, handles)
-% Rotor position for Pareto(geo.nsim_singt) 
+% Rotor position for Pareto(geo.nsim_singt)
 % hObject    handle to SimPosFinerEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1722,7 +1727,7 @@ delete('dataSet.mat');
 % guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
-function YqEdit_CreateFcn(hObject, eventdata, handles)  
+function YqEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to YqEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
@@ -1765,8 +1770,11 @@ function LoadPushTool_ClickedCallback(hObject, eventdata, handles)
 load([PathName FileName]);
 dataSet.RQ = roundn(dataSet.RQ,-4);
 GeometricTab_Callback(hObject, eventdata, handles)
-SetParameters(handles,dataSet);
 handles.dataSet = dataSet;
+SetParameters(handles,dataSet);
+DrawPush_Callback(hObject, eventdata, handles);
+% handles.dataSet = dataSet;
+
 %% ======= Matrix of winding ==============================================
 [~,n] = size(dataSet.WinMatr);
 columnName = cell(1,n);
@@ -2010,12 +2018,18 @@ function DrawPush_Callback(hObject, eventdata, handles)
 flag_plot = 'Y';
 h = handles.axes5;
 dataSet = handles.dataSet;
-[bounds, geo, per] = data0(dataSet);
+[~, ~, per] = data0(dataSet);
 [hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot);
+
+% tempcu, io, alpha, hc refreshed every time display is refreshed
 per.tempcuest = temp_est_simpleMod(geo,per);
 set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
 per.io = calc_io(geo,per);
 set(handles.CalculatedRatedCurrent,'String',num2str(per.io));
+temp = round(100*[dalpha hc])/100;
+set(handles.AlphadegreeEdit,'String',mat2str(temp(1:dataSet.NumOfLayers)));
+set(handles.hcmmEdit,'String',mat2str(temp((dataSet.NumOfLayers+1):end)));
+
 guidata(hObject,handles)
 
 function MeshEdit_Callback(hObject, eventdata, handles)
@@ -2378,7 +2392,11 @@ function BrPPEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.BrPP = str2num((get(hObject,'String')));
 dataSet.Br = dataSet.BrPP;
-SetParameters(handles,dataSet);
+
+set(handles.BrPMEdit,'String',mat2str(dataSet.Br));
+set(handles.BrPPEdit,'String',mat2str(dataSet.Br));
+
+% SetParameters(handles,dataSet);
 dataSet = handles.dataSet;
 % dataSet.Br = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
@@ -2566,11 +2584,11 @@ dataSet = handles.dataSet;
 if exist([cd,'\tmp\flag.mat']) > 0
     flag = 0;
     save([cd,'\tmp\flag.mat'],'flag');
-    [bounds, geo] = data0();    
+    [bounds, geo] = data0();
     flag = 1;
     save([cd,'\tmp\flag.mat'],'flag');
 else
-    [bounds, geo] = data0();  
+    [bounds, geo] = data0();
 end
 data = geo.avv;
 % data = dataSet.WinMatr;
@@ -2746,7 +2764,7 @@ function SaveMachinePush_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 dataSet = handles.dataSet;
 handles.dataSet = dataSet;
-DrawPushMachine;
+dataSet = DrawPushMachine(handles);
 handles.dataSet = dataSet;
 guidata(hObject,handles)
 
@@ -2755,7 +2773,7 @@ guidata(hObject,handles)
 % % hObject    handle to DeltaXBouEdit (see GCBO)
 % % eventdata  reserved - to be defined in a future version of MATLAB
 % % handles    structure with handles and user data (see GUIDATA)
-% 
+%
 % % Hints: get(hObject,'String') returns contents of DeltaXBouEdit as text
 % %        str2double(get(hObject,'String')) returns contents of DeltaXBouEdit as a double
 
@@ -2787,16 +2805,6 @@ dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
 DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
-% dataSet.HCpu = str2num(get(handles.hcpuEdit,'String'));
-% dataSet.RQ = [dataSet.ALPHApu dataSet.HCpu];
-% handles.dataSet = dataSet;
-% flag_plot = 'Y';
-% h = handles.axes5;
-% [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
-% view = round(100*[dalpha hc])/100;
-% set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
-% guidata(hObject,handles)
-
 
 % --- Executes during object creation, after setting all properties.
 function AlphapuEdit_CreateFcn(hObject, eventdata, handles)
@@ -2809,8 +2817,6 @@ function AlphapuEdit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function AlphadegreeEdit_Callback(hObject, eventdata, handles)
 % alpha [degrees]
