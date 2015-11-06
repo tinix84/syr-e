@@ -14,19 +14,15 @@ function [hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot)
 %    limitations under the License.
 
 %% Plot GUI
-
 axes(h); cla(h);
 [bounds, geo, per] = data0(dataSet);
-RQ = dataSet.RQ
-p = geo.p;                      
-nlay = geo.nlay;                
-[geo,gamma] = interpretRQ(RQ,geo);
+[geo,gamma] = interpretRQ(dataSet.RQ,geo);
 geo.x0 = geo.r/cos(pi/2/geo.p);
-ns = geo.ns;
-Ar = geo.Ar;
-r  = geo.r;
+
 th_m0 = 0;                 % rotor offset angle [mec deg]
-geo.th0 = th_m0*p - 0;     % offset angle [elt deg] (for coordinate transformations)
+
+geo.th0 = th_m0*geo.p - 0;     % offset angle [elt deg] (for coordinate transformations)
+
 fem.res = 0;
 fem.res_traf = 0;
 
@@ -39,17 +35,18 @@ hc = geo.hc;                    % Altezze in mm
 
 %% === PLOT ===============================================================
 if strcmp(flag_plot,'Y')
-    
+
     Mat = [rotor; statore];
     
     [nrig,ncol] = size(Mat);
+    hold(h,'on')
     for i = 1 : nrig
         if Mat(i,ncol) == 0
             % draw lines
             x1 = Mat(i,3); y1 = Mat(i,4);
             x2 = Mat(i,1); y2 = Mat(i,2);
+            grid on
             plot(h,[x1,x2],[y1,y2],'Linewidth',2,'Color','k');
-            hold on, grid on
             grid minor, axis equal
         else
             % draw arcs
@@ -85,8 +82,8 @@ if strcmp(flag_plot,'Y')
             y_n = r*sin(theta(2:end-1)) + y0;
             x = [x1 x_n x2];
             y = [y1 y_n y2];
+            grid on
             plot(h,x,y,'Linewidth',2,'Color','k');
-            hold on, grid on
             grid minor, axis equal
         end
     end

@@ -164,8 +164,13 @@ for i = 1:m
     IQ_LUT(i,:) = temp;   
 end
 
+FD_LUT = interp2(Id,Iq,Fd,ID_LUT,IQ_LUT);
+
 StampaVarg(fid,ID_LUT',m,n,'ID_LUT_FW','//id(T,n)','%6.4f')
+StampaVarg(fid,FD_LUT',m,n,'FD_LUT_FW','//fd(T,n)','%6.4f')
+
 StampaVarg(fid,IQ_LUT',m,n,'IQ_LUT_FW','//iq(T,n)','%6.4f')
+
 fclose(fid);
 
 figure,
@@ -176,7 +181,12 @@ xlabel('[Nm]'), ylabel('i_d [A]'), %title(motor_name)
 figure,
 plot(DatiOpt.Tmap,IQ_LUT), grid on, hold on
 plot(DatiOpt.Tmap,IQ_LUT,'kx'),
-xlabel('[Nm]'), ylabel('i_d [A]'), %title(motor_name)
+xlabel('[Nm]'), ylabel('i_q [A]'), %title(motor_name)
+
+figure,
+plot(DatiOpt.Tmap,FD_LUT), grid on, hold on
+plot(DatiOpt.Tmap,FD_LUT,'kx'),
+xlabel('[Nm]'), ylabel('\lambda_d [Vs]'), %title(motor_name)
 
 % saveas(gcf,[pathname 'tablesMTPAFluxWeak'])
 edit([pathname 'tablesMTPAFluxWeak.txt'])

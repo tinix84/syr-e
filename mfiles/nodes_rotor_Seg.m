@@ -14,8 +14,7 @@ nlay = geo.nlay;                % N° layers
 
 dalpha = geo.dalpha;            % Angoli dalpha
 % Eval alpha
-alpha = integral_fx(1:length(dalpha),dalpha);
-geo.alpha=alpha;
+alpha = cumsum(dalpha);
 dx=geo.dx;
 
 racc_pont = geo.racc_pont;      % racc_pont=1*pont0 <- per i ponticelli radiali.

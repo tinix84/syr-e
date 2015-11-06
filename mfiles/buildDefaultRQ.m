@@ -14,7 +14,7 @@
 
 function data = buildDefaultRQ(bounds)
 
-
 data = mean(bounds,2);
 data = data';
 data = roundn(data,-2);
+

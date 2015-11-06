@@ -26,7 +26,7 @@ g = geo.g;              % Traferro
 lt = geo.lt;            % Lunghezza denti
 pont0 = geo.pont0;      % Ponticelli al traferro
 dalpha = geo.dalpha;
-alpha = geo.alpha;
+alpha = cumsum(geo.dalpha);
 hc_pu = geo.hc_pu;
 hfe_min = geo.hfe_min;        % min tickness of each steel flux guide
 

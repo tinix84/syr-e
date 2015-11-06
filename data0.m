@@ -133,7 +133,7 @@ if (nargin<1)
     geo.delta_sim_singt = 60;   % rotor position span [elt degrees]
     
     % rotor geometry (subject to optimization: default set to zero)
-    geo.x0=[0 0]; geo.alpha = 0;
+    geo.x0=[0 0]; % geo.alpha = 0;
     geo.dalpha_pu = [0.45 0.22*ones(1,geo.nlay-1)];
     geo.hc_pu = 0.5*ones(1,geo.nlay);
     geo.dx = ones(1,geo.nlay) * 0;
@@ -336,7 +336,7 @@ else
     geo.nsim_singt = dataIn.SimPoFine;        % simulated positions (16-1)
     geo.delta_sim_singt = dataIn.RotPoFine;   % rotor position span [elt degrees]
     
-    geo.x0=[0 0]; geo.alpha = 0;
+    geo.x0=[0 0]; % geo.alpha = 0;
     geo.dalpha_pu = dataIn.ALPHApu;
     geo.hc_pu = dataIn.HCpu;
     geo.dx = dataIn.DepthOfBarrier;
@@ -484,7 +484,7 @@ elseif strcmp(char(geo.BLKLABELSmaterials(5)), 'Transil270-35')>0
 elseif strcmp(char(geo.BLKLABELSmaterials(5)), '10JNEX900')>0
     geo.sigma_max = 604;    % [MPa]
     geo.rhoFE = 7490;       % mass density [Kg/m3]
-    geo.alpha = 1.15746;    % coefficient of Steinmetz equation
+%     geo.alpha = 1.15746;    % coefficient of Steinmetz equation
     geo.beta = 1.78672;     % coefficient of Steinmetz equation
     geo.kh = 0.00571782;    % coefficient of Steinmetz equation
     geo.ke = 3.71539*1e-006;% coefficient of Steinmetz equation
