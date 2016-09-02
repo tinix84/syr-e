@@ -13,7 +13,7 @@
 %    limitations under the License.
 
 %% Calcolo kavv e la fase della corrente th0
-function [kavv, Asse_Fase1] = calcKwTh0(Strati)
+function [kavv, Asse_Fase1] = calcKwTh0(Strati,Q,p)
 
 % INPUT
 % Strati     % Distribuzione degli avvolgimenti (una periodicita' completa anche se la macchina puo' essere simulata sfruttando l'antiperiodicita')
@@ -25,8 +25,8 @@ function [kavv, Asse_Fase1] = calcKwTh0(Strati)
 % Star of slots
 
 [nLayers,nSlots] = size(Strati);
-
-Passo_elt = 2*pi/nSlots;
+% Passo_elt = 2*pi/nSlots;
+Passo_elt = 2*pi*p/Q;
 Posiz_cave = zeros(1,nSlots);
 for ee = 2:nSlots
     Posiz_cave(ee) = Posiz_cave(ee-1) + Passo_elt;

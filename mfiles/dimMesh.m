@@ -21,10 +21,12 @@ res_max=1/3*geo.g;
 
 if strcmp(eval_type,'MO_GA')||strcmp(eval_type,'MO_OA')
     fem.res_traf=1/geo.p;
+    if geo.q < 0.5
+        fem.res_traf = fem.res_traf * 3;
+    end
     fem.res=geo.K_mesh_MOOA*fem.res_traf;
 else
     fem.res_traf=1/geo.p * geo.K_mesh/geo.K_mesh_MOOA;
-    fem.res=geo.K_mesh_MOOA*fem.res_traf;
-    
+    fem.res=geo.K_mesh_MOOA*fem.res_traf;    
 end
 

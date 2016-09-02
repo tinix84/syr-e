@@ -49,7 +49,7 @@ Mac.RtS=geo.r+geo.g;
 %% ========================
 L_assiale=Mac.l;
 t=gcd(Mac.Q,Mac.p); % machine periodicity
-
+% keyboard
 h = OpenMagnet(1);  % 1 significa visibile, 0 invisibile
 
 % Nuovo Documento
@@ -219,11 +219,19 @@ edgeList{3}{2} = 2;
 % (MG) Machine periodicity selection
 Q = Mac.Q;                    % number of slots
 t = gcd(round(Mac.Q),Mac.p);  % number of periods
-if ((6*t/Q)>1)
+% if ((6*t/Q)>1)
+%     bdryType='Even';
+% else
+%     bdryType = 'Odd';
+% end
+
+% (SF) Machine periodicity
+if rem(Mac.ps,2)==0
     bdryType='Even';
 else
-    bdryType = 'Odd';
+    bdryType='Odd';
 end
+
 if (Mac.ps*180/Mac.p<=90)
     edgeList{1}{3} = 3;
     edgeList{2}{3} = 3;

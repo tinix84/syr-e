@@ -72,7 +72,7 @@ plot(gamma,abs(t),'-x'), grid on
 xlabel('current phase angle [deg]')
 ylabel('Torque [Nm]')
 legend([num2str(ILevel,3) ' A'])
-adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
+%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
 xlim([0 90]), saveas(gcf,[pathname 'coppia_su_gamma'])
 
 % power factor
@@ -81,7 +81,7 @@ plot(gamma,PF,'-x'), grid on
 xlabel('current phase angle [deg]')
 ylabel('Power Factor')
 legend([num2str(ILevel,3) ' A'])
-adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
+%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
 xlim([0 90]), saveas(gcf,[pathname 'PF_su_gamma'])
 
 % flux linkage
@@ -90,7 +90,7 @@ plot(gamma,abs(fd+j*fq),'-x'), grid on
 xlabel('current phase angle [deg]')
 ylabel('Flux Linkage [Vs]')
 legend([num2str(ILevel,3)])
-adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
+%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
 xlim([0 90]), saveas(gcf,[pathname 'flux_su_gamma'])
 
 % delta angle
@@ -99,7 +99,7 @@ plot(gamma,angle(fd+j*fq)*180/pi,'-x'), grid on
 xlabel('current phase angle [deg]')
 ylabel('\delta [deg]')
 legend([num2str(ILevel,3)])
-adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
+%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
 xlim([0 90]), saveas(gcf,[pathname 'coppia_su_delta'])
 
 % gamma1 = 55;

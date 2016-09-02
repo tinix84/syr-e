@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [geo,gamma] = interpretRQ(RQ,geo)
+function [geo,gamma,mat] = interpretRQ(RQ,geo,mat)
 
 % INTERPRETRQ interprets the string of the MOOA inputs (RQ)
 % and returns dalpha, hc_pu, dx, gamma
@@ -60,12 +60,12 @@ if not(isempty(geo.RQnames))
         if strcmp(geo.RQnames{first_index},'Br')
             % Br [T]
             last_index = first_index + geo.nlay - 1;
-            geo.Br = RQ(first_index:last_index);
+            mat.LayerMag.Br = RQ(first_index:last_index);
         end
     end
     
-    if length(geo.RQnames)>(last_index+1)
-        for k = last_index+1:length(geo.RQnames)-1
+    if length(geo.RQnames)>(last_index)
+        for k = last_index+1:length(geo.RQnames)
             eval(['geo.' geo.RQnames{k} ' = ' num2str(RQ(k)) ';'])
         end
     end
@@ -79,4 +79,8 @@ if not(isempty(RQ))
     gamma = RQ(end);
 else
     gamma = 45;
+end
+
+if strcmp(geo.RotType,'SPM')&&ismember('hc',geo.RQnames)
+    geo.lm = geo.hc_pu;
 end

@@ -39,7 +39,7 @@ Pfe_S_tot = T; Pfe_R_tot = T;
 
 
 kk = 1;
-SOL(:,:,kk) = simulate_xdeg(geo,nsim,delta_sim,io,gamma(kk),eval_type); % risultati
+SOL(:,:,kk) = simulate_xdeg(geo,nsim,delta_sim,io,per.BrPP,gamma(kk),eval_type); % risultati
 SOL(:,2,kk)=SOL(:,2,kk)/geo.Nbob;
 SOL(:,3,kk)=SOL(:,3,kk)/geo.Nbob;
 SOL(:,4,kk)=SOL(:,4,kk)*geo.Nbob;

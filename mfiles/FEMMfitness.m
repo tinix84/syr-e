@@ -12,14 +12,13 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [cost,geo,out,dirName] = FEMMfitness(RQ,geo,per,eval_type,filemot)
-
+function [cost,geo,mat,out,dirName] = FEMMfitness(RQ,geo,per,mat,eval_type,filemot)
 
 currentDir=pwd;
 [thisfilepath,dirName]=createTempDir();
 
-% if in optimization, RQ defines the candidate machine
 if ~isempty(RQ)
+    % MODE optimization (RQ geometry)
     RQ=RQ';
     if  strcmp(eval_type,'MO_GA')
         RQ=RQ';
@@ -40,23 +39,15 @@ if ~isempty(RQ)
     end
     
     % debug .. when syre crashes it is useful to have visibility of last RQ
-    RQ
+    % RQ
     % debug .. end
-    [geo,gamma] = interpretRQ(RQ,geo);
-    
-    if exist([thisfilepath filesep 'empty_case.fem'],'file')>1
-        empty_case_path = [thisfilepath filesep 'empty_case.fem'];
-    else
-        empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
-    end
-    
-    % The empty_case.fem file MUST be in the SyR-e root folder
-    copyfile(empty_case_path,'.');
-    
+    [geo,gamma,mat] = interpretRQ(RQ,geo,mat);
+        
     openfemm
-    [geo] = draw_motor_in_FEMM(geo,eval_type);
+    [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat);
+    
 else
-    % if in post proc, loads the existing geometry
+    % post proc or FEMM simulation (existing geometry)
     openfemm
     opendocument([filemot]);
     mi_saveas('mot0.fem'); % saves the file with name ’filename’
@@ -71,52 +62,61 @@ iAmpCoil = iAmp*geo.Nbob;
 
 geo1 = geo;
 save geo geo1       % save geo before sim
-[SOL] = simulate_xdeg(geo,iAmpCoil,gamma,eval_type);
+[SOL] = simulate_xdeg(geo,iAmpCoil,per.BrPP,gamma,eval_type);
 
 out.id = mean(SOL(:,2));
 out.iq = mean(SOL(:,3));
 out.fd = mean(SOL(:,4));
 out.fq = mean(SOL(:,5));
 out.T= abs(mean(SOL(:,6)));
+out.dT = std(SOL(:,6));
 out.dTpu = std(SOL(:,6))/out.T;
-% out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
+out.dTpp = max(SOL(:,6))-min(SOL(:,6));
+out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
 out.SOL = SOL;
 
-%% Cost functions 
-cost1 = -out.T;
-cost2 = out.dTpu*100;
-cost  = [cost1 cost2];
-
-delta = atan2(out.fq,out.fd) * 180/pi;
-geo.power_factor = mean(cosd(90+delta-gamma));
-
-% penalize the solutions which are out of the expected range of interest
-% max_exp_ripple, min_exp_torque
-if (strcmp(eval_type,'MO_OA')||strcmp(eval_type,'MO_GA'))
-    if (cost(2)>per.max_exp_ripple || cost(1)>-per.min_exp_torque)
-        cost(1)=cost(1)*0.1;
-        cost(2)=cost(2)*10;
+if ~isempty(RQ)
+    % Cost functions
+    cost = zeros(1,length(geo.OBJnames));
+    temp1 = 1; %temp2 = 1;
+    if strcmp(geo.OBJnames{temp1},'Torque')
+        cost(temp1) = -out.T;
+        temp1 = temp1+1;
     end
-end
-if ~isempty(RQ) 
+    if temp1<=length(geo.OBJnames) && strcmp(geo.OBJnames{temp1},'TorRip')
+%         cost(temp1) = out.dTpu*100;
+        cost(temp1) = out.dTpp;
+        temp1 = temp1+1;
+    end
+    if temp1<=length(geo.OBJnames) && strcmp(geo.OBJnames{temp1},'MassCu')
+        cost(temp1)=calcMassCu(geo);
+        temp1=temp1+1;
+    end
+    
+    % penalize weak solutions
+    for j = 1:length(cost)
+        %     if (cost(2)>per.max_exp_ripple || cost(1)>-per.min_exp_torque)
+        if cost(j)>per.objs(j,1)
+            if per.objs(j,1)>0
+                cost(j)=cost(j)*10;  % minimization problem
+            else
+                cost(j)=cost(j)*0.1; % maximization problem
+            end
+        end
+    end
+    % end
+    
+    % if ~isempty(RQ)
     geo.RQ = RQ;
     dataSetPath = [thisfilepath filesep 'dataSet.mat'];
     copyfile(dataSetPath,'.');
     load('dataSet');
-    [dataSet] = SaveInformation(geo,dataSet);
+    [dataSet] = SaveInformation(geo,mat,dataSet);
     delete('dataSet.mat');
-    save('mot0','geo','cost','per','dataSet');   % save geo and out
+    save('mot0','geo','cost','per','dataSet','mat');   % save geo and out
 else
-    save('geo','geo','out','-append');   % save geo and out
+    cost = [];
+    save('geo','geo','out','mat','-append');   % save geo and out
 end
 
-% if (strcmp(geo.RemoveTMPfile,'ON')&&(strcmp(eval_type,'MO_OA')||strcmp(eval_type,'MO_GA')))
-%     pause(0.1);
-%     local_path=cd;
-%     cd(local_path(1:end-(length(dirName))));
-%     rmdir(dirName,'s');
-% end
-% the previous files are non robust: the time needed in pause to guarantee
-% femm is actually closed depend on the specific computer. An alternative
-% procedure needs to be developed
 cd(currentDir);

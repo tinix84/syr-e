@@ -19,6 +19,6 @@ Stat_Cu = 'Copper: 5.77e7 Siemens/meter';
 Stat_Fe = 'M270-50A';
 Rot_Fe = 'M270-50A';
 Stat_Magn = 'empty';
-Rot_Magn = 'BondedMagnet';
+Rot_Magn = 'AIR';
 Shaft_Steel = 'CR10: Cold rolled 1010 steel';
 Rot_Cu = 'empty';

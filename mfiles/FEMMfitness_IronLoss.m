@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [cost,geo,out,dirName] = FEMMfitness(RQ,geo,per,eval_type,filemot)
+function [cost,geo,mat,out,dirName] = FEMMfitness(RQ,geo,per,mat,eval_type,filemot)
 
 currentDir=pwd;
 [thisfilepath,dirName]=createTempDir();
@@ -39,19 +39,19 @@ if ~isempty(RQ)
         options.currentgen=generation;
     end
     
-    [geo,gamma] = interpretRQ(RQ,geo);
+    [geo,gamma,mat] = interpretRQ(RQ,geo,mat);
     
-    if exist([thisfilepath filesep 'empty_case.fem'],'file')>1
-        empty_case_path = [thisfilepath filesep 'empty_case.fem'];
-    else
-        empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
-    end
-    
-    % The empty_case.fem file MUST be in the SyR-e root folder
-    copyfile(empty_case_path,'.');
+%     if exist([thisfilepath filesep 'empty_case.fem'],'file')>1
+%         empty_case_path = [thisfilepath filesep 'empty_case.fem'];
+%     else
+%         empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
+%     end
+%     
+%     % The empty_case.fem file MUST be in the SyR-e root folder
+%     copyfile(empty_case_path,'.');
     
     openfemm
-    [geo] = draw_motor_in_FEMM(geo,eval_type);
+    [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat);
     
 else
     openfemm
@@ -66,7 +66,7 @@ if isempty(RQ)
 end
 iAmpCoil=iAmp*geo.Nbob;
 
-[SOL,FluxDens] = simulate_xdeg(geo,iAmpCoil,gamma,eval_type);
+[SOL,FluxDens] = simulate_xdeg_IronLoss(geo,iAmpCoil,per.BrPP,gamma,eval_type);
 
 out.id = mean(SOL(:,2));
 out.iq = mean(SOL(:,3));
@@ -77,7 +77,10 @@ out.dTpu = std(SOL(:,6))/out.T;
 % out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
 out.SOL = SOL;
 out.FluxDens = FluxDens;
-
+out.Pfes_h = SOL(1,7);
+out.Pfes_c = SOL(2,7);
+out.Pfer_h  = SOL(3,7);
+out.Pfer_c  = SOL(4,7);
 %% Cost functions
 cost1 = -out.T;
 cost2 = out.dTpu*100;

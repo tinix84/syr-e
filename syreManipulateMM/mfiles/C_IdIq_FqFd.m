@@ -27,7 +27,7 @@ fq=linspace(FQmin,FQmax,puntiq);
 
 ID_dato_fd_iq = zeros(size(FD));
 for n=1:1:NumQ,
-    a = interp1(Fd(n,:),Id(n,:),FD(n,:),'cubic');
+    a = interp1(Fd(n,:),Id(n,:),FD(n,:),'PCHIP');
     ID_dato_fd_iq(n,:) = a;
     %    %% debug
     %    figure(100)
@@ -46,7 +46,7 @@ end
 % FQ_dato_fd_iq(NumQ,puntid)
 FQ_dato_fd_iq = zeros(size(FD));
 for n=1:1:NumQ,
-    a=interp1(Id(n,:),Fq(n,:),ID_dato_fd_iq(n,:),'cubic');
+    a=interp1(Id(n,:),Fq(n,:),ID_dato_fd_iq(n,:),'PCHIP');
     FQ_dato_fd_iq(n,:) = a;
 end
 
@@ -63,7 +63,7 @@ end
 [FD,FQ]=meshgrid(fd,fq);
 IQ_dato_fd_fq = zeros(size(FD));
 for n=1:1:puntid,
-    a=interp1(FQ_dato_fd_iq(:,n),IQ(:,n),FQ(:,n),'cubic');
+    a=interp1(FQ_dato_fd_iq(:,n),IQ(:,n),FQ(:,n),'PCHIP');
     IQ_dato_fd_fq(:,n)=a;
 end
 
@@ -83,7 +83,7 @@ end
 % IQ_dato_id_fq(puntiq,NumD)
 IQ_dato_id_fq = zeros(size(FD));
 for n=1:1:NumD,
-    a = interp1(Fq(:,n),Iq(:,n),FQ(:,n),'cubic');
+    a = interp1(Fq(:,n),Iq(:,n),FQ(:,n),'PCHIP');
     IQ_dato_id_fq(:,n) = a;
 end
 if debug
@@ -98,7 +98,7 @@ end
 % FD_dato_fq_id(puntiq,NumD)
 FD_dato_id_fq = zeros(size(FD));
 for n=1:1:NumD,
-    a=interp1(Iq(:,n),Fd(:,n),IQ_dato_id_fq(:,n),'cubic');
+    a=interp1(Iq(:,n),Fd(:,n),IQ_dato_id_fq(:,n),'PCHIP');
     FD_dato_id_fq(:,n) = a;
 end
 
@@ -115,7 +115,7 @@ end
 [FD,FQ]=meshgrid(fd,fq);
 ID_dato_fd_fq = zeros(size(FD));
 for n=1:1:puntiq,
-    a=interp1(FD_dato_id_fq(n,:),ID(n,:),FD(n,:),'cubic');
+    a=interp1(FD_dato_id_fq(n,:),ID(n,:),FD(n,:),'PCHIP');
     ID_dato_fd_fq(n,:)=a;
 end
 

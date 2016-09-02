@@ -11,7 +11,7 @@ for kk=1:nlay
     end
     a2=b;
     b2=-a;
-    c2=a*YpBar2(kk)-b*XpBar2(kk);
+    c2=a*YpBar2(kk)-b*XpBar2(kk);         
     [a3,b3,c3]=retta_per_2pti(XpBar1(kk),YpBar1(kk),xxD1k(kk),yyD1k(kk));
     [x,y]=intersezione_tra_rette(a2,b2,c2,a3,b3,c3);
     if x<XpBar1(kk)
@@ -35,10 +35,14 @@ for kk=1:nlay
         XpMag1B1(kk)=XpBar1(kk);
         YpMag1B1(kk)=YpBar1(kk);
     else
-        XpMag1B1(kk)=x;
-        YpMag1B1(kk)=y;
+%         if kk == 1
+%             XpMag1B1(1)=B2k(1);
+%             YpMag1B1(1)=YpBar1(1);
+%         else
+            XpMag1B1(kk)=x;
+            YpMag1B1(kk)=y;
+%         end
     end
-    %     keyboard
     %     xv=70:0.1:80;
     %     yv4=-a4/b4*xv-c4/b4;
     %     yv5=-a5/b5*xv-c5/b5;
@@ -69,7 +73,7 @@ for kk=1:nlay
     [xmedBar1,ymedBar1]=intersezione_tra_rette(a1b,b1b,c1b,a2b,b2b,c2b);
     xc=[xc,xmedBar1];
     yc=[yc,ymedBar1];
-    Br = [Br geo.Br(kk)];    % 1 block
+    Br = [Br mat.LayerMag.Br(kk)];    % 1 block
     
     [a1,b1,c1]=retta_per_2pti(B2k(kk),0,XpBar2(kk),YpBar2(kk));
     if (DTrasl==0)
@@ -119,7 +123,7 @@ for kk=1:nlay
     yc=[yc,ymedBar3];
     xmag=[xmag,cos(atan(mOrto))];
     ymag=[ymag,sin(atan(mOrto))];
-    Br = [Br geo.Br(kk)];    % add another blocks to all layers 
+    Br = [Br mat.LayerMag.Br(kk)];    % add another blocks to all layers 
     
 end
 zmag=zeros(1,size(xmag,2));

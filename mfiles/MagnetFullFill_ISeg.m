@@ -21,7 +21,7 @@ for kk=1:nlay
         ymedBar1=(YpBar2(kk)+YpontRadBarDx(kk))/2;  
         xc=[xc,xmedBar1];
         yc=[yc,ymedBar1];
-        Br = [Br geo.Br(kk)];    % 1 block 
+        Br = [Br mat.LayerMag.Br(kk)];    % 1 block 
 %     end
     xmag=[xmag,cos(0)];
     ymag=[ymag,sin(0)];
@@ -50,7 +50,7 @@ for kk=1:nlay
         xmag=[xmag,cos(atan(mOrto))];
         ymag=[ymag,sin(atan(mOrto))];
         
-        Br = [Br geo.Br(kk)];    % add another blocks for layers > 1
+        Br = [Br mat.LayerMag.Br(kk)];    % add another blocks for layers > 1
         
     end
 end

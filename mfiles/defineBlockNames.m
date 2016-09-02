@@ -12,66 +12,63 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function BarName = defineBlockNames(temp,geo)
+function BarName = defineBlockNames(temp,geo,mat)
 
-% names of rotor barriers (not used in FEMM, needed for
-% compatibility with other finite-element codes such as Infolytica/Magnet)
+% define names of rotor barriers (not used in FEMM, needed for
+% compatibility with other finite-element codes)
 
 ps = geo.ps;
 nlay = geo.nlay;
+RotType = geo.RotType;
+seg = geo.dx;
 
-switch geo.RotType
+if strcmp(RotType,'SPM')
+    RotName   = {'rotor'};
+    ShaftName = {'shaft'};
+    PMName    = {'permanent magnet'};
+    kkk=1;
+    BarName = [];
+    for kk = 1:ps*seg
+        BarName{kkk} = {['PM_',num2str(kk)]};
+        kkk=kkk+1;
+    end
+else
+    YpontRadSx = temp.YpontRadSx;
+    xc = temp.xc;
+    YpontRadSx=repmat(YpontRadSx,1,nlay*ps);
     
-    case 'SPM'
-        
-        RotName   = {'rotor'};
-        ShaftName = {'shaft'};
-        PMName    = {'permanent magnet'};
-        kkk=1;
-        BarName = [];
-        for kk = 1:ps
-            BarName{kkk} = {['PM_',num2str(kk)]};
-            kkk=kkk+1;
-        end
-        
-    otherwise
-        
-        YpontRadSx = temp.YpontRadSx;
-        xc = temp.xc;
-        YpontRadSx=repmat(YpontRadSx,1,nlay*ps);
-        
-        RotName   = {'rotor'};
-        ShaftName = {'shaft'};
-        kkk=1;
-        
-        % Assign label names
-        if (geo.Br==0)
-            if isempty(xc)
-                BarName=[];
-            else
-                for kk=1:length(xc)*ps
-                    if (YpontRadSx(kk)~=0)
-                        num_bar_element=2;
+    RotName   = {'rotor'};
+    ShaftName = {'shaft'};
+    kkk=1;
+    
+    % Assigment of label name
+    if (mat.LayerMag.Br==0)
+        if isempty(xc)
+            BarName=[];
+        else
+            for kk=1:nlay*ps
+                if (YpontRadSx(kk)~=0)
+                    num_bar_element=4;
+                else
+                    num_bar_element=4;
+                end
+                for jk=1:num_bar_element
+                    if (kk<=nlay)
+                        ii=kk;
+                        ij=jk;
                     else
-                        num_bar_element=1;
+                        ii=kk-nlay;
+                        ij=num_bar_element+jk;
                     end
-                    for jk=1:num_bar_element
-                        if (kk<=nlay)
-                            ii=kk;
-                            ij=jk;
-                        else
-                            ii=kk-nlay;
-                            ij=num_bar_element+jk;
-                        end
-                        BarName{kkk}={['Air_Bar_',num2str(ii),'_',num2str(ij)]};
-                        kkk=kkk+1;
-                    end
+                    BarName{kkk}={['Air_Bar_',num2str(ii),'_',num2str(ij)]};
+                    kkk=kkk+1;
                 end
             end
-        else
-            BarName=[];
-            for kk=1:length(xc)*2*ps
-                BarName{kk}={['Plasto_Bar_',num2str(kk)]};
-            end
         end
+    else
+        BarName=[];
+        for kk=1:length(xc)*2*ps
+            BarName{kk}={['Plasto_Bar_',num2str(kk)]};
+        end
+    end
 end

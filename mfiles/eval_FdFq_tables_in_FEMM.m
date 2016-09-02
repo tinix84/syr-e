@@ -60,7 +60,7 @@ for rr = 1:size(iAmp,1)
         
         copyfile(filemot,[currentDir,'\tmp\',dirName,'\mot0.fem']);
         
-        [SOLUTION{rr,cc}] = simulate_xdeg(geo,iAmpCoil(rr,cc),gamma(rr,cc),eval_type);
+        [SOLUTION{rr,cc}] = simulate_xdeg(geo,iAmpCoil(rr,cc),per.BrPP,gamma(rr,cc),eval_type);
         
         cd(currentDir)
     end
@@ -70,6 +70,7 @@ for rr=1:size(iAmp,1)
     for cc=1:size(iAmp,2)
         SOL=SOLUTION{rr,cc};
         dT(rr,cc) = std(SOL(1:end,6));
+        dTpp(rr,cc) = max(SOL(1:end,6))-min(SOL(1:end,6));
         ris_sim = mean(SOL(1:end,:),1);
         T(rr,cc) = ris_sim(6);
         Iq(rr,cc)=ris_sim(3);
@@ -87,5 +88,7 @@ F_map.Fd = Fd;
 F_map.Fq = Fq;
 F_map.T = T;
 F_map.dT = dT;
+F_map.dTpp = dTpp;
+F_map.dTpp = dTpp;
 
 % save sim_mot_temp F_map

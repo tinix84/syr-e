@@ -65,7 +65,7 @@ end
 if (temp5 == 'Y')
     mkdir(temp4)
 elseif (temp5 == 'N')
-    break
+    return
 else % (Keep)
     warndlg('OK, completo la mappa','KEEP');
 end

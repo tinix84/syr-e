@@ -42,7 +42,7 @@ axis([0 10 0 10]), axis equal
 
 %% apparent dFdq, approx #1 
 
-LLd = (Fd-lm)./Id;
+LLd = (Fd-fm)./Id;
 LLq = Fq ./ Iq;
 
 figure
@@ -80,7 +80,7 @@ adapt_figure_fonts('Times New Roman',12,10)
 saveas(gcf,[pathname 'Fdq_app1']);
 
 % apparent dFdq, approx #2
-LLLd = (Fd(1,:)-lm)./Id(1,:);
+LLLd = (Fd(1,:)-fm)./Id(1,:);
 LLLd = ones(length(LLLd),1)*LLLd;
 LLLdq = LLd - LLLd;
 

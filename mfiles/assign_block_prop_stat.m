@@ -57,7 +57,7 @@ index=index;
 for kk=1:size(BLKLABELSstat.names.FeYoke,1)
     mi_addblocklabel(BLKLABELSstat.xy(index,1),BLKLABELSstat.xy(index,2));
     mi_selectlabel(BLKLABELSstat.xy(index,1),BLKLABELSstat.xy(index,2));
-    mi_setblockprop(BLKLABELS.materials{BLKLABELSstat.xy(index,3)}, 0, fem.res,'None', 0, group, 1);
+    mi_setblockprop(BLKLABELS.materials{BLKLABELSstat.xy(index,3)}, 0, fem.res,'None', 0, 12, 1);
     mi_clearselected;
     index=index+1;
 end

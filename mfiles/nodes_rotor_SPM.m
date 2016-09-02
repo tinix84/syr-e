@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [geo,temp] = nodes_rotor_SPM(geo) %,mat,fem)
+function [geo,mat,temp] = nodes_rotor_SPM(geo,mat) %,mat,fem)
 
 % group0 = 0;                      % define the rotor as group 0 in FEMM
 
@@ -23,6 +23,7 @@ p = geo.p;                      % pole pairs
 phi = geo.phi/p;                % angle range of permanent magnet
 lm = geo.lm;                    % the thickness of permant magnet
 hc = 0;
+seg = geo.dx;                  % the number of segments of magnet
 %% COMPLETE DESIGN (ARCO OUTDOOR AIR GAP AND LAYER 1) AND ASSIGNMENTS (MATERIALS AND BOUNDARY CONDITIONS)
 x = r * cos(90/p * pi/180);
 y = r * sin(90/p * pi/180);
@@ -37,6 +38,19 @@ xPMci = r-lm; yPMci = 0;
 [xPMi,yPMi] = rot_point(xPMci,yPMci,phi/2*pi/180);
 
 [x4, y4] = rot_point(xPMci,yPMci,90/p*pi/180);
+
+% segment point
+if seg ~=1
+    NoSeg = floor(seg);
+    for jj = 1:NoSeg
+        [xPMso(jj),yPMso(jj)] = rot_point(xPMo,yPMo,-phi/2*pi/180*2/seg*jj);
+        [xPMsi(jj),yPMsi(jj)] = rot_point(xPMi,yPMi,-phi/2*pi/180*2/seg*jj);
+        temp.xPMso(jj) = xPMso(jj);
+        temp.yPMso(jj) = yPMso(jj);
+        temp.xPMsi(jj) = xPMsi(jj);
+        temp.yPMsi(jj) = yPMsi(jj);
+    end
+end
 
 %%  SAVE THE FINAL DATA:
 

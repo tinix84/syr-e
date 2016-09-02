@@ -305,7 +305,11 @@ clear Temp xtemp ytemp
 
 % FEMM-style codes
 codBound_FluxTan  = 0;      % 0 flux tangential
-codBound_periodic = 10;     % 10 odd or even periodicity
+if (Qs<geo.p*geo.q*6)
+    codBound_periodic = 10;     % 10 odd or even periodicity
+else
+    codBound_periodic = -10;    % -10 no periodicity, simulate full machine
+end
 
 [xBoundRSE1,yBoundRSE1]=rot_point(RSE,0,alpha_slot/4);  % rotazione di 1/4 di passo cava
 [xBoundRSE2,yBoundRSE2]=rot_point(RSE,0,-alpha_slot/4); % rotazione di 1/4 di passo cava

@@ -38,7 +38,7 @@ end
 % recall nodes, lines, arcs
 pathname_DXF=[pathname,filemot(1:end-4),'\DXF\'];
 
-[rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem);
+[rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem,mat);
 [geo,statore,BLKLABELSstat] = STATmatr(geo,fem);
 
 %%%%%%%%

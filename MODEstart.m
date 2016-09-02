@@ -27,15 +27,16 @@
 tic
 
 clc
-[bounds, geo, per] = data0();
+[bounds, objs, geo, per,mat] = data0();
 dat.geo0=geo;
 dat.per=per;
+dat.mat=mat;
 
 %%%%%%%%%% FEMM fitness handle %%%%%%%%%%%%%%%%%%%%%%%%%%
 eval_type = 'MO_OA';                         % you can choose between "MO_OA" and "MO_GA"
                                              % "MO_GA" use multi-objective algorithm from matlab ga toolbox
                                              % "MO_OA" use multi-objective de algorithm
-FitnessFunction = @(x)FEMMfitnessX(x,geo,per,eval_type);
+FitnessFunction = @(x)FEMMfitnessX(x,geo,per,mat,eval_type);
 % FitnessFunction = @(x)FEMMfitness(x,geo,per,eval_type);
 %FitnessFunction = @(x)zdtTestFunctions(x,1);
 %bounds = [zeros(10,1) ones(10,1)];
