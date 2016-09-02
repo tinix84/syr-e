@@ -33,16 +33,16 @@ if not(isempty(message))
 end
 
 % if isempty(axes_type)
-    if sum(Id(:,1)) < 0
-        axes_type = 'PM';  % SPM style
-    else
-        axes_type = 'SR';  % IPM style
-    end
+if sum(Id(:,1)) < 0
+    axes_type = 'PM';  % SPM style
+else
+    axes_type = 'SR';  % IPM style
+end
 % end
 
 % plot the initial magnetic model
 plot_maps(pathname,FILENAME);
- 
+
 % LUTs for flux observer
 id_tab_min = min(min(Id));
 id_tab_max = max(max(Id));
@@ -91,7 +91,7 @@ fclose(fid);
 figure,
 plot(idd',fd'), grid on, hold on
 plot(iqq ,fq'),
-plot(idd',fd','kx'), 
+plot(idd',fd','kx'),
 plot(iqq ,fq','kx'), hold off
 xlabel('i_d, i_q [A]'), ylabel('\lambda_d \lambda_q [Vs]'), %title(motor_name)
 

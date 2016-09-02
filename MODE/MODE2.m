@@ -166,9 +166,10 @@ OUT.PSet=(M1(I==1,:));
 if strcmp(options.SaveResults,'yes')
     geo0=options.geo0;
     per=options.per;
+    mat=options.mat;
     thisfilepath = fileparts(which('data0.m'));
     filename=fullfile(thisfilepath,'results',['OUT_' datestr(now,30)]);
-    save(filename,'OUT','per','geo0','dataSet'); %Results are saved
+    save(filename,'OUT','per','geo0','dataSet','mat'); %Results are saved
     clear geo0 per
 end
 
@@ -190,7 +191,7 @@ plot(F(:,1),F(:,2),'dk','MarkerFaceColor','k');...
 % if strcmp(postProcExecution,'Yes')
 disp('PostProcessing of current optimization result...');
 [~,ff]=fileparts(filename);
-if strcmp(func2str(options.CostProblem), '@(x)FEMMfitness(x,geo,per,eval_type)')
+if strcmp(func2str(options.CostProblem), '@(x)FEMMfitness(x,geo,per,mat,eval_type)')
     evalParetoFront(ff,dataSet);
 else
     evalParetoFrontX(ff,dataSet);

@@ -15,6 +15,16 @@
 function rotor = build_matrix_SPM(temp,geo)
 
     x0 = geo.x0;
+    seg = geo.dx;
+if seg~=1
+    NoSeg = floor(seg);
+    for jj = 1:NoSeg
+        xPMso(jj) = temp.xPMso(jj);
+        yPMso(jj) = temp.yPMso(jj);
+        xPMsi(jj) = temp.xPMsi(jj);
+        yPMsi(jj) = temp.yPMsi(jj);
+    end
+end
     xPMco = temp.xPMco;
     yPMco = temp.yPMco;
     xPMo = temp.xPMo;
@@ -30,10 +40,15 @@ function rotor = build_matrix_SPM(temp,geo)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 rotor = [0 0 xPMco yPMco xPMo yPMo 1;
-         0 0 xPMci yPMci xPMi yPMi 1;
-         0 0 xPMi yPMi x4 y4 1;
-         0 0 xPMo yPMo x5 y5 1;
-         xPMo yPMo xPMi yPMi NaN NaN 0;
-         x4 y4 x5 y5 NaN NaN 0];
+    0 0 xPMci yPMci xPMi yPMi 1;
+    0 0 xPMi yPMi x4 y4 1;
+    0 0 xPMo yPMo x5 y5 1];
+if seg ~=1
+    for jj = 1:NoSeg
+        rotor = [rotor; xPMso(jj) yPMso(jj) xPMsi(jj) yPMsi(jj) NaN NaN 0];
+    end
+end
+rotor = [ rotor;
+    xPMo yPMo xPMi yPMi NaN NaN 0;
+    x4 y4 x5 y5 NaN NaN 0];

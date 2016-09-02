@@ -93,12 +93,16 @@ yBarrier1{nlay+1}=yc1+r1*sin([angleB1:Dangle:angleA1]);
 Afe=cumsum(A);  % area of semipole
 
 rG=([r B1k(1:nlay-1)]+B2k)/2;
-M_Fe = 2*Afe*l * 1e-9 * 7800 ;   % massa ferro appeso ai ponticelli
+M_Fe = 2*Afe*l * 1e-9 * rhoFE ;   % massa ferro appeso ai ponticelli
 
 F_centrifuga = M_Fe .* rG/1000 *  (nmax * pi/30)^2;
-sigma_max = 180;    % N/mm2 - snervamento lamierino
+%sigma_max = sigma_max;    % N/mm2 - snervamento lamierino
 
-pont = F_centrifuga/(sigma_max * l);    % mm
+if geo.radial_ribs_eval == 0
+    pont = F_centrifuga/(sigma_max * l);    % mm
+else
+    pont = geo.pont;
+end
 
 pont(pont < pont0) = 0; % NOTA BENE: Elimino i ponticelli troppo sottili
 hpont=pont;

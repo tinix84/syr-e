@@ -3,27 +3,17 @@
 % I CONTOUR evaluation --> Kt max loci
 % CurveIsoII is the I Levels Contour in the id-iq plane
 
-cd
+cd, debug = 0;
 
-debug = 0;
-
-Curve = CurveIsoII;
-Level = ILevel;
-Tot = 0;
-Valori = 0;
-NuovoValore=[];
+Curve = CurveIsoII; Level = ILevel;
+Tot = 0; Valori = 0; NuovoValore=[];
 
 a = cell(length(Level),1);
 
-id_KtMax = [];
-iq_KtMax = [];
-T_KtMax = [];
+id_KtMax = []; iq_KtMax = []; T_KtMax = [];
 
-m = 1;
-finito = 0;
-count_finito = 0;
+m = 1; finito = 0; count_finito = 0;
 
-% while (m<=length(Level) && finito == 0),
 while ((Tot+Valori)<length(Curve) && finito == 0),
     
     Tot=Tot+Valori+1;
@@ -41,7 +31,7 @@ while ((Tot+Valori)<length(Curve) && finito == 0),
     T_I = interp2(id,iq,TI,idIso,iqIso);    % T at given I - 1st round
     [Tmax_I, indiceM]=max(T_I);
     
-    id_KtMax(m) = idIso(indiceM);     % luogo max T / I (Nm/A)
+    id_KtMax(m) = idIso(indiceM);           % luogo max T / I (Nm/A)
     iq_KtMax(m) = iqIso(indiceM);
     
     if ((indiceM == 1)||(strcmp(axes_type,'SR') && (indiceM == length(idIso))))
@@ -88,7 +78,7 @@ else
 end
 
 if not(exist('Imax'))
-    Imax = max(max(I))/sqrt(2);
+    Imax = max(max(II))/sqrt(2);
 end
 ind = find(abs(iq_KtMax_p + j* id_KtMax_p)>=0.94*Imax,1,'first');
 
@@ -106,13 +96,19 @@ if debug
     axis equal
 end
 
-%% uso le curve interpolate (solo per IPM)
-id_KtMax = id_KtMax_p;
-iq_KtMax = iq_KtMax_p;
-T_KtMax = T_KtMax_p;
+%% uso le curve interpolate
+if(0)
+    id_KtMax = id_KtMax_p;
+    iq_KtMax = iq_KtMax_p;
+    T_KtMax = T_KtMax_p;
+end
 I_KtMax = abs(id_KtMax + j* iq_KtMax);
-% PF_KtMax = PF_KtMax_p;
 save([pathname 'ktMax_idiq'],'id_KtMax','iq_KtMax','T_KtMax')
+if exist('dTpp')
+    dTpp_KtMax = interp2(id,iq,dTpp,id_KtMax,iq_KtMax);    % dT pk pk on MTPA
+    dTpp_KtMax = dTpp_KtMax(not(isnan(T_KtMax)));
+    save ([pathname 'ktMax_idiq'],'dTpp_KtMax','-append');
+end
 % save('mat\ktMax_FdFq','fd_KtMax','fq_KtMax','T_KtMax')
 
 % print(gcf,'-dpdf','-r300',['Mappe_IPMScooter\MotorMap_Flux\14_Ktmax_locus'])

@@ -48,11 +48,11 @@ if not(isempty(message))
 end
 
 % if isempty(axes_type)
-    if sum(Id(:,1)) < 0
-        axes_type = 'PM';  % SPM style
-    else
-        axes_type = 'SR';  % IPM style
-    end
+if sum(Id(:,1)) < 0
+    axes_type = 'PM';  % SPM style
+else
+    axes_type = 'SR';  % IPM style
+end
 % end
 
 if(0)
@@ -62,7 +62,7 @@ if(0)
     Id0 = Id; Iq0 = Iq; Ld0 = Fd; Lq0 = Fq;
     [Id,Iq]=meshgrid(i_d,i_q);
     Fd = interp2(Id0,Iq0,Ld0,Id,Iq,'cubic');
-    Fq = interp2(Id0,Iq0,Lq0,Id,Iq,'cubic');    
+    Fq = interp2(Id0,Iq0,Lq0,Id,Iq,'cubic');
 end
 
 if (0)
@@ -76,7 +76,16 @@ if exist('T')
     TI = abs(T);
     p = round(abs(2/3 * T(2,2)./(Fd(2,2) .* Iq(2,2) - Fq(2,2) .* Id(2,2))));   % pole pairs reconstruction
 else
-    run([pathname 'ReadParameters']);
+    if exist([pathname 'ReadParameters'],'file')
+        run([pathname 'ReadParameters']);
+    else
+        prompt={'p: # of pole pairs?'};
+        name='prompt for p';
+        numlines=1;
+        defaultanswer={'2'};
+        answer=inputdlg(prompt,name,numlines,defaultanswer);
+        p = eval(answer{1});
+    end
     TI = 3/2 * p * (Fd .* Iq - Fq .* Id);   % torque
 end
 FI = sqrt(Fd.^2 + Fq.^2);               % flux linkage amplitude
@@ -84,7 +93,7 @@ II = sqrt(Id.^2 + Iq.^2);               % current amplitude
 IPF = cos(atan(Fq./Fd)-atan(-Id./Iq));  % internal PF
 
 if axes_type == 'PM'
-    fm = interp2(Id,Iq,FI,-eps,eps);    % flux linkage at open circuit 
+    fm = interp2(Id,Iq,FI,-eps,eps);    % flux linkage at open circuit
 else
     fm = interp2(Id,Iq,FI,eps,eps);
 end
@@ -95,7 +104,7 @@ if (0)
 end
 
 pathname = [pathname 'AOA\'];
-if (1)    
+if (0)
     % Inverse Magnetic Model, saves IdIq_FdFq.mat
     C_IdIq_FqFd
     
@@ -109,24 +118,29 @@ if (1)
     argI = atan(IQ_dato_fd_fq./ID_dato_fd_fq);
     fi = pi/2 + delta - argI;    % PF angle
     PF = cos(fi);
-     
+    
+    
+    % flux coordinates - contours
+    CurveIsoT=contourc(fd,fq,T,TLevel);
+    CurveIsoI=contourc(fd,fq,I,ILevel);
+    CurveIsoPF=contourc(fd,fq,PF,PFLevel);
+    
+    % MTPV
+    KvMax_Locus_FdFq;   % in id,iq
+    
 end
-pathname = strrep(pathname,'\AOA','');
+pathname = strrep(pathname,'AOA\','');
 
 if (0)
     plot_all_surfaces;
 end
 
 % CONTOURS, used for MTPA and MTPV evaluation
-TLevel = max(max(TI))*(0.01:0.01:1);    % torque levels
+TLevel = min(max(max(TI)),max(max(TI)))*(0.01:0.01:1);    % torque levels
 Imax_interp = max(max(abs(id)),max(abs(iq)));
 ILevel = Imax_interp *(0.01:0.01:1);    % current amplitude levels
 PFLevel = 0.5:0.1:0.9;                  % PF levels
 
-% flux coordinates - contours
-CurveIsoT=contourc(fd,fq,T,TLevel);
-CurveIsoI=contourc(fd,fq,I,ILevel);
-CurveIsoPF=contourc(fd,fq,PF,PFLevel);
 % current coordinates - contours
 CurveIsoTI=contourc(id,iq,TI,TLevel);
 CurveIsoII=contourc(id,iq,II,ILevel);
@@ -140,14 +154,18 @@ KtMax_idiq2fdfq;    % in fd,fq
 F_KtMax = abs(fd_KtMax + 1i* fq_KtMax);
 
 % MTPV
-KvMax_Locus_FdFq;   % in id,iq
+% KvMax_Locus_FdFq;   % in id,iq
 KvMax_Locus_idiq;   % in fd,fq
 
-pathname = strrep(pathname,'\AOA','');
+pathname = strrep(pathname,'AOA\','');
 
 % Performance Curves
 figure
-plot(I_KtMax,T_KtMax), grid on
+plot(I_KtMax,T_KtMax), grid on,
+if exist('dTpp_KtMax')
+    hold on
+    plot(I_KtMax,[(T_KtMax+dTpp_KtMax);(T_KtMax-dTpp_KtMax)],'r');
+end
 xlabel('phase current - Apk'), ylabel('torque - Nm')
 title('torque against peak current along the MPTA')
 saveas(gcf,[pathname 'AOA\torque_current']);
@@ -177,19 +195,21 @@ title('AOA in id,iq coordinates')
 % adapt_figure_fonts('Times New Roman',18,14)
 saveas(gcf,[pathname 'AOA\MTPAMTPV(id,iq)']);
 
-figure
-temp = max(max(abs(F)));
-[c,h]=contour(FD,FQ,FF,temp * [0.1:0.1:0.9]);
-clabel(c,h,'Color','k'); hold on
-temp = max(max(abs(TF)));
-[c,h]=contour(FD,FQ,TF,temp * (-0.9:0.05:0.9)); clabel(c,h);
-[c,h]=contour(FD,FQ,IF,'k'); clabel(c,h);
-axis equal, grid on
-xlabel('fd [Vs]'),ylabel('fq [Vs]')
-title('AOA in fd,fq coordinates')
-plot(fd_KtMax,fq_KtMax,'-b','LineWidth',2)   % MTPA
-plot(fd_KvMax,fq_KvMax,'-b','LineWidth',2)   % MTPV
-saveas(gcf,[pathname 'AOA\MTPAMTPV(fd,fq)']);
+if exist('F')
+    figure
+    temp = max(max(abs(F)));
+    [c,h]=contour(FD,FQ,F,temp * [0.1:0.1:0.9]);
+    clabel(c,h,'Color','k'); hold on
+    temp = max(max(abs(TF)));
+    [c,h]=contour(FD,FQ,TF,temp * (-0.9:0.05:0.9)); clabel(c,h);
+    [c,h]=contour(FD,FQ,IF,'k'); clabel(c,h);
+    axis equal, grid on
+    xlabel('fd [Vs]'),ylabel('fq [Vs]')
+    title('AOA in fd,fq coordinates')
+    plot(fd_KtMax,fq_KtMax,'-b','LineWidth',2)   % MTPA
+    plot(fd_KvMax,fq_KvMax,'-b','LineWidth',2)   % MTPV
+    saveas(gcf,[pathname 'AOA\MTPAMTPV(fd,fq)']);
+end
 
 % print MTPA tables into a txt file
 T_KtMax(1) = 0;
@@ -236,4 +256,4 @@ plot(T_set,id_set,'xk'), plot(T_set,iq_set,'xk'), hold off,
 legend('id set point','iq set point','LUT','LUT');
 xlabel('T\_set - Nm'), ylabel('Apk')
 
-edit([pathname 'tablesMTPA.txt'])
+edit([pathname '\tablesMTPA.txt'])

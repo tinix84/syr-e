@@ -52,19 +52,42 @@ if strcmp(RotType,'SPM')
 else
     xre1 = r;        yre1 = 0;
 end
-[xre3,yre3] = rot_point(xre1,yre1,(ps-1/2)*180/p*pi/180);
+if (ps<2*p)
+    [xre3,yre3] = rot_point(xre1,yre1,(ps-1/2)*180/p*pi/180);
+else
+    [xre3,yre3] = rot_point(xre1,yre1,(ps/2-1/2)*180/p*pi/180);
+end
 [xre2,yre2] = rot_point(xre1,yre1,-90/p*pi/180);
 
-rotore=[rotore;
-    0 0 xre2 yre2 xre3 yre3 1];
+if (ps<2*p)
+    rotore=[rotore;
+        0 0 xre2 yre2 xre3 yre3 1];
+else
+    rotore=[rotore;
+    0 0 xre2 yre2 xre3 yre3 1;
+    0 0 xre3 yre3 xre2 yre2 1]; 
+end
 
 % Albero
-[xAl1,yAl1] = rot_point(Ar,0,(ps-1/2)*180/p*pi/180);
+if (ps<2*p)
+    [xAl1,yAl1] = rot_point(Ar,0,(ps-1/2)*180/p*pi/180);
+else
+    [xAl1,yAl1] = rot_point(Ar,0,(ps/2-1/2)*180/p*pi/180);
+end
 [xAl2,yAl2] = rot_point(Ar,0,-90/p*pi/180);
+
+if (ps<2*p)
 rotore=[rotore;
     0,0,xAl2,yAl2,xAl1,yAl1,1];
+else
+   rotore=[rotore;
+    0,0,xAl2,yAl2,xAl1,yAl1,1;
+    0,0,xAl1,yAl1,xAl2,yAl2,1];
+end
 
 % Completo il rotore con linee di chiusura laterali
-rotore=[rotore;
-    0,0,xre2,yre2,NaN,NaN,0;
-    0,0,xre3,yre3,NaN,NaN,0];
+if (ps<2*p)
+    rotore=[rotore;
+        0,0,xre2,yre2,NaN,NaN,0;
+        0,0,xre3,yre3,NaN,NaN,0];
+end

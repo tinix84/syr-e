@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [geo,temp]=nodes_rotor_Fluid(geo)
+function [geo,mat,temp]=nodes_rotor_Fluid(geo,mat)
 
 l=geo.l;
 r = geo.r;            % Raggio del rotore al traferro
@@ -28,6 +28,9 @@ Ar=geo.Ar;              % raggio albero
 nmax=geo.nmax;          % velocità massima
 BandRib=[2.6*geo.pont0,5*geo.pont0,5*geo.pont0];
 rCirRib=1*pont0;
+sigma_max = mat.Rotor.sigma_max;    % snervamento materiale [MPa]
+rhoFE = mat.Rotor.kgm3;             % densità del ferro di rotore [kg/m3]
+rhoPM = mat.LayerMag.kgm3;          % densità magneti [kg/m3]
 
 x0 = r/cos(pi/2/p);                            % centro cerchi (p generico)
 geo.x0 = x0;
@@ -439,7 +442,7 @@ for kk=1:length(xcbar)
     mOrto=-a/b/2;
     xmag=[xmag,cos(atan(mOrto))];
     ymag=[ymag,sin(atan(mOrto))];
-    Br = [Br geo.Br(kk)];    % add one Br (or Air) block
+    Br = [Br mat.LayerMag.Br(kk)];    % add one Br (or Air) block
 end
 temp.xc=xc;
 temp.yc=yc;

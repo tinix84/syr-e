@@ -52,10 +52,17 @@ save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Fd','Fq','Id','Iq');
 save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'T','-append');
 save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dT','-append');
 
+if isfield(F_map,'dTpp')
+    dTpp = F_map.dTpp;
+    dTpp = interp2(idvect,iqvect,dTpp,Id,Iq,'cubic');
+    dTpp = dTpp*klength;
+    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dTpp','-append');
+end
+
 % flux maps
 figure
 plot(Id(1,:),Fd([1 end],:),F_map.Id(1,:),F_map.Fd([1 end],:),'kx'), grid on, hold on
-plot(Iq(:,1),Fq(:,[1 end]),F_map.Iq(:,1),F_map.Fq(:,[1 end]),'kx'), 
+plot(Iq(:,1),Fq(:,[1 end]),F_map.Iq(:,1),F_map.Fq(:,[1 end]),'kx'),
 xlabel('id,iq [A]'), ylabel('\lambda_d, \lambda_q [Vs]'), %zlabel('\lambda_d')
 saveas(gcf,[NewDir 'Curves_' strrep(filemot,'.mat','.fig')])
 
@@ -83,9 +90,18 @@ end
 saveas(gcf,[NewDir 'Tsurf_' strrep(filemot,'.mat','.fig')])
 
 figure
-surf(Id,Iq,dT), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple [Nm]')
+surf(Id,Iq,dT), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple (std) [Nm]')
 if not(kturns == 1)
     title(['Rewind factor = ' num2str(kturns)])
 end
-saveas(gcf,[NewDir 'dTdsurf_' strrep(filemot,'.mat','.fig')])
+saveas(gcf,[NewDir 'dTsurf_' strrep(filemot,'.mat','.fig')])
 
+if isfield(F_map,'dTpp')
+
+    surf(Id,Iq,dTpp), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple (pk-pk) [Nm]')
+    if not(kturns == 1)
+        title(['Rewind factor = ' num2str(kturns)])
+    end
+    saveas(gcf,[NewDir 'dTpkpksurf_' strrep(filemot,'.mat','.fig')])
+
+end

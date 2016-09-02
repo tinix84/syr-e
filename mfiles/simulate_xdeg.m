@@ -27,7 +27,7 @@
 % SOL(5,:) = fq,
 % SOL(6,:) = torque;
 
-function [SOL] = simulate_xdeg(geo,io,gamma_in,eval_type)
+function [SOL] = simulate_xdeg(geo,io,Br,gamma_in,eval_type)
 
 % number of simulation that must be done respect to eval type
 switch eval_type
@@ -66,7 +66,7 @@ id = io * cos(gamma * pi/180);
 iq = io * sin(gamma * pi/180);
 
 % Hc = geo.Hc;
-Hc = geo.Br/(4e-7*pi);
+Hc = Br/(4e-7*pi);
 
 SOL = [];
 
@@ -123,8 +123,13 @@ end
         mi_modifycircprop('fase3n',1,-i3);
         
         % assign the Hc property to each of the bonded magnets
-        for j = 1:length(Hc)
-            mi_modifymaterial(['Bonded-Magnet' num2str(j)],3,Hc(j));
+        if strcmp(geo.RotType,'SPM')
+            mi_modifymaterial('Bonded-Magnet',3,Hc);
+        else
+            Hc_vect = Hc*ones(1,length(geo.BLKLABELS.rotore.BarName));
+            for j = 1:length(Hc_vect)
+                mi_modifymaterial(['Bonded-Magnet' num2str(j)],3,Hc_vect(j));
+            end
         end
         
         % delete the airgap arc prior to moving the rotor
@@ -134,7 +139,11 @@ end
         mi_selectgroup(2), mi_moverotate(0,0,th_m);
         
         % redraw the airgap arc
-        draw_airgap_arc_with_mesh(geo,th_m,geo.fem)
+        if (ps<2*p)
+            draw_airgap_arc_with_mesh(geo,th_m,geo.fem)
+        else
+            draw_airgap_arc_with_mesh_fullMachine(geo,th_m,geo.fem)
+        end
         
         mi_saveas([pathname,'\mot_temp.fem']);    
         mi_analyze(1);

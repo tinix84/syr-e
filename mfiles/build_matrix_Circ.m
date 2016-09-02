@@ -38,7 +38,7 @@ YBan1dx=temp.YpontRadBarDx;
 YBan1sx=temp.YpontRadBarSx;
 error_mex=temp.error_mex;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+if (geo.BarFillFac==0);
 rotore=[];
 
 for ii=1:geo.nlay
@@ -64,5 +64,44 @@ for ii=1:geo.nlay
         rotore=[rotore;
             XBan1sx(ii) YBan1sx(ii) XBan1dx(ii) YBan1dx(ii) NaN NaN 0];
     end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+else
+Xmag5dx=temp.X5;
+Ymag5dx=temp.Y5;
+Xmag6sx=temp.X6;
+Ymag6sx=temp.Y6;
+rotore=[];
+
+for ii=1:geo.nlay
+    
+    if (YpontRadSx(ii)~=0)
+        rotore=[rotore;XpontRadSx(ii),YpontRadSx(ii),XpontRadDx(ii),YpontRadDx(ii),NaN,NaN,0;...
+             Xmag6sx(ii) Ymag6sx(ii) Xmag5dx(ii) Ymag5dx(ii) NaN NaN 0;...
+            XpontRadSx(ii),YpontRadSx(ii),XBan1sx(ii),YBan1sx(ii),NaN,NaN,0;...
+            XpontRadDx(ii),YpontRadDx(ii),XBan1dx(ii),YBan1dx(ii),NaN,NaN,0];
+    end
+    if(error_mex(ii)==0)
+        rotore =[ rotore;
+            xc(ii) yc(ii) XBan3dx(ii) YBan3dx(ii) XBan3sx(ii) YBan3sx(ii) 1;
+            x0 0 XBan3sx(ii) YBan3sx(ii) Xmag6sx(ii) Ymag6sx(ii) 1;
+           x0 0 Xmag6sx(ii) Ymag6sx(ii)  XBan1sx(ii) YBan1sx(ii) 1];
+        
+        rotore=[rotore;
+            x0 0 XBan3dx(ii) YBan3dx(ii) Xmag5dx(ii) Ymag5dx(ii) 1;
+        x0 0 Xmag5dx(ii) Ymag5dx(ii) XBan1dx(ii) YBan1dx(ii) 1];
+        
+    else
+        rotore=[rotore;
+            xc(ii) 0 XBan3dx(ii) YBan3dx(ii) XBan3sx(ii) YBan3sx(ii) 1];
+        
+    end
+    
+    if (YpontRadSx(ii)==0)
+        rotore=[rotore;
+            XBan1sx(ii) YBan1sx(ii) XBan1dx(ii) YBan1dx(ii) NaN NaN 0;
+            Xmag6sx(ii) Ymag6sx(ii) Xmag5dx(ii) Ymag5dx(ii) NaN NaN 0];
+    end
+end
 end
 

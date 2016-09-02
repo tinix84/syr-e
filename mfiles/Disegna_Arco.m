@@ -59,10 +59,15 @@ maxsegdeg=0.25*(ang/maxseg);
 if (maxsegdeg>20)
     maxsegdeg=20;
 end
+if isnan(maxsegdeg)
+    maxsegdeg=20;
+end
+
 % keyboard
 % disegna arco
 % mi_drawarc(x1,y1,x2,y2,ang,ris);
-mi_addnode(x1,y1);mi_addnode(x2,y2)
+
+% mi_addnode(x1,y1);mi_addnode(x2,y2)
 mi_drawarc(x1,y1,x2,y2,ang,maxsegdeg);
 
 

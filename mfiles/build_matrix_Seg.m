@@ -87,13 +87,14 @@ LowDimBarrier=temp.LowDimBarrier;
 %%
 rotore=[];
 
+
 for ii=1:geo.nlay
     
     if (YpontRadSx(ii)~=0)
-        if (ii==1 && LowDimBarrier(ii)==1)
+%         if (ii==1 && LowDimBarrier(ii)==1)
             %             rotore=[rotore;(B1k(ii)+B2k(ii))/2,0,B1k(ii),0,B2k(ii),0,1;
             %                 (B1k(ii)+B2k(ii))/2,0,B2k(ii),0,B1k(ii),0,1];
-        else
+%         else
             rotore=[rotore;XpontRadSx(ii),YpontRadSx(ii),XpontRadDx(ii),YpontRadDx(ii),NaN,NaN,0;...
                 XpontRadSx(ii),YpontRadSx(ii),XpontRadBarSx(ii) YpontRadBarSx(ii),NaN,NaN,0;...
                 XpontRadDx(ii),YpontRadDx(ii),XpontRadBarDx(ii) YpontRadBarDx(ii),NaN,NaN,0];
@@ -125,12 +126,12 @@ for ii=1:geo.nlay
             rotore=[rotore;
                 XcRibTraf2(ii) YcRibTraf2(ii) xxD2k(ii) yyD2k(ii) xpont(ii) ypont(ii) 1];
             
-        end
+%         end
     else
-        if (ii==1 && LowDimBarrier(ii)==1)
+%         if (ii==1 && LowDimBarrier(ii)==1)
             %             rotore=[rotore;B1k(ii),0,(B1k(ii)+B2k(ii))/2,ypont(1),NaN,NaN,0;
             %                 (B1k(ii)+B2k(ii))/2,ypont(1),B2k(ii),0,NaN,NaN,0];
-        else
+%         else
             
             if (R_RaccB1(ii)<=0.5)
                 rotore=[rotore;
@@ -158,7 +159,7 @@ for ii=1:geo.nlay
                 XcRibTraf1(ii) YcRibTraf1(ii) xpont(ii) ypont(ii) xxD1k(ii) yyD1k(ii) 1];
             rotore=[rotore;
                 XcRibTraf2(ii) YcRibTraf2(ii) xxD2k(ii) yyD2k(ii) xpont(ii) ypont(ii) 1];
-        end
+%         end
     end
     
     %     if (geo.Br(ii)~=0)
@@ -183,11 +184,15 @@ for ii=1:geo.nlay
             xRaccR1_B2(ii) yRaccR1_B2(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) NaN NaN 0];
         
     else
-        rotore=[rotore;
-            %                 XpBar2(ii) YpBar2(ii) XpMag2B1(ii) YpMag2B1(ii) NaN NaN 0;
-            XpBar2(ii) YpBar2(ii) XpMag1B1(ii) YpMag1B1(ii) NaN NaN 0];
+        %  segment for the barrier
+%         if ii == 1
+%             rotore=[rotore;
+%                 XpBar1(ii)  YpBar1(ii) XpMag1B1(ii) YpMag1B1(ii) NaN NaN 0];
+%         else
+            rotore=[rotore;
+                XpBar2(ii)  YpBar2(ii) XpMag1B1(ii) YpMag1B1(ii) NaN NaN 0];
+%         end
     end
-    %     end
 end
 
 

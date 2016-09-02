@@ -37,11 +37,16 @@ switch geo.RotType
             rG(ii)=(Afe(ii-1)*rG(ii-1)+A(ii)*tmp_bary(ii,1))/Afe(ii);  % baricentri delle regioni di ferro sorrette dalle due U
         end
         
-        M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
+        M_Fe = 2*Afe*l * 1e-9 * rhoFE ;   % massa ferro appeso ai ponticelli
         
         F_centrifuga = M_Fe .* rG/1000 *  (nmax * pi/30)^2;
         
-        pont = F_centrifuga/(sigma_max * l);    % mm
+        if geo.radial_ribs_eval == 0
+            pont = F_centrifuga/(sigma_max * l);    % mm
+        else
+            pont = geo.pont;
+        end
+        
         for jj = 1 : nlay
             if (pont(jj) < pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione per gli altri tipi di rotore
                 pont(jj) = 0;
@@ -131,10 +136,10 @@ switch geo.RotType
         end
         area_barr_withoutPM = AreaBarr;
         
-        tempBr = mean(unique(geo.Br));  % c'è magnete o aria?? (gp .. temporaneo ott 16, 2015 )
+        tempBr = mean(unique(mat.LayerMag.Br));  % c'è magnete o aria?? (gp .. temporaneo ott 16, 2015 )
         
-        if tempBr > 0 && tempBr <= geo.Br_commercial
-            area_barr_withPM = area_barr_withoutPM.*geo.Br/geo.Br_commercial; % geo.Br_commercial is the Br of the real magnet
+        if tempBr > 0 && tempBr <= 1.25
+            area_barr_withPM = area_barr_withoutPM.*mat.LayerMag.Br/1.25; % geo.Br_commercial is the Br of the real magnet
             for i = 1 : 2: length(r_all)
                 idx = ceil(i/2);
                 rPM = (2/3*sin(0.5*thetaArco(idx))/(0.5*thetaArco(idx))*(r_all(2*idx)^3 - r_all(2*idx - 1)^3)/(r_all(2*idx)^2 - r_all(2*idx - 1)^2));
@@ -166,13 +171,13 @@ switch geo.RotType
                 end
             end
             for ii = 1 : nlay
-                rG(ii) = (Afe(ii)*geo.rhoFE*rG(ii) + 0.5*area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE + 0.5*area_barr_withPM(ii)*geo.rhoPM);  % baricentri
+                rG(ii) = (Afe(ii)*rhoFE*rG(ii) + 0.5*area_barr_withPM(ii)*rhoPM*rG_PM(ii)) / (Afe(ii)*rhoFE + 0.5*area_barr_withPM(ii)*rhoPM);  % baricentri
             end
-            M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE;   % massa ferro appeso ai ponticelli
+            M_Fe = 2*Afe*l * 1e-9 * rhoFE;   % massa ferro appeso ai ponticelli
             A_PM = cumsum(area_barr_withPM);
-            M_PM = A_PM*l* 1e-9 *geo.rhoPM;
+            M_PM = A_PM*l* 1e-9 *rhoPM;
             F_centrifuga = (M_Fe + M_PM) .* rG/1000 *  (nmax * pi/30)^2;
-            sigma_max = geo.sigma_max;    %Yield strength of rotor lamination
+            
             pont = F_centrifuga/(sigma_max * l);    % mm
             for jj = 1 : 2 : length(r_all)
                 idx = ceil(jj/2);
@@ -182,8 +187,8 @@ switch geo.RotType
                 Counter = 0;
                 while (area_barr_withoutPM(idx) < area_barr_withPM(idx) + pont(idx)*hc(idx))
                     Counter = Counter + 1;
-                    geo.Br = 0.99*geo.Br;
-                    area_barr_withPM = area_barr_withoutPM*geo.Br/geo.Br_commercial; %geo.Br_commercial is the Br of the real magnet
+                    Br = 0.99*mat.LayerMag.Br;
+                    area_barr_withPM = area_barr_withoutPM*Br/1.25; %geo.Br_commercial is the Br of the real magnet
                     rPM = (2/3*sin(0.5*thetaArco(idx))/(0.5*thetaArco(idx))*(r_all(2*idx)^3 - r_all(2*idx - 1)^3)/(r_all(2*idx)^2 - r_all(2*idx - 1)^2));
                     xG = x0 - rPM*cos(thetaArco(idx)*0.5 + tmp_theta(idx));
                     if area_barr_withPM(idx) <= (r_all(2*idx)^2 - r_all(2*idx - 1)^2)*thetaArco(idx)
@@ -218,14 +223,17 @@ switch geo.RotType
                 end
             end
             for ii = 1 : nlay
-                rG(ii) = (Afe(ii)*geo.rhoFE*rG(ii) + 0.5*area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE + 0.5*area_barr_withPM(ii)*geo.rhoPM);  % baricentri
+                rG(ii) = (Afe(ii)*rhoFE*rG(ii) + 0.5*area_barr_withPM(ii)*rhoPM*rG_PM(ii)) / (Afe(ii)*rhoFE + 0.5*area_barr_withPM(ii)*rhoPM);  % baricentri
             end
-            M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE;   % massa ferro appeso ai ponticelli
+            M_Fe = 2*Afe*l * 1e-9 * rhoFE;   % massa ferro appeso ai ponticelli
             A_PM = cumsum(area_barr_withPM);
-            M_PM = A_PM*l* 1e-9 *geo.rhoPM;
+            M_PM = A_PM*l* 1e-9 *rhoPM;
             F_centrifuga = (M_Fe + M_PM) .* rG/1000 *  (nmax * pi/30)^2;
-            sigma_max = geo.sigma_max;    %Yield strength of rotor lamination
-            pont = F_centrifuga/(sigma_max * l);    % mm
+            if geo.radial_ribs_eval == 0
+                pont = F_centrifuga/(sigma_max * l);    % mm
+            else
+                pont = geo.pont;
+            end
             for jj = 1 : nlay
                 if (pont(jj) < pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione per gli altri tipi di rotore
                     pont(jj) = 0;
@@ -276,7 +284,7 @@ switch geo.RotType
                     y = ytemp;
                 end
             end
-        elseif geo.Br > geo.Br_commercial
+        elseif mat.LayerMag.Br > 1.25
             disp('Error: wrong Br value');
         end
         
@@ -316,11 +324,15 @@ switch geo.RotType
             rG(ii)=(Afe(ii-1)*rG(ii-1)+A(ii)*tmp_bary(ii,1))/Afe(ii);  % baricentri delle regioni di ferro sorrette dalle due U
         end
         
-        M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
+        M_Fe = 2*Afe*l * 1e-9 * rhoFE ;   % massa ferro appeso ai ponticelli
         
         F_centrifuga = M_Fe .* rG/1000 *  (nmax * pi/30)^2;
         
-        pont = F_centrifuga/(sigma_max * l);    % mm
+        if geo.radial_ribs_eval == 0
+            pont = F_centrifuga/(sigma_max * l);    % mm
+        else
+            pont = geo.pont;
+        end
         
         for jj=1:nlay
             if (pont(jj) < pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione per gli altri tipi di rotore
@@ -329,7 +341,7 @@ switch geo.RotType
         end
         
         
-        hpont=pont;
+        hpont=pont/2;
         rac_pont=abs(B1k-B2k)/4;
         
         for ii=1:nlay

@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [geo,temp]=nodes_rotor_ISeg(geo)
+function [geo,mat,temp]=nodes_rotor_ISeg(geo,mat)
 
 r = geo.r;                    % Raggio del rotore al traferro
 x0 = geo.x0;                    % Centro fittizio
@@ -32,8 +32,10 @@ racc_pont = geo.racc_pont;      % racc_pont=1*pont0 <- per i ponticelli radiali.
 ang_pont0 = geo.ang_pont0;      % Ampiezza dell'angolo (in gradi) da spazzare con  raggio r in modo da ottenre un arco lungo pont0
 
 nmax = geo.nmax;                % Velocità max (rpm) per la valutazione della sollecitazione centrifuga più gravosa (-> ponticelli)
-sigma_max=geo.sigma_max;
 error_mex=zeros(1,nlay);
+sigma_max = mat.Rotor.sigma_max;    % snervamento materiale [MPa]
+rhoFE = mat.Rotor.kgm3;             % densità del ferro di rotore [kg/m3]
+rhoPM = mat.LayerMag.kgm3;          % densità magneti [kg/m3]
 
 %% Determination of air thickness and check the feasibility of the geometry
 geo = calcHcCheckGeoControl(geo);
@@ -358,7 +360,7 @@ calc_ribs_rad;
 % determination of different magnet segment, central point and magnetization direction
 MagnetFullFill_ISeg;
 
-geo.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
+mat.LayerMag.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
 
 temp.xc=xc;
 temp.yc=yc;

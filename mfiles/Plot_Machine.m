@@ -15,8 +15,8 @@ function [hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot)
 
 %% Plot GUI
 axes(h); cla(h);
-[bounds, geo, per] = data0(dataSet);
-[geo,gamma] = interpretRQ(dataSet.RQ,geo);
+[~, ~, geo, per,mat] = data0(dataSet);
+[geo,gamma,mat] = interpretRQ(dataSet.RQ,geo,mat);
 geo.x0 = geo.r/cos(pi/2/geo.p);
 
 th_m0 = 0;                 % rotor offset angle [mec deg]
@@ -27,7 +27,7 @@ fem.res = 0;
 fem.res_traf = 0;
 
 % nodes
-[rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem);
+[rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem,mat);
 [geo,statore,BLKLABELSstat] = STATmatr(geo,fem);
 
 dalpha = geo.dalpha;            % Angoli dalpha

@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [geo,temp] = nodes_rotor_Circ(geo) %,mat,fem)
+function [geo,mat,temp] = nodes_rotor_Circ(geo,mat) %,mat,fem)
 
 group0 = 0;                      % di default il rotore è gruppo 0, alla fine dello script gli assegno il gruppo 2 (mod. 28 04 10)
 
@@ -36,7 +36,9 @@ ang_pont0 = geo.ang_pont0;      % Ampiezza dell'angolo (in gradi) da spazzare co
 
 nmax = geo.nmax;                % Velocità max (rpm) per la valutazione della sollecitazione centrifuga più gravosa (-> ponticelli)
 error_mex=zeros(1,nlay);
-sigma_max = geo.sigma_max;
+sigma_max = mat.Rotor.sigma_max;    % snervamento materiale [MPa]
+rhoFE = mat.Rotor.kgm3;             % densità del ferro di rotore [kg/m3]
+rhoPM = mat.LayerMag.kgm3;          % densità magneti [kg/m3]
 
 % determination of air thickness and check the feasibility of the geometry
 geo = calcHcCheckGeoControl(geo);
@@ -151,21 +153,64 @@ end
 rTemp = rbeta;
 
 calc_ribs_rad;
+%% Determining  Magnet Area
+eta=[atand((YcBan)./(x0-XcBan))];
+arc_area=pi*(eta/360).*[(x0-B1k_temp).^2-(x0-B2k_temp).^2]-([B2k_temp-B1k_temp].*YpontRadDx);              % surface of arc area for each barriers
+% end_cir_area=[pi*(B2k_temp-B1k_temp).^2]/8;                                                                % half-circlec   area  at the end of barriers
+%barrier_area=arc_area+end_cir_area;
+%pu_endcir=[end_cir_area./ arc_area];                                                                         %PU of half-circlec area refer to arc area
+pu_centerpost=([B2k_temp-B1k_temp].*YpontRadDx)./arc_area;                                                   %PU of center post area refer to arc area
+Bar_fillfac=geo.BarFillFac;                                                                                   %barrier filling factor for real magnet
 
+%%%%%%%%%%%%%%%%%  detemining the ponits for real magnet
+%equ_angel=eta.*[1+pu_endcir+pu_centerpost];                                                                   %Equivalent  angels for total area of barriers
+equ_angel=eta.*[1+pu_centerpost];
+mag_angel=equ_angel.*Bar_fillfac;                                                                             %magnet angle for real magnet
+
+R1=sqrt([x0-B2k_temp].^2+YpontRadBarDx.^2);
+R2=sqrt([x0-B1k_temp].^2+YpontRadBarDx.^2);
+
+%%%%%%%%%%%%determining coordinates for real magnet area
+X5=x0-(cosd(mag_angel).*R1);
+Y5=sind(mag_angel).*R1;
+X6=x0-(cosd(mag_angel).*R2);
+Y6=sind(mag_angel).*R2;
+for k= 1:nlay
+    if(Y6(k)>YcBan(k))
+        X5(k)=X3(k);
+        Y5(k)=Y3(k);
+        X6(k)=X4(k); Y6(k)=Y4(k);
+    end
+end
+%%%%%%%%%%%%%%
 % determination of different magnet segment, central point and
-% magnetization direction
+% magnetization direction BarfillFac=0
 xmag=[];
 ymag=[];
 
-for kk=1:nlay
-    [a,b,c]=retta_per_2pti(XcBan(kk),YcBan(kk),x0,0);
-    mOrto=-a/b/2;
-    xmag=[xmag,cos(atan(mOrto))];
-    ymag=[ymag,sin(atan(mOrto))];
+if (sum(geo.BarFillFac)==0)
+    for kk=1:nlay
+        [a,b,c]=retta_per_2pti(XcBan(kk),YcBan(kk),x0,0);
+        mOrto=-a/b/2;
+        xmag=[xmag,cos(atan(mOrto))];
+        ymag=[ymag,sin(atan(mOrto))];
         
+    end
+else
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % magnetization direction  BarfillFac~=0
+    Xcc=(X5+X6)/2;
+    Ycc=(Y5+Y6)/2;
+    
+    for kk=1:nlay
+        [a,b,c]=retta_per_2pti(Xcc(kk),Ycc(kk),x0,0);
+        mOrto=-a/b/2;
+        xmag=[xmag,cos(atan(mOrto))];
+        ymag=[ymag,sin(atan(mOrto))];
+    end
 end
 
-geo.Br = [geo.Br geo.Br];    % replicates Br for correct block assignation
+mat.LayerMag.Br = [mat.LayerMag.Br mat.LayerMag.Br];    % replicates Br for correct block assignation
 
 YcBan(YcBan==0)=hc(YcBan==0)/4;
 temp.xmag=xmag;
@@ -202,6 +247,10 @@ temp.Y3=Y3;
 
 temp.X4=X4;
 temp.Y4=Y4;
+temp.X5=X5;
+temp.Y5=Y5;
+temp.X6=X6;
+temp.Y6=Y6;
 temp.error_mex=error_mex;
 
 % barrier transverse dimension (for permeance evaluation)

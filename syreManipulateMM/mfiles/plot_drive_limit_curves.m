@@ -51,7 +51,7 @@ grid on, axis([0 Nmax 0 1.25*Pmax])
 yy = ylabel('Shaft Power [W]'); xx = xlabel('rpm');
 legend(num2str(Imax_vect))
 % title('Shaft power')
-adapt_figure_fonts('Times New Roman',12,10)
+%adapt_figure_fonts('Times New Roman',12,10)
 saveas(gcf,[pathname1 'PF'])
 
 

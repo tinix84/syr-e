@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function post_proc_single_motor(CurrLoPP,GammaPP,BrPP,NumOfRotPosPP,AngularSpanPP,NumGrid,varargin)
+function post_proc_single_motor(dataIn,varargin)
 
 % post_proc_single_motor simulates an existing machine
 % Open matlabpool manually prior to execution
@@ -49,13 +49,17 @@ if (nargin) == 0
     NumOfRotPosPP = eval(cell2mat(temp(4)));    % # simulated positions
     AngularSpanPP = eval(cell2mat(temp(5)));    % angular span of simulation
     NumGrid = eval(cell2mat(temp(6)));          % number of points in [0 Imax] for the single machine post-processing
-elseif nargin ~= 6
-    disp('Wrong number of inputs')
-    return
+else
+    CurrLoPP = dataIn.CurrLoPP;
+    GammaPP  = dataIn.GammaPP;
+    BrPP = dataIn.BrPP;
+    NumOfRotPosPP = dataIn.NumOfRotPosPP;
+    AngularSpanPP = dataIn.AngularSpanPP;
+    NumGrid = dataIn.NumGrid;
 end
 
 clc;
-syreRoot = fileparts(which('MODEstart.m'));
+syreRoot = fileparts(which('GUI_Syre.m'));
 current_path = syreRoot;
 
 overload_temp =  CurrLoPP;   % current to be simulated
@@ -69,15 +73,27 @@ else
 end
 
 % choose the .fem file and load the associated .mat file
-[filemot, pathname] = uigetfile([syreRoot '\*.fem'], 'Pick a motor');
+% [filemot, pathname] = uigetfile([syreRoot '\*.fem'], 'Pick a motor');
+pathname = dataIn.currentpathname;
+filemot = strrep(dataIn.currentfilename,'.mat','.fem');
 load([pathname strrep(filemot,'.fem','.mat')]);
 
 geo.nsim_singt = NumOfRotPosPP;       % # simulated positions
 geo.delta_sim_singt = AngularSpanPP;  % angular span of simulation
 
+%% Iron Loss Input
+if dataIn.LossEvaluationCheck == 1
+%     geo.loss.kh = dataIn.HysteresisLossFactor;
+%     geo.loss.alpha = dataIn.HysteresisFrequencyFactor;
+%     geo.loss.beta = dataIn.HysteresisFluxDenFactor;
+%     geo.loss.ke = dataIn.EddyCurLossFactor;
+%     geo.rhoFE = dataIn.IronMassDen;
+    per.EvalSpeed = dataIn.EvalSpeed;
+end
+
 % Magnet coercivity
 Hc = 1/(4e-7*pi)*Br;    % PM coercivity
-geo.Hc = Hc;
+mat.LayerMag.Hc = Hc;
 
 switch eval_type
     
@@ -96,7 +112,11 @@ switch eval_type
         
         geo.RemoveTMPfile = 'OFF';
         for i = 1:length(overload_temp)
-            [~,geometry{i},output{i},tempDirName{i}] = FEMMfitness([],geo,performance{i},eval_type,[pathname,filemot]);
+            if dataIn.LossEvaluationCheck == 0
+                [~,geometry{i},mat,output{i},tempDirName{i}] = FEMMfitness([],geo,performance{i},mat,eval_type,[pathname,filemot]);
+            else
+                [~,geometry{i},mat,output{i},tempDirName{i}] = FEMMfitness_IronLoss([],geo,performance{i},mat,eval_type,[pathname,filemot]);
+            end
         end
         
         % save output into individual folders
@@ -108,13 +128,11 @@ switch eval_type
             per = performance{i};
             dirName = tempDirName{i};
             
-            
             iStr=num2str(iAmp(i),3); iStr = strrep(iStr,'.','A');
             gammaStr=num2str(gamma_temp(i),4); gammaStr = strrep(gammaStr,'.','d');
             if isempty(strfind(gammaStr, 'd'))
                 gammaStr = [gammaStr 'd'];
             end
-            
             
             FILENAME = [filemot(1:end-4) '_T_eval_',iStr,'_',gammaStr];
             [success,message,messageid] = mkdir(pathname,FILENAME);
@@ -134,6 +152,7 @@ switch eval_type
             iq = zeros(1,length(overload_temp));
             T = zeros(1,length(overload_temp));
             dTpu = zeros(1,length(overload_temp));
+            dTpp = zeros(1,length(overload_temp));
             fd = zeros(1,length(overload_temp));
             fq = zeros(1,length(overload_temp));
             
@@ -142,6 +161,7 @@ switch eval_type
                 iq(i) = output{i}.iq;
                 T(i) = output{i}.T;
                 dTpu(i) = output{i}.dTpu;
+                dTpp(i) = output{i}.dTpp;
                 fd(i) = output{i}.fd;
                 fq(i) = output{i}.fq;
             end
@@ -150,9 +170,9 @@ switch eval_type
             
             x = 1:length(overload_temp);
             figure(10), subplot(2,1,1)
-            plot(x,T,'-x',x,T+dTpu.*T,'r',x,T-dTpu.*T,'r'), grid on, ylabel('torque [Nm]')
+            plot(x,T,'-x',x,T+0.5*Tpp,'r',x,T-0.5*dTpp,'r'), grid on, ylabel('torque [Nm]')
             subplot(2,1,2)
-            plot(x,dTpu.*T,'-x'), grid on, ylabel('torque ripple [Nm]')
+            plot(x,dTpp,'-x'), grid on, ylabel('torque ripple pk-pk [Nm]')
             xlabel('simulation #'),
             saveas(gcf,[dirPower,filemot(1:end-4),'_torque_sens.fig'])
             

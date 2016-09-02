@@ -1,4 +1,4 @@
-function [geo,temp]=nodes_rotor_Seg(geo)
+function [geo,mat,temp]=nodes_rotor_Seg(geo,mat)
 %%
 %% INIZIALIZZAZIONE DATI DI INGRESSO:
 r = geo.r;                    % Raggio del rotore al traferro
@@ -21,8 +21,10 @@ racc_pont = geo.racc_pont;      % racc_pont=1*pont0 <- per i ponticelli radiali.
 ang_pont0 = geo.ang_pont0;      % Ampiezza dell'angolo (in gradi) da spazzare con  raggio r in modo da ottenre un arco lungo pont0
 
 nmax = geo.nmax;                % Velocità max (rpm) per la valutazione della sollecitazione centrifuga più gravosa (-> ponticelli)
-sigma_max=geo.sigma_max;
 hfe_min=geo.hfe_min;
+sigma_max = mat.Rotor.sigma_max;    % snervamento materiale [MPa]
+rhoFE = mat.Rotor.kgm3;             % densità del ferro di rotore [kg/m3]
+rhoPM = mat.LayerMag.kgm3;          % densità magneti [kg/m3]
 
 alphaRot=alpha*pi/180+pi/2/p;   % angoli barriere di flux al traferro meccanici
 
@@ -504,7 +506,7 @@ end
 % magnetization direction
 MagnetFullFill_Seg;
 
-geo.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
+mat.LayerMag.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
 
 temp.xc=xc;
 temp.yc=yc;

@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem)
+function [rotor,BLKLABELSrot,geo,mat] = ROTmatr(geo,fem,mat)
 
 % Rotor construction.
 % rotor:                  	one row per FEMM line or arc
@@ -26,28 +26,31 @@ ps = geo.ps;
 p = geo.p;
 lm = geo.lm;
 
-geo.Br = geo.Br.*ones(1,geo.nlay);   % replicate Br in case it is scalar
+if strcmp(geo.RotType,'SPM')
+else
+    mat.LayerMag.Br = mat.LayerMag.Br.*ones(1,geo.nlay);   % replicate Br in case it is scalar
+end
 
 switch geo.RotType
     case 'Circular'
         % build nodes, lines and arcs for half a pole
-        [geo,temp] = nodes_rotor_Circ(geo);
+        [geo,mat,temp] = nodes_rotor_Circ(geo,mat);
         rotor = build_matrix_Circ(temp,geo);
     case 'ISeg'
         % build nodes, lines and arcs for half a pole
-        [geo,temp] = nodes_rotor_ISeg(geo);
+        [geo,mat,temp] = nodes_rotor_ISeg(geo,mat);
         rotor = build_matrix_ISeg(temp,geo);
     case 'Seg'
         % build nodes, lines and arcs for half a pole
-        [geo,temp] = nodes_rotor_Seg(geo);
+        [geo,mat,temp] = nodes_rotor_Seg(geo,mat);
         rotor = build_matrix_Seg(temp,geo);
     case 'Fluid'
         % build nodes, lines and arcs for half a pole
-        [geo,temp] = nodes_rotor_Fluid(geo);
+        [geo,mat,temp] = nodes_rotor_Fluid(geo,mat);
         rotor = build_matrix_Fluid(temp,geo);
     case 'SPM'
         % build nodes, lines and arcs for half a pole
-        [geo,temp] = nodes_rotor_SPM(geo);
+        [geo,mat,temp] = nodes_rotor_SPM(geo,mat);
         rotor = build_matrix_SPM(temp,geo);
 end
 % replicate the half pole
@@ -56,9 +59,13 @@ rotor = finishRotorMatrix(rotor,geo);
 % find the centers of all blocks
 BarCenter = defineBlockCenters(temp,fem,geo);
 % Assign label names
-BarName = defineBlockNames(temp,geo);
+BarName = defineBlockNames(temp,geo,mat);
 % BOUNDARY CONDITIONS
-codBound_periodic = 10;           % 10 = Odd or Even Periodicity
+if (geo.ps<2*geo.p)
+    codBound_periodic = 10;           % 10 = Odd or Even Periodicity
+else
+    codBound_periodic = -10;          % -10 = no periodicity, simulate full machine
+end
 
 % shaft boundary
 [xShaftBound1,yShaftBound1] = rot_point(mean([0,Ar]),0,-90/p*pi/180);

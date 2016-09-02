@@ -17,8 +17,12 @@ function evalParetoFront(filename,dataSet)
 % positions (instead of the 5 positions with random offset used by MODE)
 
 % pivot_cost: selects how to sort the machines of the front
-% pivot_cost = 1 (default), COST_sorted is ordered according to the values of T
-% pivot_cost = 2, COST_sorted is ordered according to the values of dT
+% pivot_cost = 1 (default), COST_sorted is ordered according to the values
+% of first cost function (normally T)
+% pivot_cost = 2, COST_sorted is ordered according to the values of the
+% second cost function (normally dT) .. and so on
+
+% NOTE: not tested for >2 cost functions
 
 pivot_cost = 1;
 
@@ -29,7 +33,7 @@ else
     pathname_ini=[syreRoot filesep 'results' filesep];
     filename=[filename,'.mat'];
 end
-load(filename);
+load([pathname_ini filename]);
 dir_name = strrep(filename,'end_','');
 dir_name = strrep(dir_name,'.mat','');
 pathname = [dir_name];
@@ -48,6 +52,7 @@ end
 
 geo=geo0;       % assign to geo intial geometric data (same in data0)
 per_temp=per;   % re-assign because matlabpool don't work...
+mat=mat;
 COST = [];
 
 % filter duplicate solutions
@@ -78,9 +83,9 @@ for j = 1:length(geo0.RQnames)
 end
 
 % goals
-T = zeros(size(x,1),1); dT = T; % PFES = T; PFER = T; FD90 = T;
+T = zeros(size(x,1),1); dT = T; MCu = T;% PFES = T; PFER = T; FD90 = T;
 
-geo.nsim_singt = 2; % debug    
+% geo.nsim_singt = 2; % debug
 parfor m = 1:size(x,1)
     
     mot_index = num2str(m);
@@ -88,7 +93,7 @@ parfor m = 1:size(x,1)
     
     % FEA evaluates each machine of the front
     
-    [cost{m},geometry{m},~,~] = FEMMfitness(x(m,:)',geo,per_temp,eval_type);
+    [cost{m},geometry{m},material{m},~,~] = FEMMfitness(x(m,:)',geo,per_temp,mat,eval_type);
     
     % debug
     %     cost{m} = x(m,end-1:end);
@@ -104,15 +109,16 @@ for m=1:size(x,1)
     end
     
     geo=geometry{m};
-%     if exist([syreRoot filesep 'empty_case.fem'],'file')>1
-%         empty_case_path = [syreRoot filesep 'empty_case.fem'];
-%     else
-%         empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
-%     end
+    mat=material{m};
+    %     if exist([syreRoot filesep 'empty_case.fem'],'file')>1
+    %         empty_case_path = [syreRoot filesep 'empty_case.fem'];
+    %     else
+    %         empty_case_path = ['c:' filesep 'empty_case.fem'];      %TODO: fix this with something more robust and crossplatform
+    %     end
     
     openfemm
-    [geo] = interpretRQ(x(m,:),geo);
-    [geo] = draw_motor_in_FEMM(geo,eval_type);
+    [geo,~,mat] = interpretRQ(x(m,:),geo,mat);
+    [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat);
     
     
     % end drawing procedure....
@@ -123,7 +129,7 @@ for m=1:size(x,1)
     movefile([syreRoot,'\mot0.fem'],[pathname '\mot_'  mot_index '.fem']);
     % Save data geometry mot
     geo.RQ = x(m,:);
-
+    
     dataSet.AirGapThickness = geo.g; % airgap thickness
     dataSet.AirGapThickness = roundn(dataSet.AirGapThickness,-2);
     dataSet.AirGapRadius = geo.r; % machine airgap radius
@@ -136,65 +142,81 @@ for m=1:size(x,1)
     dataSet.ToothWidth = roundn(dataSet.ToothWidth,-2);
     dataSet.ToothTangDepth = geo.ttd; % tooth tang depth [mm]
     dataSet.ToothTangDepth = roundn(dataSet.ToothTangDepth,-2);
-    dataSet.Br = geo.Br; % Br
+    dataSet.Br = roundn(mat.LayerMag.Br,-4); % Br
     dataSet.Br = roundn(dataSet.Br,-2);
     dataSet.ALPHApu = geo.dalpha_pu;
     dataSet.ALPHApu = roundn(dataSet.ALPHApu,-2);
-    dataSet.HCpu = geo.hc_pu;
+    if strcmp(geo.RotType,'SPM')
+        dataSet.ThicknessOfPM = geo.hc_pu;
+    else
+        dataSet.HCpu = geo.hc_pu;
+    end
     dataSet.HCpu = roundn(dataSet.HCpu,-2);
     dataSet.DepthOfBarrier = geo.dx;    % the depth of the barriers radial-wise in per unit
     dataSet.DepthOfBarrier = roundn(dataSet.DepthOfBarrier,-2);
     dataSet.RQ = geo.RQ;
-    save([pathname '\mot_' mot_index '.mat'],'geo','cost','per','dataSet');
+    save([pathname '\mot_' mot_index '.mat'],'geo','cost','per','dataSet','mat');
     %% %%%%%%%
     COST=[COST; cost{m}];
     if m<10
         mot_index = ['0' mot_index];
     end
     
-%     geo.Br
+    %     geo.Br
     % geometry summary of the re evaluated Pareto front
     % replace fields od geo0 with content of RQ
-%     k = 0; y = 0; t = 0; u = 0;
+    %     k = 0; y = 0; t = 0; u = 0;
     for j = 1:length(nameTemp)
         eval([nameTemp{j} '(m) = x(m,j);']);
         
-%         if strfind(nameTemp{j},'DALPHA')
-%             k = k +1;
-%             % line for nlay-dimensional RQ variables
-%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(k);']);
-%         elseif strfind(nameTemp{j},'HC')
-%             y = y +1;
-%             % line for nlay-dimensional RQ variables
-%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(y);']);
-%         elseif strfind(nameTemp{j},'DX')
-%             t = t+1;
-%             % line for nlay-dimensional RQ variables
-%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(t);']);
-%         elseif strfind(nameTemp{j},'BR')
-%             u = u+1,
-%             % line for nlay-dimensional RQ variables
-%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(u);']);
-%         elseif strcmp(nameTemp{j},'GAMMA')
-%             % line for gamma (end of x)
-%             eval([nameTemp{j} '(m) = x(m,end);']);
-%         else
-%             % line for all 1-dimensional variables
-%             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j}]);
-%         end
-
+        %         if strfind(nameTemp{j},'DALPHA')
+        %             k = k +1;
+        %             % line for nlay-dimensional RQ variables
+        %             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(k);']);
+        %         elseif strfind(nameTemp{j},'HC')
+        %             y = y +1;
+        %             % line for nlay-dimensional RQ variables
+        %             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(y);']);
+        %         elseif strfind(nameTemp{j},'DX')
+        %             t = t+1;
+        %             % line for nlay-dimensional RQ variables
+        %             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(t);']);
+        %         elseif strfind(nameTemp{j},'BR')
+        %             u = u+1,
+        %             % line for nlay-dimensional RQ variables
+        %             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j} '(u);']);
+        %         elseif strcmp(nameTemp{j},'GAMMA')
+        %             % line for gamma (end of x)
+        %             eval([nameTemp{j} '(m) = x(m,end);']);
+        %         else
+        %             % line for all 1-dimensional variables
+        %             eval([nameTemp{j} '(m) = geo.' geo0.RQnames{j}]);
+        %         end
+        
     end
     
     % cost functions (modify in the future)
-    T(m,1) = COST(m,1); %out.Tn;
-    dT(m,1) = COST(m,2); %out.ripple_pu;
-    
-%     close;
+    temp1 = 1;
+    if strcmp(geo.OBJnames{temp1},'Torque')
+        T(m,1) = COST(m,temp1); %out.Tn;
+        %         cost(temp1) = -out.T;
+        temp1 = temp1+1;
+    end
+    if temp1<=length(geo.OBJnames) && strcmp(geo.OBJnames{temp1},'TorRip')
+        %         cost(temp1) = out.dTpp;
+        dT(m,1) = COST(m,temp1); %out.ripple_pu;
+        temp1 = temp1+1;
+    end
+    if temp1<=length(geo.OBJnames) && strcmp(geo.OBJnames{temp1},'MassCu')
+        %         cost(temp1)=calcMassCu(geo);
+        MCu(m,1) = COST(m,temp1); %out.ripple_pu;
+        temp1=temp1+1;
+    end
 end
 
 [STATUS,MESSAGE,MESSAGEID] = copyfile([pathname_ini,filename],[pathname,'\']);
 
-out_all = struct('T', T, 'dT', dT); %, 'PFES', PFES, 'PFER', PFER, 'FD90', FD90);
+out_all = struct('T', T, 'dT', dT, 'MCu', MCu); %, 'PFES', PFES, 'PFER', PFER, 'FD90', FD90);
 
 % sort the solutions of the Front according to T or dT
 n_mot = size(COST,1);
@@ -205,8 +227,9 @@ x_sorted = x(I,:);
 
 T_s = out_all.T(I,:);
 DT_s = out_all.dT(I,:);
+MCu_s = out_all.MCu(I,:);
 
-out_all_sorted = struct('T', T_s, 'dT', DT_s);
+out_all_sorted = struct('T', T_s, 'dT', DT_s, 'MCu', MCu_s);
 
 name_output = strrep(filename,'end_','sort_');
 name_output = strrep(name_output,'.mat','');
@@ -217,28 +240,28 @@ name_case = strrep(name_output,'sort_','');
 close
 figure(1), hold on
 for ii=1:n_mot
-    plot(T(ii),dT(ii),'x'),
-    text(T(ii),dT(ii)+0.1,num2str(ii));
+    plot(COST(ii,1),COST(ii,2),'x'),
+    text(COST(ii,1),COST(ii,2)+0.1,num2str(ii));
 end
 grid on, hold off
-xlabel('Torque [Nm]'), ylabel('Ripple [pu]')
+xlabel(geo0.OBJnames{1}), ylabel(geo0.OBJnames{2})
 
 [front,idx] = FastParetoEstimation(x,COST);
 nmot_actual_front=find(idx); %macchine sul fronte vero
 
 figure(1), hold on
 for ii=1:length(nmot_actual_front) %ii = 1:length(x) PERCHE' USARE LENGTH(X) ABBIAMO LA LUNGHEZZA DI T ???????????
-    T_front(ii)=front(ii,end-1);dT_front(ii)=front(ii,end);
-    plot(T_front(ii),dT_front(ii),'ro','LineWidth',2),
-    text(T_front(ii),dT_front(ii)+0.1,num2str(nmot_actual_front(ii)));
+    C1_front(ii)=front(ii,end-1);C2_front(ii)=front(ii,end);
+    plot(C1_front(ii),C2_front(ii),'ro','LineWidth',2),
+    text(C1_front(ii),C2_front(ii)+0.1,num2str(nmot_actual_front(ii)));
 end
-[T_front_sorted,ii_tfs]=sort(T_front);
-plot(T_front(ii_tfs),dT_front(ii_tfs),'r','LineWidth',2)
+[T_front_sorted,ii_tfs]=sort(C1_front);
+plot(C1_front(ii_tfs),C2_front(ii_tfs),'r','LineWidth',2)
 set(gca,'FontName','Arial','FontSize',12)
 grid on, hold off
-xlabel('Torque - Nm'),
-ylabel('Torque ripple - %')
-figure_title = [geo.RotType ' nlay = ' num2str(geo.nlay) ' p = ' num2str(geo.p) ' - magnete plasto Br = ' num2str(geo.Br) ' T'];
+xlabel(geo0.OBJnames{1}),
+ylabel(geo0.OBJnames{2})
+figure_title = [geo.RotType ' nlay = ' num2str(geo.nlay) ' p = ' num2str(geo.p) ' - magnete plasto Br = ' num2str(mat.LayerMag.Br) ' T'];
 title(figure_title)
 saveas(gcf,[pathname '\Pareto - ' name_case '.fig']);
 
@@ -266,7 +289,12 @@ for j = 1:length(nameTemp)
         bar(eval(nameTemp{j}),bw,'g'), grid,
         xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
         legend(nameTemp{j});
-        xlabel('Machine Number'); ylabel('Barrier Width [mm]');
+        xlabel('Machine Number');
+        if strcmp(geo.RotType,'SPM')
+            ylabel('PM thickness [mm]');
+        else
+            ylabel('Barrier Width [mm]');
+        end
         saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_HC.fig']);
     elseif strfind(nameTemp{j},'DX')
         t = t +1;
@@ -346,24 +374,19 @@ for j = 1:length(nameTemp)
 end
 
 % cost functions (already sorted)
-k=dir(strcat(pathname,'/*.fig'));
-y=length(k)+1;
-figure(y);
-set(gca,'xTickLabel',I); subplot(2,1,1);
-bar(-T_s,bw,'y'), grid,
+figure, subplot(2,1,1);
+bar(sign(per.objs(1,1))*COST(I,1),bw,'y'), grid,
 xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
-xlabel('Machine Number'), ylabel('Torque [Nm]')
-legend('Torque');
-title('Torque in descending order');
-
-figure(y);
-set(gca,'xTickLabel',I);subplot(2,1,2);
-bar(DT_s,bw,'b'), grid,
+xlabel('Machine Number'), ylabel(geo0.OBJnames{1})
+legend(geo0.OBJnames{1});
+% title('Torque in descending order');
+subplot(2,1,2);
+bar(sign(per.objs(2,1))*COST(I,2),bw,'b'), grid,
 xlim([0 n_mot+1]);set(gca,'xTickLabel',I),set(gca,'xTick',1:1:length(I)),
-xlabel('Machine Number'), ylabel('Torque Ripple %');
-legend('Torque Ripple');
+xlabel('Machine Number'), ylabel(geo0.OBJnames{2});
+legend(geo0.OBJnames{2});
 
-saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_T&dT.fig']);
+saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_goal1&goal2.fig']);
 
 %% Evaluation of the Progressive distribution of the Pareto Front
 
@@ -391,6 +414,6 @@ saveas(gcf,[pathname '\BarChart - ' name_case '_sort' num2str(pivot_cost) '_T&dT
 % saveas(gcf,[pathname '\pareto2x_evolution_during_optimization-' name_case '.fig']);
 
 if OUT.eval_type=='MO_OA'
-    save(filename,'front','idx','-append');
+    save([pathname '\' filename],'front','idx','-append');
     movefile([pathname],['results\']);
 end

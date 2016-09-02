@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [geo] = draw_motor_in_FEMM(geo,eval_type)
+function [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat)
 
 % draw_motor_in_FEMM.m
 % builds the .fem motor model with the rotor in position zero
@@ -25,11 +25,12 @@ function [geo] = draw_motor_in_FEMM(geo,eval_type)
 fem = dimMesh(geo,eval_type);
 
 filename = 'mot0.fem';
-opendocument('empty_case.fem');
-mi_probdef(0,'millimeters','planar',1e-8,geo.l,25);
+% opendocument('empty_case.fem');
+FEMM_initialize(geo,mat);
+mi_probdef(0,'millimeters','planar',1e-8,geo.l,15);
 
 % calc winding factor (kavv) and rotor offset (phase1_offset)
-[kavv, phase1_offset] = calcKwTh0(geo.tempWinTable);
+[kavv, phase1_offset] = calcKwTh0(geo.tempWinTable,geo.ns*geo.p,geo.p);
 
 % offset angle for coordinate transformations
 if strcmp(geo.RotType,'SPM')
@@ -52,8 +53,10 @@ mi_addboundprop('APs2', 0, 0, 0, 0, 0, 0, 0, 0, geo.periodicity);
 
 % nodes
 geo.x0 = geo.r/cos(pi/2/geo.p);
-[rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem); % rotor and BLKLABELSrot describe the rotor
+
+[rotor,BLKLABELSrot,geo,mat] = ROTmatr(geo,fem,mat); % rotor and BLKLABELSrot describe the rotor
 geo.rotor = rotor;
+
 [geo,statore,BLKLABELSstat] = STATmatr(geo,fem); % statore and BLKLABELSstat describe the stator
 
 % draw lines and arcs
@@ -65,7 +68,7 @@ BLKLABELS.materials=geo.BLKLABELSmaterials;
 BLKLABELS.rotore = BLKLABELSrot;
 BLKLABELS.statore= BLKLABELSstat;
 geo.BLKLABELS=BLKLABELS;
-assign_block_prop_rot(BLKLABELS,geo,fem,2);
+assign_block_prop_rot(BLKLABELS,geo,mat,fem,2);
 assign_block_prop_stat(BLKLABELS,geo,fem,1);
 
 % assign boundary conditions to the rotor
@@ -106,9 +109,13 @@ for ii=1:size(BLKLABELSstat.boundary,1)
 end
 
 % build the airgap (group 20)
-AirGapBuild(geo.Qs,geo.ps,geo.p,geo.g,360/(geo.ns*geo.p)/2,geo.r,fem.res_traf,1,2,geo.lm,BLKLABELSrot,geo.RotType);
-draw_airgap_arc_with_mesh(geo,th_m0,fem);
+if (geo.ps<2*geo.p)
+    AirGapBuild(geo.Qs,geo.ps,geo.p,geo.g,360/(geo.ns*geo.p)/2,geo.r,fem.res_traf,1,2,geo.lm,BLKLABELSrot,geo.RotType);
+    draw_airgap_arc_with_mesh(geo,th_m0,fem);
+else
+    draw_airgap_arc_with_mesh_fullMachine(geo,th_m0,fem);
+end
 
 geo.fem=fem;
-geo.Br = unique(geo.Br,'stable');   % reset geo.Br to input value (either scalar or size = nlay)
+mat.LayerMag.Br = unique(mat.LayerMag.Br,'stable');   % reset geo.Br to input value (either scalar or size = nlay)
 mi_saveas(filename); % saves the file with name ’filename’.
