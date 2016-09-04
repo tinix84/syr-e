@@ -3525,9 +3525,12 @@ dataSet = DrawPushMachine(handles,dataSet.currentfilename,dataSet.currentpathnam
 flag_plot = 'Y';
 h = handles.axes5;
 handles.dataSet = dataSet;
+% guidata(hObject,handles)
+% [~,~,~] = Plot_Machine(h,dataSet,flag_plot);
+SetParameters(handles,dataSet);
+DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
-% [~,~,~] = data0(dataSet);
-[~,~,~] = Plot_Machine(h,dataSet,flag_plot);
+
 
 function xRangeEdit_Callback(hObject, eventdata, handles)
 % hObject    handle to xRangeEdit (see GCBO)
