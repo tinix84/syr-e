@@ -153,8 +153,8 @@ if strcmp(geo.RotType,'SPM')
         uiwait(h);
         return
     end
-
-%     kl = 1;                   % leakage ratio
+    
+    %     kl = 1;                   % leakage ratio
     mur = 1.1;                % permeanbility
     Cphi = 1;                 % ratio between airgap area and PM area
     lm_general = kc*mur*Cphi*geo.g./(2*Cphi./Bg-1);     % WEMPEC Tab 8 2015
@@ -220,7 +220,7 @@ if strcmp(geo.RotType,'SPM')
     kdq = ones(size(Bg));
     id = zeros(size(Bg));
     
-
+    
 end
 
 iq = sqrt((loadpu*i0).^2 - id.^2); iq = real(iq);                   % q-axis current [A] pk
@@ -292,7 +292,7 @@ title('torque and PF tradeoff')
 %     xlabel('x - rotor / stator split')
 %     ylabel('b - p.u. magnetic loading')
 %     title('Torque from Multipolar SPM')
-% end    
+% end
 
 
 button = questdlg('pick up a machine?','SELECT','Yes','No','Yes');
@@ -306,13 +306,6 @@ while isequal(button,'Yes')
     display(['Torque = ' num2str(interp2(xx,bb,T,geo.x,geo.b)) ' Nm;']);
     display(['PwrFac = ' num2str(interp2(xx,bb,PF,geo.x,geo.b)) ' Nm;']);
     display('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-    
-    button = questdlg('pick up a machine?','SELECT','Yes','No','Yes');
-end
-
-button = questdlg('save the last machine?','SELECT','Yes','No','Yes');
-
-if isequal(button,'Yes')
     
     % Export to Syre GUI
     geo.r = geo.x*geo.R;                        % rotor radius [mm]
@@ -340,9 +333,9 @@ if isequal(button,'Yes')
         EPS=0.03;
         count=1;
         while abs(geo.la-lb)>=0.1;
-%             abs(geo.la-lb)
-%             disp(num2str(count))
-%             count=count+1;
+            %             abs(geo.la-lb)
+            %             disp(num2str(count))
+            %             count=count+1;
             if geo.la>lb;
                 lapu=lapu*(1+EPS);
             end
@@ -369,11 +362,79 @@ if isequal(button,'Yes')
     lapu=round(lapu*100)/100;
     dataSet.HCpu=lapu*ones(1,geo.nlay);
     
+    button = questdlg('pick up another machine?','SELECT','Yes','No','Yes');
+    
+    if isequal(button,'No')
+        buttonS = questdlg('save the last machine?','SELECT','Yes','No','Yes');
+        figure(1), hold off
+    end
+    
+    
+end
+
+
+if isequal(buttonS,'Yes')
+    
+    %     % Export to Syre GUI
+    %     geo.r = geo.x*geo.R;                        % rotor radius [mm]
+    %     %     bt = geo.b;                           % Bgap/Bfe,tooth (tooth p.u. size)
+    %     geo.wt = interp2(x,b,wt,geo.x,geo.b);
+    %     geo.wt = round(geo.wt*100)/100;
+    %     geo.lt=interp2(x,b,lt,geo.x,geo.b);
+    %     geo.lt=round(geo.lt*100)/100;
+    %     geo.x0=geo.R * geo.x /cos(pi/2/geo.p);
+    %     geo.Ar=interp2(x,b,s,geo.x,geo.b);          % shaft radius [mm]
+    %     geo.Ar=round(geo.Ar*100)/100;
+    %     % for SPM
+    %     if strcmp(geo.RotType,'SPM')
+    %         geo.lm=interp2(x,b,lm,geo.x,geo.b);    % PM thickness [mm]
+    %         geo.lm=round(geo.lm*100)/100;
+    %     end
+    %     geo.la=interp2(x,b,la,geo.x,geo.b);        % total insulation
+    %
+    %     % iterative evaluation of barriers radial dimension hc_pu
+    %     lapu = 1;
+    %     if not(strcmp(geo.RotType,'SPM'))
+    %         geo.hc_pu=lapu*ones(size(geo.dalpha));
+    %         [geo] = calcHcCheckGeoControl(geo);
+    %         lb=sum(geo.hc);                        % Summation of barriers length
+    %         EPS=0.03;
+    %         count=1;
+    %         while abs(geo.la-lb)>=0.1;
+    % %             abs(geo.la-lb)
+    % %             disp(num2str(count))
+    % %             count=count+1;
+    %             if geo.la>lb;
+    %                 lapu=lapu*(1+EPS);
+    %             end
+    %             if geo.la<lb;
+    %                 lapu=lapu*(1-EPS);
+    %             end
+    %             geo.hc_pu=lapu*ones(1,geo.nlay);
+    %             [geo] = calcHcCheckGeoControl(geo);
+    %             lb = sum(geo.hc);
+    %         end
+    %     end
+    %
+    %     % current phase angle
+    %     temp_id = interp2(x,b,id,geo.x,geo.b);  % id [A]
+    %     temp_iq = interp2(x,b,iq,geo.x,geo.b);  % iq [A]
+    %     dataSet.GammaPP=round(atand(temp_iq/temp_id)*100)/100;
+    %
+    %     % adjourn dataSet
+    %     dataSet.AirGapRadius=round(geo.r*100)/100;
+    %     dataSet.ShaftRadius = round(geo.Ar*100)/100;
+    %     dataSet.ToothLength=geo.lt;
+    %     dataSet.ToothWidth=geo.wt;
+    %     dataSet.ThicknessOfPM = geo.lm;
+    %     lapu=round(lapu*100)/100;
+    %     dataSet.HCpu=lapu*ones(1,geo.nlay);
+    %
     % save new machine
     newnamestring = ['x' num2str(geo.x,2) 'b' num2str(geo.b,2)];
     newnamestring(newnamestring=='.') = '';
     dataSet.currentfilename = strrep(dataSet.currentfilename,'.mat',[newnamestring '.mat']);
-
+    
 end
 
 
