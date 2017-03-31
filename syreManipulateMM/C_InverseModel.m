@@ -21,12 +21,18 @@
 
 % output files are in new subfolder AOA 
 
-close all, clear all; load ultimo; addpath m
+close all, clear all; load LastPath; %addpath m
 
 % load motor data
 [FILENAME, pathname, FILTERINDEX] = uigetfile([pathname '/*_n*.mat'], 'LOAD DATA');
 save('ultimo','pathname');
-load([pathname FILENAME]); run([pathname 'ReadParameters']);
+load([pathname FILENAME]);
+prompt={'p: # of pole pairs?'};
+name='prompt for p';
+numlines=1;
+defaultanswer={'2'};
+answer=inputdlg(prompt,name,numlines,defaultanswer);
+p = eval(answer{1});
 [success,message,messageid] = mkdir(pathname,'AOA')
 pathname = [pathname,'AOA\'];
 

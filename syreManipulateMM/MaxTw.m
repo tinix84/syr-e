@@ -68,8 +68,10 @@ Fd=interp2(Id_ModMgn,Iq_ModMgn,Fd_ModMgn,Id,Iq,'spline'); Fq=interp2(Id_ModMgn,I
 
 % Loss
 if exist('Pfes_c','var')
-    Pfes_c=interp2(Id_Loss,Iq_Loss,Pfes_c,Id,Iq,'spline'); Pfes_h=interp2(Id_Loss,Iq_Loss,Pfes_h,Id,Iq,'spline');
-    Pfer_c=interp2(Id_Loss,Iq_Loss,Pfer_c,Id,Iq,'spline'); Pfer_h=interp2(Id_Loss,Iq_Loss,Pfer_h,Id,Iq,'spline');
+    Pfes_c=interp2(Id_Loss,Iq_Loss,Pfes_c,Id,Iq,'spline');
+    Pfes_h=interp2(Id_Loss,Iq_Loss,Pfes_h,Id,Iq,'spline');
+    Pfer_c=interp2(Id_Loss,Iq_Loss,Pfer_c,Id,Iq,'spline');
+    Pfer_h=interp2(Id_Loss,Iq_Loss,Pfer_h,Id,Iq,'spline');
 end
 if exist('P_BarRot','var')
     P_BarRot=interp2(Id_Loss,Iq_Loss,P_BarRot,Id,Iq,'spline');
@@ -106,7 +108,7 @@ setup=inputdlg(prompt,name,numlines,defaultanswer);
 % compute control trajectories
 if exist('Pfes_c','var')
     % iron loss map is available
-    d.velDim = velDim;
+%     d.velDim = velDim;
     DatiOpt = PuntiDiOttimo(d,setup,Id,Iq,Fd,Fq,Pfes_c,Pfer_c,Pfes_h,Pfer_h,Ppm,coeff_Pfe);
 else
     % iron loss is extrapolated from single test point d.PfeDim
@@ -125,8 +127,8 @@ if strcmp(ButtonName,'Yes')
     save(filenamewithpath,'DatiOpt','d')
     
     % salva le figure
-    [SUCCESS,MESSAGE,MESSAGEID] = mkdir([OutputFolder SLASH 'Figure_MaxTW']);
-    for ii = 1:H_last
+%     [SUCCESS,MESSAGE,MESSAGEID] = mkdir([OutputFolder SLASH 'Figure_MaxTW']);
+    for ii = 1:get(gcf,'Number') %H_last
         saveas(ii,[OutputFolder SLASH 'fig_' num2str(ii)],'fig');
     end
 end

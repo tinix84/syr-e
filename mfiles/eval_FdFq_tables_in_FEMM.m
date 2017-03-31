@@ -17,7 +17,7 @@
 % - simula n punti di lavoro con corrente di ampiezza io per valutare il
 % modello magnetico della macchina
 
-function F_map = eval_FdFq_tables_in_FEMM(geo,per,id_vett,iq_vett,eval_type,filemot)
+function F_map = eval_FdFq_tables_in_FEMM(geo,per,id_vett,iq_vett,eval_type,filemot,mat,dataIn)
 
 nsim = round(geo.nsim_singt/2);
 delta_sim = geo.delta_sim_singt;
@@ -53,16 +53,26 @@ filemot = strrep(filemot,'.mat','.fem');
 iAmpCoil=iAmp*geo.Nbob;
 
 Fd = zeros(size(Id)); Fq = Fd; T = Fd; dT = Fd;
-for rr = 1:size(iAmp,1)
-    parfor cc = 1:size(iAmp,2)
-        [thisfilepath,dirName]=createTempDir();
-        disp(['Evaluation of position I:',num2str(iAmp(rr,cc)),' gamma:',num2str(gamma(rr,cc))]);
-        
-        copyfile(filemot,[currentDir,'\tmp\',dirName,'\mot0.fem']);
-        
-        [SOLUTION{rr,cc}] = simulate_xdeg(geo,iAmpCoil(rr,cc),per.BrPP,gamma(rr,cc),eval_type);
-        
-        cd(currentDir)
+
+if dataIn.LossEvaluationCheck == 0
+    for rr = 1:size(iAmp,1)
+        parfor cc = 1:size(iAmp,2)
+            [thisfilepath,dirName]=createTempDir();
+            disp(['Evaluation of position I:',num2str(iAmp(rr,cc)),' gamma:',num2str(gamma(rr,cc))]);
+            copyfile(filemot,[currentDir,'\tmp\',dirName,'\mot0.fem']);
+            [SOLUTION{rr,cc}] = simulate_xdeg(geo,iAmpCoil(rr,cc),per.BrPP,gamma(rr,cc),eval_type);
+            cd(currentDir)
+        end
+    end
+else
+    for rr = 1:size(iAmp,1)
+        parfor cc = 1:size(iAmp,2)
+            [thisfilepath,dirName]=createTempDir();
+            disp(['Evaluation of position I:',num2str(iAmp(rr,cc)),' gamma:',num2str(gamma(rr,cc))]);
+            copyfile(filemot,[currentDir,'\tmp\',dirName,'\mot0.fem']);
+            [SOLUTION{rr,cc}] = simulate_xdeg_IronLoss(geo,iAmpCoil(rr,cc),per.BrPP,gamma(rr,cc),eval_type,mat,per);
+            cd(currentDir)
+        end
     end
 end
 
@@ -77,10 +87,14 @@ for rr=1:size(iAmp,1)
         Id(rr,cc)=ris_sim(2);
         Fd(rr,cc) = ris_sim(4);
         Fq(rr,cc) = ris_sim(5);
-        
+        if size(SOL,2) == 7
+            Pfes_h(rr,cc) = SOL(1,7);
+            Pfes_c(rr,cc) = SOL(2,7);
+            Pfer_h(rr,cc) = SOL(3,7);
+            Pfer_c(rr,cc) = SOL(4,7);
+        end
     end
 end
-% end
 
 F_map.Id = Id;
 F_map.Iq = Iq;
@@ -89,6 +103,8 @@ F_map.Fq = Fq;
 F_map.T = T;
 F_map.dT = dT;
 F_map.dTpp = dTpp;
-F_map.dTpp = dTpp;
 
+if exist('Pfes_h')
+    F_map.Pfe = Pfes_h+Pfes_c+Pfer_h+Pfer_c;
+end
 % save sim_mot_temp F_map

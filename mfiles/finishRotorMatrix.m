@@ -24,6 +24,10 @@ Ar = geo.Ar;
 lm = geo.lm;
 RotType = geo.RotType;
 
+% Check the rotor matrix, to avoid plot error due to arcs
+[rotore]=checkPlotMatrix(rotore,1e-9);
+
+
 if not(isempty(rotore))
     % mirror the rotor points
     rotNeg=rotore;

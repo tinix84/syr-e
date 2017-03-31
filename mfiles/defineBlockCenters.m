@@ -44,18 +44,52 @@ switch geo.RotType
         xPMi = temp.xPMi;
         yPMo = temp.yPMo;
         yPMi = temp.yPMi;
+        
+        if isfield(temp,'xPMso')
+            xPMso = temp.xPMso;
+            yPMso = temp.yPMso;
+            xPMsi = temp.xPMsi;
+            yPMsi = temp.yPMsi;
+        end
         %% find the center of permanent magnet
         PMBaricentro = [];
         
-        if seg~=1
-            xPMcenter0 = mean([xPMo,xPMi]);
-            yPMcenter0 = mean([yPMo,yPMi]);
-            for jj = 1:seg
-                [xPMcenter(jj),yPMcenter(jj)] = rot_point(xPMcenter0,yPMcenter0,-(phi/2*pi/180/seg+phi*pi/180/seg*(jj-1)));
-                PMBaricentro = [PMBaricentro; xPMcenter(jj),yPMcenter(jj),codMatPM,res,1,0,0,0];
+        hybrid = geo.hybrid;
+        if hybrid == 0
+            %% regular or rounded shape
+            if seg~=1
+                % find the center of each PM segment; defined as the middle
+                % point of diagonal;
+                xPMcenter = (xPMi + xPMso(1))/2;
+                yPMcenter = (yPMi + yPMso(1))/2;
+                xPMcenter = [xPMcenter,(xPMsi(1:end-1) + xPMso(2:end))/2];
+                yPMcenter = [yPMcenter,(yPMsi(1:end-1) + yPMso(2:end))/2];
+                % duplicate to full pole
+                if mod(seg,2)==1
+                    %% odd segments
+                    xPMcenter = [xPMcenter,geo.r-geo.lm*0.5];
+                    yPMcenter = [yPMcenter,0];
+                    xPMcenter = [xPMcenter,xPMcenter(1:end-1)];
+                    yPMcenter = [yPMcenter,-yPMcenter(1:end-1)];
+                else
+                    %% even segments
+                    xPMcenter = [xPMcenter,xPMcenter];
+                    yPMcenter = [yPMcenter,-yPMcenter];
+                end
+                PMBaricentro = [PMBaricentro; xPMcenter',yPMcenter',codMatPM*ones(seg,1),res*ones(seg,1),ones(seg,1),zeros(seg,1),zeros(seg,1),zeros(seg,1)];
+            else
+                PMBaricentro = [mean([xPMci,xPMco]),0,codMatPM,res,1,0,0,0];
             end
         else
-            PMBaricentro = [mean([xPMci,xPMco]),0,codMatPM,res,1,0,0,0];
+            %% hybrid shape
+            PM_angle = geo.PM_angle;
+            Fe_angle = geo.Fe_angle;
+            [xFecenter1,yFecenter1] = rot_point(mean([xPMci,xPMco]),0,(PM_angle+Fe_angle/2)*pi/180);
+            [xFecenter2,yFecenter2] = rot_point(mean([xPMci,xPMco]),0,(-PM_angle-Fe_angle/2)*pi/180);
+            
+            PMBaricentro = [mean([xPMci,xPMco]),0,codMatPM,res,1,0,0,0;
+                xFecenter1,yFecenter1,codMatPM,res,1,0,0,0;
+                xFecenter2,yFecenter2,codMatPM,res,1,0,0,0;];
         end
         % Replicate poles ps-1 times
         Temp=[]; kk=1;
@@ -105,13 +139,21 @@ switch geo.RotType
         % Barriers: magnetization direction
         xmag=temp.xmag; ymag=temp.ymag; zmag=temp.zmag;
         
+        if (0)  % put 1 to define the magnet direction parallel to q axis
+            warning('magnet direction is parallel!!!')
+            [r,c]=size(xmag);
+            xmag=ones(r,c);
+            ymag=zeros(r,c);
+            zmag=zeros(r,c);
+        end
+        
         % barrier block centers
         if isempty(xc)
             BarCenter=[];
         else
             
-%             a=(geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType);
-%             if (a==0)
+            %             a=(geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType);
+            %             if (a==0)
             if(sum(geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType))
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%just for circular type with BarFillFac~=0
                 XpontRadBarSx=temp.XpontRadBarSx;
@@ -121,18 +163,67 @@ switch geo.RotType
                 x0=geo.x0;
                 Rbeta=sqrt((x0-xc).^2+yc.^2);
                 Beta=atan((yc)./(x0-xc));
-                Beta_mid=(Beta.*geo.BarFillFac)/2;            %%Determine center of magnet area
-                Xmidbar=(x0-Rbeta.*cos(Beta_mid));
-                Ymidbar=Rbeta.*sin(Beta_mid);
-                
+                if isfield(temp,'xxD1k')
+                    Rbeta=x0-temp.Bx0;
+                    Beta1=atan(temp.yyD1k./(x0-temp.xxD1k));
+                    Beta2=atan(temp.yyD2k./(x0-temp.xxD2k));
+                    Beta=zeros(1,length(Beta));
+                    for ii=1:length(Beta)
+                        if Beta1(ii)<Beta2(ii)
+                            Beta(ii)=Beta1(ii);
+                        else
+                            Beta(ii)=Beta2(ii);
+                        end
+                    end
+                end
+                % Beta=atan(temp.Y5./(x0-temp.X5));
+                Beta_min_dx=atan(temp.YpontRadDx./(x0-temp.XpontRadDx));
+                Beta_min_sx=atan(temp.YpontRadSx./(x0-temp.XpontRadDx));
+                Beta_min=zeros(1,length(Beta_min_dx));
+                for ii=1:length(Beta_min_dx)
+                    if Beta_min_dx(ii)<Beta_min_sx(ii)
+                        Beta_min(ii)=Beta_min_sx(ii);
+                    else
+                        Beta_min(ii)=Beta_min_dx(ii);
+                    end
+                    if isnan(Beta_min(ii))
+                        Beta_min(ii)=0;
+                    end
+                end
+                Beta_half=(Beta+Beta_min)/2;
+                Beta_mid=(Beta+Beta_min)/2;
+                if isfield(temp,'xPMi')
+                    xPMi=temp.xPMi;
+                    yPMi=temp.yPMi;
+                    xPMe=temp.xPMe;
+                    yPMe=temp.yPMe;
+                    Xmidbar=[];
+                    Ymidbar=[];
+                    for ii=1:length(xPMi)
+                        Xmidbar=[Xmidbar,xPMi(ii),xPMe(ii)];
+                        Ymidbar=[Ymidbar,yPMi(ii),yPMe(ii)];
+                    end
+                else
+                    Xmidbar=(x0-Rbeta.*cos(Beta_mid));
+                    Ymidbar=Rbeta.*sin(Beta_mid);
+                end
                 Xmidbar=[Xmidbar';Xmidbar']; Ymidbar=[Ymidbar';-Ymidbar'];
-                xc=xc;yc_new=yc+([geo.B2k-geo.B1k]/4);
+                if isfield(temp,'xpont')
+                    xair=(temp.xpont+temp.xxD1k+temp.xxD2k)/3;
+                    yair=(temp.ypont+temp.yyD1k+temp.yyD2k)/3;
+                    xair=[xair';xair'];
+                    yair=[yair';-yair'];
+                else
+                    yc_new=yc+([geo.B2k-geo.B1k]/4);
+                    xair=[xc';xc'];
+                    yair=[yc_new';-yc_new'];
+                end
                 %xmag=0*ones(1,length(xc)); ymag=0*ones(1,length(xc));zmag=0*ones(1,length(xc));
-                xc=[xc';xc']; yc_new=[yc_new';-yc_new'];
+                
                 xmag=[xmag';xmag']; ymag=[ymag';-ymag']; zmag=[zmag';zmag'];
                 BarCenter=[];
-                BarCenter=[BarCenter;Xmidbar,Ymidbar,codMatBar*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag;...
-                    xc,yc_new,codMatAir*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag];
+                BarCenter=[BarCenter;Xmidbar,Ymidbar,codMatBar*ones(length(Xmidbar),1),res*ones(length(Xmidbar),1),1*ones(length(Xmidbar),1),xmag,ymag,zmag;...
+                    xair,yair,codMatAir*ones(length(xair),1),res*ones(length(xair),1),1*ones(length(xair),1),zeros(length(xair),1),zeros(length(xair),1),zeros(length(xair),1)];
                 % magdir=atan2(ymag,xmag);
                 magdir=atan2(BarCenter(:,7),BarCenter(:,6)); % it means : magdir=atan2(ymag,xmag);
                 % keyboard
@@ -154,7 +245,7 @@ switch geo.RotType
             while kk<=ps-1
                 [xtemp,ytemp]=rot_point(BarCenter(:,1),BarCenter(:,2),kk*180/p*pi/180);
                 magdir_tmp=magdir+(kk*pi/p-eps)+(cos((kk-1)*pi)+1)/2*pi;
-                Temp=[Temp;xtemp,ytemp,codMatBar*ones(length(BarCenter(:,1)),1),res*ones(length(BarCenter(:,1)),1),1*ones(length(BarCenter(:,1)),1),cos(magdir_tmp),sin(magdir_tmp),BarCenter(:,8)];
+                Temp=[Temp;xtemp,ytemp,BarCenter(:,3),BarCenter(:,4),BarCenter(:,5),cos(magdir_tmp),sin(magdir_tmp),BarCenter(:,8)];
                 kk=kk+1;
             end
             BarCenter=[BarCenter;Temp];

@@ -41,7 +41,38 @@ rhoFE = mat.Rotor.kgm3;             % densità del ferro di rotore [kg/m3]
 rhoPM = mat.LayerMag.kgm3;          % densità magneti [kg/m3]
 
 % determination of air thickness and check the feasibility of the geometry
+%% calcolo dx (uguale a Seg)
+beta = 180/pi * calc_apertura_cerchio(pi/180*alpha,r,x0);                  % La funzione calc_apertura_cerchio riceve in input le coordinate polari,
+% (r, alpha) (alpha in rad), di un punto generico. Queste sono calcolate
+% rispetto al centro (0,0). In output la funzione restituisce l'apertura
+% angolare (in rad) dello stesso punto rispetto al centro preso come
+% riferimento (ha coordinate:(x0,0)).
+% I punti di cui, in questo caso, si calcolano le aperture angolari rispetto
+% al centro di riferimento sono i punti mediani delle barriere, presi in
+% corrispondenza del traferro.
+
+rbeta = (x0 - r * cos(alpha*pi/180))./(cos(beta*pi/180));                      % Di questi stessi punti, si calcolano anche le distanze dal centro (x0,0)
+% e le si memorizzano nel vettore rbeta.
+
+[xpont,ypont] = calc_intersezione_cerchi(r-pont0, rbeta, x0);
+
+LowDimBarrier=zeros(1,nlay);
+for ii=1:nlay
+    if (not(isreal(xpont(ii)))||not(isreal(ypont(ii))))
+        %         betaTmp=atan(-((r-pont0)*sin(alpha(ii)*pi/180)/((r-pont0)*cos(alpha(ii)*pi/180)-x0)));
+        xpont(ii)=(r-2*pont0)*cos(alpha(ii)*pi/180);
+        ypont(ii)=(r-2*pont0)*sin(alpha(ii)*pi/180);
+        LowDimBarrier(ii)=1;
+    end
+end
+
+rpont_x0=sqrt(ypont.^2+(x0-xpont).^2);
+[alphapont,rpont] = cart2pol(xpont,ypont);
+Bx0=x0-(rpont_x0); geo.Bx0=Bx0;
+geo.Bx0=Bx0; % Initialization of central non-moved line of the flux barrier
 geo = calcHcCheckGeoControl(geo);
+% geo = calcHcCheckGeoControlwDx(geo);
+
 hc=geo.hc;
 
 %% CONTORNO DEL ROTORE: INDIVIDUAZIONE DELLE COORDINATE PRINCIPALI; DISEGNO

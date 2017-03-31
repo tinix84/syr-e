@@ -1,3 +1,5 @@
+function MODEstart(filename,pathname)
+
 % Copyright 2014
 %
 %    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,19 +26,42 @@
 % objectives are optimized, the greedy selection step in DE algorithm is 
 % performed using a dominance relation.
 %%
-tic
+
+if nargin()<2
+    manual_dataSet;
+    dataSet.currentpathname = [cd '\'];
+    dataSet.currentfilename = 'mot_0.fem';
+    [bounds, objs, geo, per, mat]=data0(dataSet);
+    dataSet.RQ = buildDefaultRQ(bounds);
+else
+    if ~strcmp(filename(end-3),'.')
+        filename = [filename '.mat'];
+    end
+    if ~isequal(pathname(end),'\')
+        pathname=[pathname '\'];
+    end
+    load([pathname filename]);
+    dataSet = back_compatibility(dataSet,geo,per,1);
+    % If you want load an existing machine and perform an optimization,
+    % please write here the initialization of Optimization data (see
+    % section "Optimization data" in manual_dataSet.m or edit the dataSet
+    % of the existing machine.
+    
+end
+    
 
 clc
-[bounds, objs, geo, per,mat] = data0();
+[bounds, objs, geo, per,mat] = data0(dataSet);
 dat.geo0=geo;
 dat.per=per;
 dat.mat=mat;
+save('dataSet','dataSet');
 
 %%%%%%%%%% FEMM fitness handle %%%%%%%%%%%%%%%%%%%%%%%%%%
 eval_type = 'MO_OA';                         % you can choose between "MO_OA" and "MO_GA"
                                              % "MO_GA" use multi-objective algorithm from matlab ga toolbox
                                              % "MO_OA" use multi-objective de algorithm
-FitnessFunction = @(x)FEMMfitnessX(x,geo,per,mat,eval_type);
+FitnessFunction = @(x)FEMMfitness(x,geo,per,mat,eval_type);
 % FitnessFunction = @(x)FEMMfitness(x,geo,per,eval_type);
 %FitnessFunction = @(x)zdtTestFunctions(x,1);
 %bounds = [zeros(10,1) ones(10,1)];
@@ -55,13 +80,13 @@ dat.CostProblem = FitnessFunction;           % Cost function instance
 % state-of-the-art. IEEE Transactions on Evolutionary Computation. Vol 15,
 % 4 - 31.
 
-NOBJ = 2;                                    % Number of objectives
-XPOP = 32;                                    % Population size
+NOBJ = sum(objs(:,2));                       % Number of objectives
+XPOP = dataSet.XPop;                         % Population size
 Esc = 0.75;                                  % Scaling factor
 Pm= 0.2;                                     % Croosover Probability
 
 NVAR = size(bounds,1);                       % Number of decision variables
-MAXGEN = 70;                                  % Generation bound
+MAXGEN = dataSet.MaxGen;                     % Generation bound
 MAXFUNEVALS = 20000*NVAR*NOBJ;               % Function evaluations bound
     
 %% Variables regarding the optimization problem
@@ -69,7 +94,7 @@ MAXFUNEVALS = 20000*NVAR*NOBJ;               % Function evaluations bound
 switch eval_type
     case 'MO_OA'
         dat.FieldD = bounds;                  % Initialization 
-        dat.Initial = bounds;                  % Optimization bounds (see data0.m)
+        dat.Initial = bounds;                 % Optimization bounds (see data0.m)
         dat.NOBJ = NOBJ;
         dat.NRES = 0;                        % Number of constraints
         dat.NVAR = NVAR;
@@ -96,7 +121,7 @@ switch eval_type
         dat.CounterFES=0;
 
         % Run the algorithm.
-        OUT=MODE2(dat);
+        OUT=MODE2(dat,dataSet);
         
     case 'MO_GA'                              %'MO_GA' use multi-objective algorithm from matlab ga toolbox
         A = []; b = [];
@@ -145,8 +170,8 @@ switch eval_type
 end
         
 %% matlabpool close
-toc
 %
 %% Release and bug report:
 %
 % November 2012: Initial release
+% October 2016: Second release

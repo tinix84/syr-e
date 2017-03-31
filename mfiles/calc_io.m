@@ -25,70 +25,50 @@
 % cap. 6 - Vagati
 
 function io = calc_io(geo,per)
-%% Data
-q=geo.q;
-p=geo.p;
-% qui dentro si usa notazione normalizzata stile Guglielmi - Vagati
-% per cui non badare troppo a significato dei simboli
 
-% superficie esterna statore - m2
-Asup = 2*pi*geo.R*geo.l*1e-6; 
-% dissipazione - W/m2
-kj = per.Loss / Asup; 
-% temperatura
-tempcu = per.tempcu;
-% paia poli
-p = geo.p;
-% induzione normalizzata nel ferro
-% b = geo.b;
-% coeff. scaling dente
-% kt = geo.kt;
-% bt = geo.bt;
-
-b  = (geo.R - geo.r - geo.lt)*geo.p/geo.r;  % Bgap/Bfe,yoke (back-iron p.u. size)
-bt = geo.wt/pi*(3*geo.q*geo.p)/geo.r;        % Bgap/Bfe,tooth (tooth p.u. size)
-    
-
-% spire in serie per fase
-n_spire = geo.Ns;
-% raccorciamento di passo
-kracc = geo.kracc;
-% riempimento cava
+% input
+loss = per.Loss; % [W]
+R = geo.R/1e3; % [m]
+l = geo.l/1e3; % [m]
 kcu = geo.kcu;
+Aslots = geo.Aslot*(6*geo.p*geo.q)/1e6; % [m^2]
+N=geo.Ns;
+rocu = 17.8*(234.5+per.tempcuest)/(234.5+20)*1e-9;
 
-% lunghezza pacco NORMr
-l = geo.l / geo.R;
-% raggio rotore NORMr
-x = geo.r / geo.R;
-% lunghezza gap NORMr
-g = geo.g / geo.R;
-% lunghezza del dente NORMr
-lt = geo.lt / geo.R;
-% spessore del giogo NORMr
-ly = 1 - (x + g) - lt;
-% Area denti NORMrpi
-vdenti=2*bt*x*lt;  
-% corrente totale ^2 NORM cfr.eq.(3.3.19) pag. 3.28
-% area cave norm. alla circonferenza esterna (NORMrpi)
-io2pu=(6*p*q)*geo.Aslot/pi/geo.R^2;
-% io2pu = lt*(2*(1-ly)-lt)-vdenti; 
-iopu = sqrt(io2pu);
-if (geo.q<1)
-    wt = geo.wt/geo.R;
-    ltestata = 2*lt+0.5*(wt+pi*(x+lt/2)*sin(pi/(6*p*q)));
-else
-    % lunghezza delle testate NORMr
-    % formula empirica -> prof. Tassoni
-    ltestata=(2*lt+kracc*(0.5*pi*(1-ly+x)/p));
-    % lunghezza NORMl di pacco attivo e testate
+% Calcolo lend avvolgimento
+avv=geo.avv;
+[r,c]=size(avv);
+ini=0;
+fin=0;
+for ii=1:c
+    if ini==0
+        if avv(1,ii)==1 || avv(2,ii)==1
+            ini=ii;
+        end
+    elseif fin==0
+        if avv(1,ii)==-1 || avv(2,ii)==-1
+            fin=ii;
+        end
+    end
 end
-lprimor=(l+ltestata)./l;
-% resistività del rame alla temperatura (TetaCu)
-rocu = 17.8*(234.5+tempcu)/(234.5+20)*1e-9; 
-% cfr.eq.(3.3.8) pag.3.26
-k=sqrt(kcu*kj/(rocu*lprimor));
-% Coeff. di NORM delle correnti
-CoeffCorrente=pi*(geo.R/1000)^1.5*k/(3*n_spire);  
-% MODULO DI CORRENTE
-io=CoeffCorrente.*iopu;
+
+if fin==0
+    fin=c+1;
+end
+
+yq=fin-ini;
+
+if yq==1  %avvolgimento concentrato
+    lend=0.5*(geo.wt+pi*(geo.r+geo.g+geo.lt/2)*sin(pi/6/geo.p/geo.q))/1e3;    % [m] from Gamba - A new PMASRM with nonconventional FS pole combination
+else
+    alpha=yq*2*pi/(6*geo.p*geo.q);
+    lend=(2*geo.lt+(geo.r+geo.g+geo.lt/2)*alpha)/1e3; %[m]
+    clear alpha
+end
+
+kj=loss/(2*pi*R*l);
+
+io = (kj*kcu/rocu*l/(l+lend)*2*pi*2*R*Aslots/36/N^2)^0.5;
+
+
 

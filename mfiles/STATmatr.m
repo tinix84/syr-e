@@ -30,7 +30,7 @@ Nbob = geo.Nbob;
 lt = geo.lt;
 wt = geo.wt;
 p = geo.p;
-q=geo.q;
+q = geo.q;
 R = geo.R;
 r = geo.r;
 g = geo.g;
@@ -48,8 +48,8 @@ RSE=R;                        % r esterno statore
 RS5=r+g+lt;                  % r esterno cave
 PassoCava=(RSI)*2*pi/(ns*p);  % passo cava di statore
 
-C0=acs*PassoCava/2;
-DS2=ttd;                   % operator setup...
+% C0=acs*PassoCava/2;
+% DS2=ttd;                   % operator setup...
 
 % r eq for middle of slot computation
 mr=tan(alpha_slot/2);
@@ -59,44 +59,71 @@ y0=RSI*sin(alpha_slot/2);
 % design like a line parallel to r, case of trapezoidal slot r2: y=m2x+q2
 % explicit form
 m2=mr; q2= -wt/2*sqrt(1+mr^2);
-xx=linspace(0,100);
-y1=mr*xx;
-y2=m2*xx+q2;
+% xx=linspace(0,100);
+% y1=mr*xx;
+% y2=m2*xx+q2;
 
 [x1t,y1t]=intersezione_retta_circonferenza(0,0,RSI,m2,q2);
 
 slot_open_ang=acs*2*pi/(ns*p)/2;
 [x1,y1]=intersezione_retta_circonferenza(0,0,RSI,tan(slot_open_ang),0);
-if (tan(y1/x1)>tan(y1t/x1t))
+if (tan(y1./x1)>tan(y1t./x1t))
     x1=x1t;
     y1=y1t;
 end
 
 x2=x1+ttd;
 y2=y1;
-%
+
 mtta=tan(pi/2-tta*pi/180);
 qtta=y2-mtta*x2;
-ytta=mtta*xx+qtta;
+% ytta=mtta*xx+qtta;
 [x3,y3]=intersezione_tra_rette(mtta,-1,qtta,m2,-1,q2);
-% middle of the slot
-x7=(lt-x2)/2;
-y7=m2*x7+q2;
+
 % end of the slot
 x6=RSI+lt;
 y6=0;
 % LT2 position at the tooth 
-% xLT2=(RSI+lt)*cos(alpha_slot/2);
-% yLT2=(RSI+lt)*sin(alpha_slot/2);
 [xLT2,yLT2]=intersezione_retta_circonferenza(0,0,(RSI+lt),m2,q2);
 % bottom slot radius
-[xRacSlot,yRacSlot,x5,y5,x4,y4]=cir_tg_2rette(x6,y6,xLT2,yLT2,x3,y3,x7,y7,RaccordoFC);
+[xRacSlot,yRacSlot,x5,y5,x4,y4]=cir_tg_2rette(x6,y6,xLT2,yLT2,xLT2,yLT2,x3,y3,RaccordoFC);
 x4=x4(2);
 y4=y4(2);
 x5=x5(2);
 y5=y5(2);
 xRacSlot=xRacSlot(2);
 yRacSlot=yRacSlot(2);
+
+mm1 = (yLT2-y6)./(xLT2-x6);       % slope of line slot bottom
+mm2 = (y3-yLT2)./(x3-xLT2);       % slope of line slot side
+angle1 = atan(abs((mm2-mm1)./(1+mm1.*mm2)));        % angle between two lines
+%% Chao limit fillet radius 
+if x5 > x6    % not beyond central of slot at slot bottom
+    x5 = x6;
+    y5 = y6;
+    RaccordoFC = tan(angle1/2)*sqrt((yLT2-y5)^2+(xLT2-x5)^2);
+    [xRacSlot,yRacSlot,x5,y5,x4,y4]=cir_tg_2rette(x6,y6,xLT2,yLT2,xLT2,yLT2,x3,y3,RaccordoFC);
+    x4=x4(2);
+    y4=y4(2);
+    x5=x5(2);
+    y5=y5(2);
+    xRacSlot=xRacSlot(2);
+    yRacSlot=yRacSlot(2);
+end
+if x4 < x2+(x6-x2)/2    % not beyond half of slot at slot side
+    x4 = x2+(x6-x2)/2;
+    y4 = m2*x4+q2;
+    RaccordoFC = tan(angle1/2)*sqrt((yLT2-y4)^2+(xLT2-x4)^2);
+    [xRacSlot,yRacSlot,x5,y5,x4,y4]=cir_tg_2rette(x6,y6,xLT2,yLT2,xLT2,yLT2,x3,y3,RaccordoFC);
+    x4=x4(2);
+    y4=y4(2);
+    x5=x5(2);
+    y5=y5(2);
+    xRacSlot=xRacSlot(2);
+    yRacSlot=yRacSlot(2);
+end
+geo.SFR = RaccordoFC;
+area_corner = RaccordoFC^2 * (1./tan(angle1/2)-(pi-angle1)/2);           % redundant area at bottom slot area (made by slot side, slot bottom and circle)
 % slot air (near air-gap)
 xA1=RSI;
 yA1=0;
@@ -106,9 +133,13 @@ xA2=x2; yA2=0;
 xE1=RSE; yE1=0;
 xE2=RSE*cos(alpha_slot/2); yE2=RSE*sin(alpha_slot/2);
 %% slot area evaluation
-xv=[xA2,x2,x3,x4,x5,x6,x6,xA2];
-yv=[yA2,y2,y3,y4,y5,y6,y6,yA2];
-geo.Aslot = 2*polyarea(xv,yv);
+% xv=[xA2,x2,x3,x4,x5,x6,x6,xA2];
+% yv=[yA2,y2,y3,y4,y5,y6,y6,yA2];
+% xArea=[x3,x3,x4,x5,x6,x3];
+% yArea=[ 0,y3,y4,y5,y6, 0];
+xArea=[xA2,x2,x3,xLT2,x6,xA2];
+yArea=[yA2,y2,y3,yLT2,y6,yA2];
+geo.Aslot = 2*(polyarea(xArea,yArea)-area_corner);
 % figure;area(xv,yv);
 % xv=[x1,x2,x3,x5,x4,x6];
 % yv=[y1,y2,y3,y5,y4,y6];

@@ -26,16 +26,21 @@ ps = geo.ps;
 p = geo.p;
 lm = geo.lm;
 
-if strcmp(geo.RotType,'SPM')
-else
+if ~strcmp(geo.RotType,'SPM')
     mat.LayerMag.Br = mat.LayerMag.Br.*ones(1,geo.nlay);   % replicate Br in case it is scalar
 end
 
 switch geo.RotType
     case 'Circular'
         % build nodes, lines and arcs for half a pole
-        [geo,mat,temp] = nodes_rotor_Circ(geo,mat);
-        rotor = build_matrix_Circ(temp,geo);
+        if (0)  % select 0 if you want to use the new circular geometry, 1 if you want use the old circular. Old circular not updated
+            [geo,mat,temp] = nodes_rotor_Circ(geo,mat);
+            rotor = build_matrix_Circ(temp,geo);
+            disp('Old circular is selected')
+        else
+            [geo,mat,temp] = nodes_rotor_Circ_dx(geo,mat);
+            rotor = build_matrix_Circ_dx(temp,geo);
+        end
     case 'ISeg'
         % build nodes, lines and arcs for half a pole
         [geo,mat,temp] = nodes_rotor_ISeg(geo,mat);
@@ -61,7 +66,7 @@ BarCenter = defineBlockCenters(temp,fem,geo);
 % Assign label names
 BarName = defineBlockNames(temp,geo,mat);
 % BOUNDARY CONDITIONS
-if (geo.ps<2*geo.p)
+if (ps<2*geo.p)
     codBound_periodic = 10;           % 10 = Odd or Even Periodicity
 else
     codBound_periodic = -10;          % -10 = no periodicity, simulate full machine
@@ -93,6 +98,7 @@ for ii=1:2:ncol-2
 end
 rotor2=[rotor2,rotor(:,ncol)];
 rotor = rotor2;
+rotor=checkPlotMatrix(rotor,1e-9);
 
 %%% Block centers %%%
 BLKLABELSrot.xy     =   BarCenter;

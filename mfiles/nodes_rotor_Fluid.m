@@ -450,7 +450,7 @@ temp.xmag=xmag;
 temp.ymag=ymag;
 temp.zmag=zeros(1,length(xcbar));
 
-geo.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
+mat.LayerMag.Br = [mat.LayerMag.Br mat.LayerMag.Br];    % replicates Br for correct block assignation
 
 % Salvataggio dei dati finali:
 %%

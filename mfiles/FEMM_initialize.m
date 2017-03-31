@@ -30,7 +30,16 @@ mi_addmaterial(mat.SlotCond.MatName);
 mi_modifymaterial(mat.SlotCond.MatName,5,mat.SlotCond.sigma/1e6);
 
 %% add barrier used
-mi_addmaterial(mat.LayerMag.MatName,mat.LayerMag.mu,mat.LayerMag.mu,mat.LayerMag.Hc);
+if isfield(mat.LayerMag,'BH')
+    mi_addmaterial(mat.LayerMag.MatName);
+
+    for ii=1:length(mat.LayerMag.BH(:,1))
+        mi_addbhpoint(mat.LayerMag.MatName,mat.LayerMag.BH(ii,1),mat.LayerMag.BH(ii,2));
+    end
+    
+else
+    mi_addmaterial(mat.LayerMag.MatName,mat.LayerMag.mu,mat.LayerMag.mu,mat.LayerMag.Hc(1));
+end
 
 %% add air
 mi_addmaterial('Air',1,1,0,0);

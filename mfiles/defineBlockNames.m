@@ -34,7 +34,7 @@ if strcmp(RotType,'SPM')
     end
 else
     YpontRadSx = temp.YpontRadSx;
-    xc = temp.xc;
+    xmag = temp.xmag;
     YpontRadSx=repmat(YpontRadSx,1,nlay*ps);
     
     RotName   = {'rotor'};
@@ -43,14 +43,14 @@ else
     
     % Assigment of label name
     if (mat.LayerMag.Br==0)
-        if isempty(xc)
+        if isempty(xmag)
             BarName=[];
         else
             for kk=1:nlay*ps
                 if (YpontRadSx(kk)~=0)
                     num_bar_element=4;
                 else
-                    num_bar_element=4;
+                    num_bar_element=2;
                 end
                 for jk=1:num_bar_element
                     if (kk<=nlay)
@@ -67,7 +67,7 @@ else
         end
     else
         BarName=[];
-        for kk=1:length(xc)*2*ps
+        for kk=1:length(xmag)*2*ps
             BarName{kk}={['Plasto_Bar_',num2str(kk)]};
         end
     end
