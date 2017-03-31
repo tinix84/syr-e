@@ -16,10 +16,17 @@
 %intersection line and circumference:
 function [x,y]=intersezione_retta_circonferenza(xc,yc,r,m2,q2)
 
-A=1+m2^2;
-B=2*m2*q2-2*xc-2*m2*yc;
-C=xc^2+q2^2+yc^2-2*q2*yc-r^2;
-tmp=roots([A B C]);
-x=tmp(1);
-y=m2*x+q2;
-
+A=1+m2.^2;
+B=2.*m2.*q2-2.*xc-2.*m2.*yc;
+C=xc.^2+q2.^2+yc.^2-2.*q2.*yc-r.^2;
+% tmp=roots([A B C]);
+% NB: if r>0, the output point is the bigger. If r<0, the output point is
+% the lower
+ksing = r./abs(r);
+x = (-B+ksing.*(B.^2-4.*A.*C).^0.5)./(2*A);
+% if r>=0
+%     x = (-B+(B.^2-4.*A.*C).^0.5)./(2*A);
+% else
+%     x = (-B-(B.^2-4.*A.*C).^0.5)./(2*A);
+% end
+y=m2.*x+q2;

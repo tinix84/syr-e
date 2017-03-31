@@ -22,8 +22,8 @@ i_d=linspace(round(min(min(F_map.Id))),round(max(max(F_map.Id))),n);
 i_q=linspace(round(min(min(F_map.Iq))),round(max(max(F_map.Iq))),n);
 [Id,Iq]=meshgrid(i_d,i_q);
 % interp flux linkages
-Fd = interp2(F_map.Id,F_map.Iq,F_map.Fd,Id,Iq,'cubic',NaN);
-Fq = interp2(F_map.Id,F_map.Iq,F_map.Fq,Id,Iq,'cubic');
+Fd = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.Fd,Id,Iq,'spline',NaN);
+Fq = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.Fq,Id,Iq,'spline');
 % change number of turns
 Id=Id/Kr;
 Iq=Iq/Kr;
@@ -40,12 +40,12 @@ save ([pathname 'fdfq_idiq_n' num2str(n) '.mat'],'Fd','Fq','Id','Iq');
 
 % interp torque and torque ripple
 if isfield(F_map,'T')
-    T = interp2(F_map.Id,F_map.Iq,F_map.T,Id,Iq,'cubic');
+    T = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.T,Id,Iq,'spline');
     T = T*Kl;
     save ([pathname 'fdfq_idiq_n' num2str(n) '.mat'],'T','-append');
 end
 if isfield(F_map,'dT')
-    dT = interp2(F_map.Id,F_map.Iq,F_map.dT,Id,Iq,'cubic');
+    dT = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.dT,Id,Iq,'spline');
     dT = dT*Kl;
     save ([pathname 'fdfq_idiq_n' num2str(n) '.mat'],'dT','-append');
 end
@@ -54,7 +54,7 @@ end
 % pm loss
 if isfield(F_map,'Ppm')
     Ppm = F_map.Ppm;
-    Ppm = interp2(F_map.Id,F_map.Iq,Ppm,Id,Iq,'cubic');
+    Ppm = interp2(F_map.Id(1,:),F_map.Iq(:,1),Ppm,Id,Iq,'spline');
     save ([pathname 'fdfq_idiq_n' num2str(n) '.mat'],'Ppm','-append');
 end
 
@@ -66,10 +66,10 @@ if isfield(F_map,'Pfes_h')
     Pfer_h = F_map.Pfer_h;
     Pfer_c = F_map.Pfer_c;
     
-    Pfes_h = interp2(F_map.Id,F_map.Iq,Pfes_h,Id,Iq,'cubic');
-    Pfes_c = interp2(F_map.Id,F_map.Iq,Pfes_c,Id,Iq,'cubic');
-    Pfer_h = interp2(F_map.Id,F_map.Iq,Pfer_h,Id,Iq,'cubic');
-    Pfer_c = interp2(F_map.Id,F_map.Iq,Pfer_c,Id,Iq,'cubic');
+    Pfes_h = interp2(F_map.Id(1,:),F_map.Iq(:,1),Pfes_h,Id,Iq,'spline');
+    Pfes_c = interp2(F_map.Id(1,:),F_map.Iq(:,1),Pfes_c,Id,Iq,'spline');
+    Pfer_h = interp2(F_map.Id(1,:),F_map.Iq(:,1),Pfer_h,Id,Iq,'spline');
+    Pfer_c = interp2(F_map.Id(1,:),F_map.Iq(:,1),Pfer_c,Id,Iq,'spline');
     
     velDim = F_map.speed;
     

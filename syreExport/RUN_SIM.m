@@ -114,7 +114,7 @@ In.temperature = eval(setup{7});
 prompt={'Stator Iron used', 'rotor iron used','Magnet'};
 name='IRON and MAGNET IDENTIFICATION';
 numlines=1;
-defaultanswer={'M250-35A','M250-35A','BMN-42SH'};
+defaultanswer={'M600-50A','M600-50A','PM04: Br 0.4 mur 1.0'};
 IronName=inputdlg(prompt,name,numlines,defaultanswer);
 
 %% Variabili da modificare in Batch
@@ -129,7 +129,7 @@ if length(In.Vel) > 1
 end
 
 if (strcmp(In.DataFormat,'SYRE'))
-    Mac=genMacDataFromGeo(geo);
+    Mac=genMacDataFromGeo(geo,mat);
 %     Mac.n_mag_simulati=0;
 end
 

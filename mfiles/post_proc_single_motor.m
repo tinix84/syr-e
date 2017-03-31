@@ -78,16 +78,14 @@ pathname = dataIn.currentpathname;
 filemot = strrep(dataIn.currentfilename,'.mat','.fem');
 load([pathname strrep(filemot,'.fem','.mat')]);
 
+per.overload=CurrLoPP;
+per.BrPP=BrPP;
+
 geo.nsim_singt = NumOfRotPosPP;       % # simulated positions
 geo.delta_sim_singt = AngularSpanPP;  % angular span of simulation
 
 %% Iron Loss Input
 if dataIn.LossEvaluationCheck == 1
-%     geo.loss.kh = dataIn.HysteresisLossFactor;
-%     geo.loss.alpha = dataIn.HysteresisFrequencyFactor;
-%     geo.loss.beta = dataIn.HysteresisFluxDenFactor;
-%     geo.loss.ke = dataIn.EddyCurLossFactor;
-%     geo.rhoFE = dataIn.IronMassDen;
     per.EvalSpeed = dataIn.EvalSpeed;
 end
 
@@ -170,7 +168,7 @@ switch eval_type
             
             x = 1:length(overload_temp);
             figure(10), subplot(2,1,1)
-            plot(x,T,'-x',x,T+0.5*Tpp,'r',x,T-0.5*dTpp,'r'), grid on, ylabel('torque [Nm]')
+            plot(x,T,'-x',x,T+0.5*dTpp,'r',x,T-0.5*dTpp,'r'), grid on, ylabel('torque [Nm]')
             subplot(2,1,2)
             plot(x,dTpp,'-x'), grid on, ylabel('torque ripple pk-pk [Nm]')
             xlabel('simulation #'),
@@ -209,7 +207,7 @@ switch eval_type
                 end
         end
         
-        F_map = eval_FdFq_tables_in_FEMM(geo,per,idvect,iqvect,eval_type,[pathname filemot]);
+        F_map = eval_FdFq_tables_in_FEMM(geo,per,idvect,iqvect,eval_type,[pathname filemot],mat,dataIn);
         
         % builds a new folder for each id, iq simulation
         Idstr=num2str(max(abs(idvect)),3); Idstr = strrep(Idstr,'.','A');

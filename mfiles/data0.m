@@ -33,14 +33,15 @@ if (nargin<1)
     per.Loss = 1000;                % Joule loss [W]
     per.tempcu = 130;               % Target Copper Temperature [C]
     per.overload = 2;               % current overload factor used for optimization (1 means Joule loss = per.Loss)
+    per.BrPP = 0.4;                 % Br used for postprocessing [T]
     per.temphous = 70;              % Housing Temperature [C]
-    per.tempcuest = per.tempcu;     % Estimated Copper Temperature [C]
+%     per.tempcuest = per.tempcu;     % Estimated Copper Temperature [C]
     % torque and ripple penalization
     % a penalizing coefficient will be applied during the optimization to all
     % the machines with a lower torque or a higher torque ripple
     per.min_exp_torque = 10;   % minimum expected torque [Nm]
     per.max_exp_ripple = 8;    % maximum expected torque ripple in % of T
-    per.max_Cu_mass = 0;       % maximum expected copper mass [kg]
+    per.max_Cu_mass = 10;       % maximum expected copper mass [kg]
     per.io = 0;
     
     %% geo: geometry
@@ -53,6 +54,14 @@ if (nargin<1)
         'NdFeB 37 MGOe';
         '10JNEX900';
         'Copper'};
+    
+    % create dataSet only for material definition
+    dataIn.SlotMaterial = geo.BLKLABELSmaterials{3};
+    dataIn.StatorMaterial = geo.BLKLABELSmaterials{4};
+    dataIn.RotorMaterial = geo.BLKLABELSmaterials{5};
+    dataIn.FluxBarrierMaterial = geo.BLKLABELSmaterials{6};
+    dataIn.ShaftMaterial = geo.BLKLABELSmaterials{7};
+    dataIn.RotorCondMaterial = geo.BLKLABELSmaterials{8};
     
     geo.pont0 = 0.4;    % thickness of the structural bridges at the airgap
     % AND minimum mechanical tolerance [mm]
@@ -67,8 +76,9 @@ if (nargin<1)
     
     geo.RemoveTMPfile = 'ON';      % 'ON' of 'OFF' for remuving the motor folders in tmp
     
-    geo.RaccBarrier='=ON';  % Seg geometry, it attivate circular connection to the side of the barrier if 'ON'
+    geo.RaccBarrier='=OFF';  % Seg geometry, it attivate circular connection to the side of the barrier if 'ON'
     % Seg geometry, barrier are drawn with no circular junction og if 'OFF'
+    geo.DTrasl=0;
     
     geo.p  = 2;         % pole pairs
     geo.R  = 100;      % stator outer radius [mm]
@@ -79,7 +89,7 @@ if (nargin<1)
     
     geo.BarFillFac=1;   % barrier filling factor
     % stator
-    geo.q   = 2;        % stator slots per pole per phase
+    geo.q   = 1;        % stator slots per pole per phase
     %     geo.slot_layer_pos='over_under';  %     stator slot layer position, two
     %     solution are possible, 'over_under', and 'side_by_side'
     geo.slot_layer_pos='side_by_side';
@@ -117,11 +127,12 @@ if (nargin<1)
     geo.ns = geo.q*6;                               % number of slot per pole pair
     geo.Nbob  = geo.Ns/geo.p/(geo.ns/6)/size(geo.avv,1);  % conductors in slot per label
     geo.nmax = 4000;                                % overspeed [rpm]
+    geo.Qs = 3;                                     % number of slots in the simulation
     
     % permanent magnets (default: Br = 0)
-    geo.Br = 0.0;
-    geo.Hc = 1/(4e-7*pi)*geo.Br;
-    geo.rhoPM = 7600;                               % Permanent Magnet mass density [Kg/m3] (for NdFeB magnets)
+%     geo.Br = 0.0;
+%     geo.Hc = 1/(4e-7*pi)*geo.Br;
+%     geo.rhoPM = 7600;                               % Permanent Magnet mass density [Kg/m3] (for NdFeB magnets)
 %     geo.Br_commercial=1.25;                         % [T] remanence of commercial NdFeB permanent magnets
     
     geo.lm = 5;      % the thickness of permanent magnet
@@ -146,6 +157,7 @@ if (nargin<1)
     
     % rotor geometry (subject to optimization: default set to zero)
     geo.x0=[0 0]; % geo.alpha = 0;
+    geo.x0 = geo.r/cos(pi/2/geo.p);
     geo.dalpha_pu = [0.45 0.22*ones(1,geo.nlay-1)];
     geo.hc_pu = 0.5*ones(1,geo.nlay);
     if strcmp(geo.RotType,'SPM')
@@ -153,6 +165,9 @@ if (nargin<1)
     else
         geo.dx = zeros(1,geo.nlay);
     end
+    
+    geo.radial_ribs_eval = 0;   % if 1 the radial ribs are manually designed, if 0, the radial ribs are automatic designed
+    geo.pont = [0 0 0];         % radial ribs
     
     %% bounds: limits of the search space
     % dalpha1 [p.u.]
@@ -193,7 +208,7 @@ if (nargin<1)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     yes_vector = ones(geo.nlay,1);
     no_vector = zeros(geo.nlay,1);
-    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg'))
+    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'Circular'))
         flag_dx = yes_vector;
     else
         flag_dx = no_vector;
@@ -221,7 +236,7 @@ if (nargin<1)
             bounds_dalpha_1 1
             bounds_dalpha   yes_vector(1:end-1)
             bounds_hc       yes_vector
-            bounds_dx       yes_vector*0
+            bounds_dx       yes_vector*1
             bounds_Br       yes_vector*0
             bounds_g        0
             bounds_xr       0
@@ -241,11 +256,12 @@ if (nargin<1)
     %     geo.RQnames = RQnames;
     
     %% OBJECTIVES
-    objs = [per.min_exp_torque  1
-        per.max_exp_ripple  1
-        per.max_Cu_mass  0];
+    objs = [per.min_exp_torque  1      % minimum expected torque
+            per.max_exp_ripple  1      % maximum expected torque ripple
+            per.max_Cu_mass     0];    % maximum expected copper mass
     filt_objs = (objs(:,2)==1);
     objs = objs(objs(:,2)==1,:);
+    per.objs=objs;
 
     
 else
@@ -264,6 +280,9 @@ else
     per.min_exp_torque = dataIn.MinExpTorque;      % minimum expected torque [Nm]
     per.max_exp_ripple = dataIn.MaxRippleTorque;    % maximum expected torque ripple in pu during opimization
     per.max_Cu_mass = dataIn.MaxCuMass;         % maximum expected copper mass [kg]
+    if dataIn.LossEvaluationCheck == 1
+        per.EvalSpeed = dataIn.EvalSpeed;
+    end
     % a penalizing coefficient will be applied during the optimization to all
     % the machines with a lower torque or a higher torque ripple
     
@@ -370,6 +389,7 @@ else
     geo.delta_sim_singt = dataIn.RotPoFine;   % rotor position span [elt degrees]
     
     geo.x0=[0 0]; % geo.alpha = 0;
+    geo.x0 = geo.r/cos(pi/2/geo.p);
     geo.dalpha_pu = dataIn.ALPHApu;
     geo.hc_pu = dataIn.HCpu;
     geo.dx = dataIn.DepthOfBarrier;
@@ -422,11 +442,12 @@ else
     % bounds: n x 2 vector containing the boundaries of each input
     yes_vector = ones(geo.nlay,1);
     no_vector  = zeros(geo.nlay,1);
-    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg'))
+    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'Circular'))
         flag_dx = yes_vector*dataIn.DxBouCheck;
     else
         flag_dx = no_vector*dataIn.DxBouCheck;
     end
+    
     
     if geo.nlay == 1
         bounds = [
@@ -473,6 +494,7 @@ else
     objs = objs(objs(:,2)==1,:);
     % eliminate unnecessary objs
     %objs = objs(objs(:,2)==1);
+    per.objs=objs;
     
 end
 

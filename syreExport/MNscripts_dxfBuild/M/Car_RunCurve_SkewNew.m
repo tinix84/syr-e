@@ -139,6 +139,7 @@ for kk = 1:size(Sim.Id_,1)
             F_map.Fq(kk,k,kkk) = mean(Ft.values(:,11));
             F_map.T(kk,k,kkk) = -mean(Ft.values(:,12));
             F_map.dT(kk,k,kkk) = std(Ft.values(:,12));
+            F_map.dTpp(kk,k,kkk) = max(abs(Ft.values(:,12)))-min(abs(FT.values(:,12)));
             if Sim.sim_angle == 360
                 F_map.Pfes_h(kk,k,kkk) = Pfes_h;
                 F_map.Pfes_c(kk,k,kkk) = Pfes_c;

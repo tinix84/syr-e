@@ -50,7 +50,7 @@ iq_tab_min = min(min(Iq));
 iq_tab_max = max(max(Iq));
 
 % LUT dimension
-m = 9;    % rows
+m = 21;    % rows
 n = 21;   % columns
 
 % Fd table: current steps

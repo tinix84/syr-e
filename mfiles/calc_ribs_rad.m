@@ -3,6 +3,14 @@
 switch geo.RotType
     
     case 'Circular'
+        
+        if ~exist('X3')
+            X3 = xxD2k;
+            Y3 = yyD2k;
+            X4 = xxD1k;
+            Y4 = yyD1k;
+        end
+        
         A = [];
         rG = [];  % Distanza da (0,0) dei baricentri dei volumi appesi ai ponticelli
         tmp_bary = [];
@@ -64,16 +72,30 @@ switch geo.RotType
             if (x11 < x10) && (pont(ceil(jj/2))>0)                      % Se i due punti non si incrociano (raccordo non troppo grande rispetto alla
                 % larghezza della barriera), e se lo spessore estratto dall'algoritmo per il
                 % ponticello non è troppo piccolo, allora procedo al disegno del ponticello
-                lpont = x10 - x11;                                      % lpont=lunghezza ponticello=larghezza barriera-2*racc_pont
+                %                 lpont = x10 - x11;                                      % lpont=lunghezza ponticello=larghezza barriera-2*racc_pont
+                %                 hpont = pont(ceil(jj/2));
+                %                 y10 = hpont/2;                                          % Coordinata y Nodo 10
+                %                 y11 = y10;                                              % Coordinata y Nodo 11
+                %                 XpontRadDx(ceil(jj/2)) = x10; YpontRadDx(ceil(jj/2)) = y10;
+                %                 XpontRadSx(ceil(jj/2)) = x11; YpontRadSx(ceil(jj/2)) = y10;
+                %                 x12 = x10 + 1.5 * racc_pont; y12 = y10 + 1.5*racc_pont;   % Punto 12 (serve solo per il disegno del raccordo: verrà cancellato)
+                %                 XpontRadBarDx(ceil(jj/2)) = XBanqdx(ceil(jj/2)); YpontRadBarDx(ceil(jj/2)) = y10 + (XpontRadBarDx(ceil(jj/2)) - x10);
+                %                 x13 = x11 - 1.5 * racc_pont; y13 = y10 + 1.5*racc_pont;   % Punto 13 (serve solo per il disegno del raccordo: verrà cancellato)
+                %                 XpontRadBarSx(ceil(jj/2)) = XBanqsx(ceil(jj/2)); YpontRadBarSx(ceil(jj/2)) = y10 + (x11-XpontRadBarSx(ceil(jj/2)));
+                
                 hpont = pont(ceil(jj/2));
                 y10 = hpont/2;                                          % Coordinata y Nodo 10
-                y11 = y10;                                              % Coordinata y Nodo 11
-                XpontRadDx(ceil(jj/2)) = x10; YpontRadDx(ceil(jj/2)) = y10;
-                XpontRadSx(ceil(jj/2)) = x11; YpontRadSx(ceil(jj/2)) = y10;
-                x12 = x10 + 1.5 * racc_pont; y12 = y10 + 1.5*racc_pont;   % Punto 12 (serve solo per il disegno del raccordo: verrà cancellato)
-                XpontRadBarDx(ceil(jj/2)) = XBanqdx(ceil(jj/2)); YpontRadBarDx(ceil(jj/2)) = y10 + (XpontRadBarDx(ceil(jj/2)) - x10);
-                x13 = x11 - 1.5 * racc_pont; y13 = y10 + 1.5*racc_pont;   % Punto 13 (serve solo per il disegno del raccordo: verrà cancellato)
-                XpontRadBarSx(ceil(jj/2)) = XBanqsx(ceil(jj/2)); YpontRadBarSx(ceil(jj/2)) = y10 + (x11-XpontRadBarSx(ceil(jj/2)));
+                YpontRadBarDx(ceil(jj/2)) = y10 + racc_pont;             % Coordinata y pontRadBarDx
+                [x_temp,~] = intersezione_retta_circonferenza(x0,0,r_all(jj),0,YpontRadBarDx(ceil(jj/2)));
+                XpontRadBarDx(ceil(jj/2)) = 2*x0 - x_temp;
+                YpontRadBarSx(ceil(jj/2)) = y10 + racc_pont;             % Coordinata y pontRadBarDx
+                [x_temp,~] = intersezione_retta_circonferenza(x0,0,r_all(jj+1),0,YpontRadBarSx(ceil(jj/2)));
+                XpontRadBarSx(ceil(jj/2)) = 2*x0 - x_temp;
+                XpontRadDx(ceil(jj/2))  = XpontRadBarDx(ceil(jj/2))  - racc_pont;
+                YpontRadDx(ceil(jj/2))  = y10;
+                XpontRadSx(ceil(jj/2))  = XpontRadBarSx(ceil(jj/2))  + racc_pont;
+                YpontRadSx(ceil(jj/2))  = y10;
+                
             else                                                         % Se invece i punti 10 e 11 si incrociano (ovvero raccordo troppo grande rispetto)
                 % alla larghezza barriera), non faccio il ponticello e disegno solo una linea di
                 hpont = 0;
@@ -248,18 +270,31 @@ switch geo.RotType
                 x11 = x0 - r_all(jj+1) + racc_pont;                         % Coordinata x Nodo 11 ((Ponticello radiale_vertice in alto a sx)=(Punto
                 % in basso a sx del raccordo))
                 if (x11 < x10) && (pont(ceil(jj/2))>0)                      % Se i due punti non si incrociano (raccordo non troppo grande rispetto alla
-                    % larghezza della barriera), e se lo spessore estratto dall'algoritmo per il
-                    % ponticello non è troppo piccolo, allora procedo al disegno del ponticello
-                    lpont = x10 - x11;                                      % lpont=lunghezza ponticello=larghezza barriera-2*racc_pont
+                    %                     % larghezza della barriera), e se lo spessore estratto dall'algoritmo per il
+                    %                     % ponticello non è troppo piccolo, allora procedo al disegno del ponticello
+                    %                     lpont = x10 - x11;                                      % lpont=lunghezza ponticello=larghezza barriera-2*racc_pont
+                    %                     hpont = pont(ceil(jj/2));
+                    %                     y10 = hpont/2;                                          % Coordinata y Nodo 10
+                    %                     y11 = y10;                                              % Coordinata y Nodo 11
+                    %                     XpontRadDx(ceil(jj/2)) = x10; YpontRadDx(ceil(jj/2)) = y10;
+                    %                     XpontRadSx(ceil(jj/2)) = x11; YpontRadSx(ceil(jj/2)) = y10;
+                    %                     x12 = x10 + 1.5 * racc_pont; y12 = y10+1.5*racc_pont;   % Punto 12 (serve solo per il disegno del raccordo: verrà cancellato)
+                    %                     XpontRadBarDx(ceil(jj/2)) = XBanqdx(ceil(jj/2)); YpontRadBarDx(ceil(jj/2)) = y10 + (XpontRadBarDx(ceil(jj/2))-x10);
+                    %                     x13 = x11 - 1.5 * racc_pont; y13 = y10+1.5*racc_pont;   % Punto 13 (serve solo per il disegno del raccordo: verrà cancellato)
+                    %                     XpontRadBarSx(ceil(jj/2)) = XBanqsx(ceil(jj/2)); YpontRadBarSx(ceil(jj/2)) = y10 + (x11-XpontRadBarSx(ceil(jj/2)));
+                    %
                     hpont = pont(ceil(jj/2));
                     y10 = hpont/2;                                          % Coordinata y Nodo 10
-                    y11 = y10;                                              % Coordinata y Nodo 11
-                    XpontRadDx(ceil(jj/2)) = x10; YpontRadDx(ceil(jj/2)) = y10;
-                    XpontRadSx(ceil(jj/2)) = x11; YpontRadSx(ceil(jj/2)) = y10;
-                    x12 = x10 + 1.5 * racc_pont; y12 = y10+1.5*racc_pont;   % Punto 12 (serve solo per il disegno del raccordo: verrà cancellato)
-                    XpontRadBarDx(ceil(jj/2)) = XBanqdx(ceil(jj/2)); YpontRadBarDx(ceil(jj/2)) = y10 + (XpontRadBarDx(ceil(jj/2))-x10);
-                    x13 = x11 - 1.5 * racc_pont; y13 = y10+1.5*racc_pont;   % Punto 13 (serve solo per il disegno del raccordo: verrà cancellato)
-                    XpontRadBarSx(ceil(jj/2)) = XBanqsx(ceil(jj/2)); YpontRadBarSx(ceil(jj/2)) = y10 + (x11-XpontRadBarSx(ceil(jj/2)));
+                    YpontRadBarDx(ceil(jj/2)) = y10 + racc_pont;             % Coordinata y pontRadBarDx
+                    [x_temp,~] = intersezione_retta_circonferenza(x0,0,r_all(jj),0,YpontRadBarDx(ceil(jj/2)));
+                    XpontRadBarDx(ceil(jj/2)) = 2*x0 - x_temp;
+                    YpontRadBarSx(ceil(jj/2)) = y10 + racc_pont;             % Coordinata y pontRadBarDx
+                    [x_temp,~] = intersezione_retta_circonferenza(x0,0,r_all(jj+1),0,YpontRadBarSx(ceil(jj/2)));
+                    XpontRadBarSx(ceil(jj/2)) = 2*x0 - x_temp;
+                    XpontRadDx(ceil(jj/2))  = XpontRadBarDx(ceil(jj/2))  - racc_pont;
+                    YpontRadDx(ceil(jj/2))  = y10;
+                    XpontRadSx(ceil(jj/2))  = XpontRadBarSx(ceil(jj/2))  + racc_pont;
+                    YpontRadSx(ceil(jj/2))  = y10;
                 else                                                         % Se invece i punti 10 e 11 si incrociano (ovvero raccordo troppo grande rispetto)
                     % alla larghezza barriera), non faccio il ponticello e disegno solo una linea di
                     hpont = 0;
@@ -408,98 +443,98 @@ switch geo.RotType
             area_barr_withoutPM = [areaI areaUbars];
         end
         
-%         if (geo.Br>0 && geo.Br<=geo.Br_commercial)
-%             %     areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-%             %     areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-%             %     areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-%             %     area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
-%             
-%             area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-%             
-%             rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
-%             %ricalcolo i baricentri delle masse di ferro e magnete
-%             for ii=1:nlay
-%                 rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
-%             end
-%             
-%             %% ripeto le righe 36-78 per ricalcolare i ponticelli radiali in presenza di magneti (da qui fino alla fine dello script)
-%             M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
-%             A_PM=cumsum(area_barr_withPM);
-%             %     A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
-%             
-%             M_PM = A_PM*l* 1e-9 *geo.rhoPM;
-%             F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
-%             sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
-%             
-%             pont = F_centrifuga/(sigma_max * l);    % mm
-%             
-%             for jj=1:nlay
-%                 if (pont(jj) < geo.pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione
-%                     pont(jj)=0;
-%                 end
-%                 
-%                 % controllo per vedere se ho a disposizione area a sufficienza per
-%                 % il magnete
-%                 while (area_barr_withoutPM(jj) < area_barr_withPM(jj) + pont(jj)*hc(jj))
-%                     geo.Br = 0.99*geo.Br;
-%                     %             areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-%                     %             areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-%                     %             areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
-%                     %             area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
-%                     area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
-%                     
-%                     rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
-%                     %ricalcolo i baricentri delle masse di ferro e magnete
-%                     for ii=1:nlay
-%                         rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
-%                     end
-%                     
-%                     M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
-%                     A_PM=cumsum(area_barr_withPM);
-%                     %             A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
-%                     M_PM = A_PM*l* 1e-9 *geo.rhoPM;
-%                     F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
-%                     sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
-%                     
-%                     pont = F_centrifuga/(sigma_max * l);    % mm
-%                 end
-%                 
-%             end
-%             
-%             
-%             hpont=pont;
-%             rac_pont=abs(B1k-B2k)/4;
-%             
-%             for ii=1:nlay
-%                 
-%                 if hpont(ii)>0
-%                     XpontRadBarSx(ii)=B1k(ii);
-%                     YpontRadBarSx(ii)=hpont(ii)+rac_pont(ii);
-%                     XpontRadBarDx(ii)=B2k(ii);
-%                     YpontRadBarDx(ii)=hpont(ii)+rac_pont(ii);
-%                     XpontRadDx(ii)=B2k(ii)-rac_pont(ii);
-%                     YpontRadDx(ii)=hpont(ii);
-%                     XpontRadSx(ii)=B1k(ii)+rac_pont(ii);
-%                     YpontRadSx(ii)=hpont(ii);
-%                     
-%                 else
-%                     
-%                     
-%                     XpontRadBarSx(ii)=B1k(ii);
-%                     YpontRadBarSx(ii)=0;
-%                     XpontRadBarDx(ii)=B2k(ii);
-%                     YpontRadBarDx(ii)=0;
-%                     XpontRadDx(ii)=NaN;
-%                     YpontRadDx(ii)=0;
-%                     XpontRadSx(ii)=NaN;
-%                     YpontRadSx(ii)=0;
-%                 end
-%                 
-%             end
-%             %%
-%         elseif geo.Br>geo.Br_commercial
-%             disp('Error: wrong Br value')
-%             
-%         end
+        %         if (geo.Br>0 && geo.Br<=geo.Br_commercial)
+        %             %     areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+        %             %     areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+        %             %     areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+        %             %     area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
+        %
+        %             area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+        %
+        %             rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
+        %             %ricalcolo i baricentri delle masse di ferro e magnete
+        %             for ii=1:nlay
+        %                 rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
+        %             end
+        %
+        %             %% ripeto le righe 36-78 per ricalcolare i ponticelli radiali in presenza di magneti (da qui fino alla fine dello script)
+        %             M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
+        %             A_PM=cumsum(area_barr_withPM);
+        %             %     A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
+        %
+        %             M_PM = A_PM*l* 1e-9 *geo.rhoPM;
+        %             F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
+        %             sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
+        %
+        %             pont = F_centrifuga/(sigma_max * l);    % mm
+        %
+        %             for jj=1:nlay
+        %                 if (pont(jj) < geo.pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione
+        %                     pont(jj)=0;
+        %                 end
+        %
+        %                 % controllo per vedere se ho a disposizione area a sufficienza per
+        %                 % il magnete
+        %                 while (area_barr_withoutPM(jj) < area_barr_withPM(jj) + pont(jj)*hc(jj))
+        %                     geo.Br = 0.99*geo.Br;
+        %                     %             areaI_withPM = areaI*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+        %                     %             areaU1_withPM = areaU1*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+        %                     %             areaU2_withPM = areaU2*geo.Br/geo.Br_commercial;    %geo.Br_commercial is the Br of the real magnet
+        %                     %             area_barr_withPM = [areaI_withPM areaU1_withPM areaU2_withPM];
+        %                     area_barr_withPM=area_barr_withoutPM*geo.Br/geo.Br_commercial;      %geo.Br_commercial is the Br of the real magnet
+        %
+        %                     rG_PM = (B1k+B2k)/2;    % vettore con i baricentri dei magneti
+        %                     %ricalcolo i baricentri delle masse di ferro e magnete
+        %                     for ii=1:nlay
+        %                         rG(ii)=(Afe(ii)*geo.rhoFE*rG(ii) + area_barr_withPM(ii)*geo.rhoPM*rG_PM(ii)) / (Afe(ii)*geo.rhoFE+area_barr_withPM(ii)*geo.rhoPM);  % baricentri delle regioni di ferro sorrette dalla I e dalle due U
+        %                     end
+        %
+        %                     M_Fe = 2*Afe*l * 1e-9 * geo.rhoFE ;   % massa ferro appeso ai ponticelli
+        %                     A_PM=cumsum(area_barr_withPM);
+        %                     %             A_PM=cumsum([areaI_withPM, areaU1_withPM, areaU2_withPM]);
+        %                     M_PM = A_PM*l* 1e-9 *geo.rhoPM;
+        %                     F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
+        %                     sigma_max=geo.sigma_max;    %Yield strength of rotor lamination
+        %
+        %                     pont = F_centrifuga/(sigma_max * l);    % mm
+        %                 end
+        %
+        %             end
+        %
+        %
+        %             hpont=pont;
+        %             rac_pont=abs(B1k-B2k)/4;
+        %
+        %             for ii=1:nlay
+        %
+        %                 if hpont(ii)>0
+        %                     XpontRadBarSx(ii)=B1k(ii);
+        %                     YpontRadBarSx(ii)=hpont(ii)+rac_pont(ii);
+        %                     XpontRadBarDx(ii)=B2k(ii);
+        %                     YpontRadBarDx(ii)=hpont(ii)+rac_pont(ii);
+        %                     XpontRadDx(ii)=B2k(ii)-rac_pont(ii);
+        %                     YpontRadDx(ii)=hpont(ii);
+        %                     XpontRadSx(ii)=B1k(ii)+rac_pont(ii);
+        %                     YpontRadSx(ii)=hpont(ii);
+        %
+        %                 else
+        %
+        %
+        %                     XpontRadBarSx(ii)=B1k(ii);
+        %                     YpontRadBarSx(ii)=0;
+        %                     XpontRadBarDx(ii)=B2k(ii);
+        %                     YpontRadBarDx(ii)=0;
+        %                     XpontRadDx(ii)=NaN;
+        %                     YpontRadDx(ii)=0;
+        %                     XpontRadSx(ii)=NaN;
+        %                     YpontRadSx(ii)=0;
+        %                 end
+        %
+        %             end
+        %             %%
+        %         elseif geo.Br>geo.Br_commercial
+        %             disp('Error: wrong Br value')
+        %
+        %         end
 end
 

@@ -54,11 +54,24 @@ if ~isfield(tmp,'kgm3')
     error('Select a correct barrier material')
 end
 mat.LayerMag.kgm3 = tmp.kgm3;
-mat.LayerMag.Br = tmp.Br;
-mat.LayerMag.Hc = tmp.Hc;
-mat.LayerMag.mu = tmp.mu;
+if isfield(tmp,'BH')
+    mat.LayerMag.BH = tmp.BH;
+    mat.LayerMag.Br = 0;
+    mat.LayerMag.Hc = 0;
+    mat.LayerMag.Hci = tmp.Hci;
+    mat.LayerMag.Bnom = tmp.Bnom;
+else
+    mat.LayerMag.Br = tmp.Br;
+    mat.LayerMag.Hc = tmp.Hc;
+    mat.LayerMag.mu = tmp.mu;
+end
 mat.LayerMag.MatName = tmp.MatName;
 mat.MatList.barrier = tmp.MatList;
+
+if isequal(dataSet.FluxBarrierMaterial,'Bonded-Magnet')
+    mat.LayerMag.Br = dataSet.Br;
+    mat.LayerMag.Hc = dataSet.Br/(4e-7*pi);
+end
 
 %% rotor air
 tmp = material_properties_layer('Air');
@@ -70,13 +83,25 @@ mat.LayerAir.MatName = 'Air';
 %% shaft
 tmp = material_properties_iron(dataSet.ShaftMaterial);
 if ~isfield(tmp,'kgm3')
-    error('Select a correct shaft material')
+    if isequal(dataSet.ShaftMaterial,'Air')
+        mat.Shaft.kgm3 = 0;
+        mat.Shaft.alpha = 0;
+        mat.Shaft.beta = 0;
+        mat.Shaft.kh = 0;
+        mat.Shaft.ke = 0;
+        mat.Shaft.BH = [-100 -1/(4*pi)*1e-9
+                        +100 +1/(4*pi)*1e-9];
+        mat.Shaft.MatName = 'ShaftAir';
+    else
+        error('Select a correct shaft material')
+    end
+else
+    mat.Shaft.kgm3 = tmp.kgm3;
+    mat.Shaft.alpha = tmp.alpha;
+    mat.Shaft.beta = tmp.beta;
+    mat.Shaft.kh = tmp.kh;
+    mat.Shaft.ke = tmp.ke;
+    mat.Shaft.BH = tmp.BH;
+    mat.Shaft.MatName = tmp.MatName;
 end
-mat.Shaft.kgm3 = tmp.kgm3;
-mat.Shaft.alpha = tmp.alpha;
-mat.Shaft.beta = tmp.beta;
-mat.Shaft.kh = tmp.kh;
-mat.Shaft.ke = tmp.ke;
-mat.Shaft.BH = tmp.BH;
-mat.Shaft.MatName = tmp.MatName;
 

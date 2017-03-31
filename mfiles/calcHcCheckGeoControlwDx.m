@@ -104,8 +104,8 @@ else
         if (jj == nlay)
             
 %             hc_half_max = min((x0-r(end)-Ar-hfe_min),0.5*la/(0.5+(sum(hc_pu(2:nlay-1)))/(hc_pu(nlay))+hc_pu(1)/hc_pu(nlay)/2));
-            hc_half_max = 0.5*la/(0.5+(sum(hc_pu(2:nlay-1)))/(hc_pu(nlay))+hc_pu(1)/hc_pu(nlay)/2);
-            hc_nlay_temp_half=0.5*la/(0.5+(sum(hc_pu(2:nlay-1)))/(hc_pu(nlay))+hc_pu(1)/hc_pu(nlay)/2);
+            hc_half_max       = 0.5*la/(0.5+(sum(hc_pu(2:nlay-1)))/(hc_pu(nlay))+hc_pu(1)/hc_pu(nlay)/2);
+            hc_nlay_temp_half = 0.5*la/(0.5+(sum(hc_pu(2:nlay-1)))/(hc_pu(nlay))+hc_pu(1)/hc_pu(nlay)/2);
             
                 if strcmp(geo.RotType,'ISeg_HS')>0
                    hc(jj) = 2*hc_half_max(jj);
@@ -186,21 +186,32 @@ for k=1:nlay-1
 end % end for nlay
 
 %% Safety control for last flux barrier check feseability space between air and iron of the spyder at the air-gap and along the q axis
-[xc_temp,yc_temp]=calc_intersezione_cerchi(r,rbeta(nlay),x0);
-dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
-
-if (dPointEndBar<(Bx0(nlay)-B1k(nlay)))
-   B1k(nlay)=Bx0(nlay)-dPointEndBar+hfe_min(nlay)/2;
-   
+if strcmp(geo.RotType,'Circular')
+    [x_temp,y_temp]=calc_intersezione_cerchi(r,x0-B1k(end),x0);
+    rSpider=calc_distanza_punti([x0,0],[r*cos(pi/2/p),r*sin(pi/2/p)]);
+    rEndBar=calc_distanza_punti([x0,0],[x_temp,y_temp]);
+    if ((rSpider-rEndBar)<hfe_min(end)/2)
+        B1k(end)=x0-(rSpider-hfe_min(end)/2);
+        disp('#3 spider is too thin')
+    end
+%     dPointEndBar=calc_distanza_punti([x_temp,y_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
+else
+    [xc_temp,yc_temp]=calc_intersezione_cerchi(r,rbeta(nlay),x0);
+    dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
+    if (dPointEndBar<(Bx0(nlay)-B1k(nlay)))
+        B1k(nlay)=Bx0(nlay)-dPointEndBar+hfe_min(nlay)/2;
+        disp('#3 spider is too thin')
+    end
+    
+    if (B1k(nlay)<geo.Ar+hfe_min(end))    % questa condizione vale per l'ultima barriera di flux
+        geo.Ar=max(B1k(nlay)-hfe_min(end),Bx0(nlay)-dPointEndBar);
+    end
 end
 
-if (B1k(nlay)<geo.Ar+hfe_min(end))    % questa condizione vale per l'ultima barriera di flux
-    geo.Ar=max(B1k(nlay)-hfe_min(end),Bx0(nlay)-dPointEndBar);
-end
+
 
 hc=B2k-B1k;
-% Re-definition of B1k in function of dx...
-B1k=Bx0-hc/2+dx.*hc/2; B2k=Bx0+hc/2+dx.*hc/2;
+
 % Control and correction of the geometry with the iron degree of freedom
     dx_old=dx;
     hfemin=2*pont0;
@@ -208,7 +219,7 @@ B1k=Bx0-hc/2+dx.*hc/2; B2k=Bx0+hc/2+dx.*hc/2;
 
 for k=1:nlay  
    if  (hc(k)/2*(1-abs(dx(k)))<=pont0);
-   disp('#1Dx dx riassegnati');
+   disp('#1Dx dx modified');
    dx1=1-2*mean(pont0)/hc(k);
 %    error_code=1;
       if (dx(k)>0)
@@ -219,8 +230,59 @@ for k=1:nlay
    end
 end
 
+% Check the last dx (only for circular geometry) to avoid the exit of the
+% inner flux barrier from the pole
+
+if strcmp(geo.RotType,'Circular')
+    if dx(end)<0 % avoid the exit of the barrier from the pole
+        B1ktemp=B1k(end)+dx(end)*hc(end)/2;
+        [x_temp,y_temp]=calc_intersezione_cerchi(r,x0-B1ktemp,x0);
+        rSpider=calc_distanza_punti([x0,0],[r*cos(pi/2/p),r*sin(pi/2/p)]);
+        rEndBar=calc_distanza_punti([x0,0],[x_temp,y_temp]);
+        if rSpider-rEndBar<geo.hfe_min/2
+            dSpider=rSpider-rEndBar;
+            dx1=(abs(dx(end)*hc(end)/2)-(geo.hfe_min/2-dSpider))*2/hc(end);
+            dx(end)=-abs(dx1);
+            disp('#1Dxc inner dx modified for prevent exit of the barrier from pole')
+        end
+    end
+    
+    for ii=1:nlay
+        if dx(ii)>0
+            B1ktemp=B1k(ii)+dx(ii)*hc(ii)/2;
+            if (Bx0(ii)-B1ktemp)<geo.pont0
+                B1ktemp=Bx0(ii)-geo.pont0;
+                dx1=(B1ktemp-B1k(ii))*2/hc(ii);
+                dx(ii)=abs(dx1);
+                disp('#2Dxc dx modified to prevent exit of the axis from the barrier')
+            end
+        elseif dx(ii)<0
+            B2ktemp=B2k(ii)+dx(ii)*hc(ii)/2;
+            if (B2ktemp-Bx0(ii))<geo.pont0
+                B2ktemp=Bx0(ii)+geo.pont0;
+                dx2=(B2k(ii)-B2ktemp)*2/hc(ii);
+                dx(ii)=-abs(dx2);
+                disp('#2Dxc dx modified to prevent exit of the axis from the barrier')
+            end
+        end
+    end
+    
+end
+        
+    
+
 geo.dx=dx;
-B1k=Bx0-hc/2+dx.*hc/2; B2k=Bx0+hc/2+dx.*hc/2;
+
+% Re-definition of B1k in function of dx...
+if strcmp(geo.RotType,'Circular')
+    B1k = B1k+dx.*hc/2;
+    B2k = B2k+dx.*hc/2;
+else
+    B1k=Bx0-hc/2+dx.*hc/2;
+    B2k=Bx0+hc/2+dx.*hc/2;
+end
+% B1k=Bx0-hc/2+dx.*hc/2; B2k=Bx0+hc/2+dx.*hc/2;
+
 
 if nlay~=1
     
@@ -228,12 +290,12 @@ for k=1:nlay-1
         hc_old=hc;
     if ((r-B2k(k))<1) % questa condizione varrebbe per la 1°barriera
         B2k(k)=r-1;
-        disp('#2Dx vincolo 1 layer esce dal rotore');
+        disp('#2Dx 1 layer exit from the rotor');
 %         error_code=[error_code,2];
     end
     if (B1k(end)<geo.Ar+hfemin(k))    % questa condizione vale per l'ultima barriera di flux
-        B1k(end)=geo.Ar+1.0;
-        disp('#3Dx vincolo n° layer interseca albero')   
+        B1k(end)=geo.Ar+hfe_min(k);
+        disp('#3Dx inner layer cross the shaft')   
 %         error_code=[error_code,3];
     end                
 
@@ -241,13 +303,13 @@ for k=1:nlay-1
         Dq=B2k(k+1)-B1k(k);
         B2p=B2k(k+1)-(1/2)*(Dq+hfemin(k));
         B1p=B1k(k)+(1/2)*(Dq+hfemin(k));
-        disp('#4Dx vincolo 1-n° layer sovrapposizione'); 
+        disp('#4Dx 1-n° layer overposition'); 
 %         error_code=[error_code,4];
        
         if ((Bx0(k)<B1p)||(Bx0(k+1)>B2p)|| ((B2p-Bx0(k+1))<pont0(k)/2) || ((Bx0(k)-B1p)<pont0(k)/2))  % condizione vale nel caso in cui muovendosi con #2 non c'è più spazio per l'aria
            B1p=Bx0(k)-(Bx0(k)-Bx0(k+1))/3;
            B2p=Bx0(k+1)+(Bx0(k)-Bx0(k+1))/3;
-           disp('#5Dx vincolo 1-n° intersezione arie, spessore lato barriera<pont0/2 --> equa ripartizione aria ferro');
+           disp('#5Dx 1-n° flux guides<pont0/2 --> equal split iron/air');
 %            error_code=[error_code,5];
         end
         B2k(k+1)=B2p;
@@ -258,13 +320,13 @@ for k=1:nlay-1
         Dhc12=dB12-hfemin(k);
         B1p=Bx0(k)-Dhc12/2;
         B2p=Bx0(k+1)+Dhc12/2;
-        disp('#6Dx vincolo 1-n° tra 2 barriere successive no abbastanza ferro --> equa ripartizione aria ferro');        
+        disp('#6Dx 1-n° not enought iron between 2 barrier --> equal split iron/air');        
 %         error_code=[error_code,6];
         
         if ((Bx0(k)-B1p)<pont0(k) || (B2p-Bx0(k+1))<pont0(k))
         B1p=Bx0(k)-(Bx0(k)-Bx0(k+1))/3;
         B2p=Bx0(k+1)+(Bx0(k)-Bx0(k+1))/3;
-        disp('#7Dx vincolo 1-n° (Bx0(k)-B1p)<pont0 (B2p-Bx0(k+1))<pont0 --> equa ripartizione aria ferro');
+        disp('#7Dx 1-n° (Bx0(k)-B1p)<pont0 (B2p-Bx0(k+1))<pont0 --> equal split iron/air');
 %         error_code=[error_code,7];        
         end
         
@@ -284,7 +346,7 @@ else
     hc_old=hc;
     if ((r-B2k(k))<1) % questa condizione varrebbe per la 1°barriera
         B2k(k)=r-1;
-        disp('#8Dx vincolo 1 layer esce dal rotore');
+        disp('#8Dx 1 layer exit from the rotor');
 %         error_code=[error_code,2];
     end
 

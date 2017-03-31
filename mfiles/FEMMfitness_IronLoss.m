@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [cost,geo,mat,out,dirName] = FEMMfitness(RQ,geo,per,mat,eval_type,filemot)
+function [cost,geo,mat,out,dirName] = FEMMfitness_IronLoss(RQ,geo,per,mat,eval_type,filemot)
 
 currentDir=pwd;
 [thisfilepath,dirName]=createTempDir();
@@ -66,7 +66,7 @@ if isempty(RQ)
 end
 iAmpCoil=iAmp*geo.Nbob;
 
-[SOL,FluxDens] = simulate_xdeg_IronLoss(geo,iAmpCoil,per.BrPP,gamma,eval_type);
+[SOL] = simulate_xdeg_IronLoss(geo,iAmpCoil,per.BrPP,gamma,eval_type,mat,per);
 
 out.id = mean(SOL(:,2));
 out.iq = mean(SOL(:,3));
@@ -76,11 +76,11 @@ out.T= abs(mean(SOL(:,6)));
 out.dTpu = std(SOL(:,6))/out.T;
 % out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
 out.SOL = SOL;
-out.FluxDens = FluxDens;
 out.Pfes_h = SOL(1,7);
 out.Pfes_c = SOL(2,7);
 out.Pfer_h  = SOL(3,7);
 out.Pfer_c  = SOL(4,7);
+out.Pfe_total = out.Pfes_h + out.Pfes_c + out.Pfer_h + out.Pfer_c;
 %% Cost functions
 cost1 = -out.T;
 cost2 = out.dTpu*100;

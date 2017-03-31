@@ -65,7 +65,7 @@ gradi_da_sim=180/p*ps;
 id = io * cos(gamma * pi/180);
 iq = io * sin(gamma * pi/180);
 
-% Hc = geo.Hc;
+
 Hc = Br/(4e-7*pi);
 
 SOL = [];
@@ -99,73 +99,85 @@ for ij=1:nsim
     i3_tmp(ij) = i123(3);
 end
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%% ciclo for %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
-    for jj = 1:nsim
-        
-        th_m = (th(jj) - th0)/p;
-       
-        openfemm
-        %main_minimize
-        opendocument([pathname,'\mot0.fem']);
-        
-        % assign the phase current values to the FEMM circuits
-        i1 = i1_tmp(jj);
-        i2 = i2_tmp(jj);
-        i3 = i3_tmp(jj);
-        mi_modifycircprop('fase1',1,i1);
-        mi_modifycircprop('fase1n',1,-i1);
-        mi_modifycircprop('fase2',1,i2);
-        mi_modifycircprop('fase2n',1,-i2);
-        mi_modifycircprop('fase3',1,i3);
-        mi_modifycircprop('fase3n',1,-i3);
-        
-        % assign the Hc property to each of the bonded magnets
-        if strcmp(geo.RotType,'SPM')
-            mi_modifymaterial('Bonded-Magnet',3,Hc);
-        else
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%% ciclo for %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Open and draw motor once, rotate and simulate nsim positions by Chao Lu 17/01/2017
+openfemm
+%main_minimize
+opendocument([pathname,'\mot0.fem']);
+
+for jj = 1:nsim
+    
+    th_m = (th(jj) - th0)/p;
+    
+    %         openfemm
+    %         %main_minimize
+    %         opendocument([pathname,'\mot0.fem']);
+    
+    % assign the phase current values to the FEMM circuits
+    i1 = i1_tmp(jj);
+    i2 = i2_tmp(jj);
+    i3 = i3_tmp(jj);
+    mi_modifycircprop('fase1',1,i1);
+    mi_modifycircprop('fase1n',1,-i1);
+    mi_modifycircprop('fase2',1,i2);
+    mi_modifycircprop('fase2n',1,-i2);
+    mi_modifycircprop('fase3',1,i3);
+    mi_modifycircprop('fase3n',1,-i3);
+    
+    % assign the Hc property to each of the bonded magnets
+    if strcmp(geo.RotType,'SPM')
+        mi_modifymaterial('Bonded-Magnet',3,Hc);
+    else
+        if length(Hc)==1
             Hc_vect = Hc*ones(1,length(geo.BLKLABELS.rotore.BarName));
-            for j = 1:length(Hc_vect)
-                mi_modifymaterial(['Bonded-Magnet' num2str(j)],3,Hc_vect(j));
-            end
-        end
-        
-        % delete the airgap arc prior to moving the rotor
-        mi_selectgroup(20), mi_deleteselectedarcsegments;
-        
-        % rotate the rotor
-        mi_selectgroup(2), mi_moverotate(0,0,th_m);
-        
-        % redraw the airgap arc
-        if (ps<2*p)
-            draw_airgap_arc_with_mesh(geo,th_m,geo.fem)
         else
-            draw_airgap_arc_with_mesh_fullMachine(geo,th_m,geo.fem)
+            Hc_vect=[Hc Hc];
         end
-        
-        mi_saveas([pathname,'\mot_temp.fem']);    
-        mi_analyze(1);
-        mi_loadsolution;
-        post_proc;
-        mo_close, mi_close
-        closefemm
-        
-        SOL = [SOL; sol];
-		
+        for ii = 1:length(Hc_vect)
+            mi_modifymaterial(['Bonded-Magnet_' num2str(ii)],3,Hc_vect(ii));
+        end
     end
     
-    % Effective value of flux and current, simulation are done with one turns
-    % in slot and consequently, current in fem simulation is increase by the number of conductors in slot Nbob....
-    SOL(:,2)=SOL(:,2)/geo.Nbob;
-    SOL(:,3)=SOL(:,3)/geo.Nbob;
-    SOL(:,4)=SOL(:,4)*geo.Nbob;
-    SOL(:,5)=SOL(:,5)*geo.Nbob;
+    % delete the airgap arc prior to moving the rotor
+    mi_selectgroup(20), mi_deleteselectedarcsegments;
+    % rotate the rotor
+    mi_selectgroup(22),  mi_selectgroup(2)
+    if jj > 1
+        mi_moverotate(0,0,(th(jj) - th(jj-1))/p);
+    else
+        mi_moverotate(0,0,th_m);
+    end
+    % redraw the airgap arc
+    if (ps<2*p)
+        draw_airgap_arc_with_mesh(geo,th_m,geo.fem)
+    else
+        draw_airgap_arc_with_mesh_fullMachine(geo,th_m,geo.fem)
+    end
+    mi_saveas([pathname,'\mot_temp.fem']);
+    mi_analyze(1);
+    mi_loadsolution;
+    post_proc;
+%     mo_close, mi_close
+%     closefemm
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %       FINE VECCHIO CICLO FOR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    SOL = [SOL; sol];
+    
+end
+mo_close, mi_close
+closefemm
+
+% Effective value of flux and current, simulation are done with one turns
+% in slot and consequently, current in fem simulation is increase by the number of conductors in slot Nbob....
+SOL(:,2)=SOL(:,2)/geo.Nbob;
+SOL(:,3)=SOL(:,3)/geo.Nbob;
+SOL(:,4)=SOL(:,4)*geo.Nbob;
+SOL(:,5)=SOL(:,5)*geo.Nbob;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%       FINE VECCHIO CICLO FOR %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % end
 %% VERIFICA CHE I DUE CICLI FOR E PARFOR DIANO LO STESSO RISULTATO %%
 % ERROR = SOL-SOL_PARFOR_temp

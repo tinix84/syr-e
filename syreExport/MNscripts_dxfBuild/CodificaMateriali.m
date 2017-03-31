@@ -16,9 +16,10 @@
 Air1 = 'AIR';
 Air2 = 'AIR';
 Stat_Cu = 'Copper: 5.77e7 Siemens/meter';
-Stat_Fe = 'M270-50A';
-Rot_Fe = 'M270-50A';
+Stat_Fe = 'M600-50A_extended';
+Rot_Fe = 'M600-50A_extended';
 Stat_Magn = 'empty';
-Rot_Magn = 'AIR';
+Rot_Magn = 'PM04: Br 0.4 mur 1.0';
 Shaft_Steel = 'CR10: Cold rolled 1010 steel';
+% Shaft_Steel = 'M600-50A_extended';
 Rot_Cu = 'empty';

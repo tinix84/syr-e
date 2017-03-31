@@ -27,7 +27,7 @@ switch geo.RotType
         
         countPM=1;
         countdx=1;
-        for kk = 1:size(BLKLABELSrot.xy,1);
+        for kk = 1:size(BLKLABELSrot.xy,1)
             mi_addblocklabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
             mi_selectlabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
             if (isnan(BLKLABELSrot.xy(kk,6)))
@@ -38,7 +38,9 @@ switch geo.RotType
                 else
                     angle = atan2(BLKLABELSrot.xy(kk,2),BLKLABELSrot.xy(kk,1))*180/pi+180*rem(countPM,2);
                 end
-                
+                if geo.hybrid == 1
+                    angle = atan2(BLKLABELSrot.xy(kk,2),BLKLABELSrot.xy(kk,1))*180/pi+180;
+                end
                 mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res, 'None',angle, group, 0);
                 if countdx==geo.dx
                     countdx=1;
@@ -46,20 +48,6 @@ switch geo.RotType
                 else
                     countdx=countdx+1;
                 end
-%                 ii = real(fix((kk-1)/geo.dx));
-%                 if ((6*geo.t/Q)>1)
-%                     if mod(ii,2)==0
-%                         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', 180+(2*ii+1)*180/geo.t/geo.ps, group, 0);
-%                     else
-%                         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', (2*ii+1)*180/geo.t/geo.ps, group, 0);
-%                     end
-%                 else
-%                     if mod(ii,2)==0
-%                         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', 90/geo.t/geo.ps+ii*180/geo.ps+180, group, 0);
-%                     else
-%                         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', 90/geo.t/geo.ps+ii*180/geo.ps, group, 0);
-%                     end
-%                 end
             end
             mi_clearselected;
         end
@@ -69,44 +57,90 @@ switch geo.RotType
         mi_selectlabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(index,3)}, 0, fem.res,'None', 0, 22, 0);
         mi_clearselected;
+        
     otherwise
         % Assegna aria alle barriere di flux:
         %     for kk=1:length(BLKLABELSrot.BarName)
         if ((geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType))
-            Br=[Br 0*Br];
+            tmp = [mat.LayerMag.Br mat.LayerMag.Br];
+            Br = repmat(tmp,1,geo.ps);
+            % Br=[Br 0*Br];
         end
-        for kk=1:length(Br)
-            if (Br(kk)==0)
-                % air
-                mi_addblocklabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
-                mi_selectlabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
-                mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', 0, group, 0);
-                mi_setblockprop('Air', 0, fem.res,'None', 0, group, 0);
-                mi_clearselected;
-            else
-                % Plasto-Magnet with assigned Br
-                Hc=1/(4e-7*pi)*Br(kk);        % Proprietà da assegnare al magnete
-                magdir=atan2(BLKLABELSrot.xy(kk,7),BLKLABELSrot.xy(kk,6))*180/pi;
-                mi_addmaterial([mat.LayerMag.MatName num2str(kk)], 1, 1, Hc);
-                mi_addblocklabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
-                mi_selectlabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
-                mi_setblockprop([mat.LayerMag.MatName num2str(kk)], 0, fem.res,'None', magdir, group, 0);
-                mi_clearselected;
+%         for kk=1:length(Br)
+%             if (Br(kk)==0)
+%                 % air
+%                 mi_addblocklabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
+%                 mi_selectlabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
+%                 mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res,'None', 0, group, 0);
+%                 mi_setblockprop('Air', 0, fem.res,'None', 0, group, 0);
+%                 mi_clearselected;
+%             else
+%                 % Plasto-Magnet with assigned Br
+%                 Hc=1/(4e-7*pi)*Br(kk);        % Propriet?da assegnare al magnete
+%                 magdir=atan2(BLKLABELSrot.xy(kk,7),BLKLABELSrot.xy(kk,6))*180/pi;
+%                 mi_addmaterial([mat.LayerMag.MatName '_' num2str(kk)], 1, 1, Hc);
+%                 mi_addblocklabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
+%                 mi_selectlabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
+%                 mi_setblockprop([mat.LayerMag.MatName '_' num2str(kk)], 0, fem.res,'None', magdir, group, 0);
+%                 mi_clearselected;
+%             end
+%         end
+%         
+%         % rotor iron
+%         index=kk+1;
+%         mi_addblocklabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
+%         mi_selectlabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
+%         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(index,3)}, 0, fem.res,'None', 0, 22, 0);
+%         mi_clearselected;
+%         
+%         % shaft
+%         index=index+1;
+%         mi_addblocklabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
+%         mi_selectlabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
+%         mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(index,3)}, 0, fem.res,'None', 0, group, 0);
+%         mi_clearselected;
+        kk=1; % tiene conto di quale magnete sto assegnando
+        for ii=1:length(BLKLABELSrot.xy(:,1))
+            switch BLKLABELSrot.xy(ii,3)
+                case 1  % Aria
+                    mi_addblocklabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                    mi_selectlabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                    mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(ii,3)}, 0, fem.res,'None', 0, group, 0);
+                    mi_setblockprop('Air', 0, fem.res,'None', 0, group, 0);
+                    mi_clearselected;
+                case 6 % PM
+                    if isfield(mat.LayerMag,'BH')
+                        magdir=atan2(BLKLABELSrot.xy(ii,2),BLKLABELSrot.xy(ii,1))*180/pi;
+                        mi_addblocklabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                        mi_selectlabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                        mi_setblockprop(mat.LayerMag.MatName, 0, fem.res,'None', magdir, group, 0);
+                        mi_clearselected;
+                    else
+                        Hc=1/(4e-7*pi)*Br(kk); 
+                        magdir=atan2(BLKLABELSrot.xy(ii,7),BLKLABELSrot.xy(ii,6))*180/pi;
+                        mi_addmaterial([mat.LayerMag.MatName '_' num2str(kk)], 1, 1, Hc);
+                        mi_addblocklabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                        mi_selectlabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                        mi_setblockprop([mat.LayerMag.MatName '_' num2str(kk)], 0, fem.res,'None', magdir, group, 0);
+                        mi_clearselected;
+                        kk=kk+1;
+                    end
+                case 5 % Ferro rotore
+                    mi_addblocklabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                    mi_selectlabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                    mi_setblockprop(mat.Rotor.MatName, 0, fem.res,'None', 0, 22, 0);
+                    mi_clearselected;
+                case 7 % shaft
+                    mi_addblocklabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                    mi_selectlabel(BLKLABELSrot.xy(ii,1),BLKLABELSrot.xy(ii,2));
+                    if isequal(mat.Shaft.MatName,'ShaftAir')
+                        mi_setblockprop('Air', 0, fem.res,'None', 0, group, 0);
+                    else
+                        mi_setblockprop(mat.Shaft.MatName, 0, fem.res,'None', 0, group, 0);
+                    end
+                    mi_clearselected;
             end
         end
-        
-        % rotor iron
-        index=kk+1;
-        mi_addblocklabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
-        mi_selectlabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
-        mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(index,3)}, 0, fem.res,'None', 0, 22, 0);
-        mi_clearselected;
-        
-        % shaft
-        index=index+1;
-        mi_addblocklabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
-        mi_selectlabel(BLKLABELSrot.xy(index,1),BLKLABELSrot.xy(index,2));
-        mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(index,3)}, 0, fem.res,'None', 0, group, 0);
-        mi_clearselected;
+                    
         
 end

@@ -42,6 +42,13 @@ OUT.MatrixPFront  = [];
 OUT.MatrixPset    = [];
 tau1            = options.tau1;
 
+[success,message,messageid] = mkdir('partial_optimization');
+
+if ~isempty(message)
+    rmdir('partial_optimization','s');
+    mkdir('partial_optimization');
+end
+
 %% Initial random population
 Parent = zeros(populationSize,numVariables);  % Parent population.
 Mutant = zeros(populationSize,numVariables);  % Mutant population.
@@ -68,6 +75,7 @@ functionEvaluations = functionEvaluations+populationSize;
 %% Evolution process
 
 for n=1:generations
+    Tstart=now;
     for i=1:populationSize
         rev=randperm(populationSize);
         
@@ -120,6 +128,10 @@ for n=1:generations
     Ranks      = tempPopulation(:,numVariables+1+numObjectives);
     %CrowdDist  = tempPopulation(:,end);
     
+    Tend = now;
+    EvalTime = Tend-Tstart;
+    EndTime = datevec(EvalTime*(generations-n)+now);
+        
     PFront = Objectives(Ranks==1,:);
     PSet   = Parent(Ranks==1,:);
     OUT.MatrixPop      = cat(3, OUT.MatrixPop, Parent);
@@ -134,13 +146,19 @@ for n=1:generations
     OUT.eval_type      = options.eval_type;
     options.CounterGEN = n;
     options.CounterFES = functionEvaluations;
+    options.EvalTime   = datevec(EvalTime);
+    options.EndTime    = EndTime;
     
     [OUT, options]=PrinterDisplay(OUT,options); % To print results on screen
+    
+    save(['partial_optimization\generation_' int2str(n)]);
     
     if functionEvaluations>options.MAXFUNEVALS || n>options.MAXGEN
         disp('Termination criteria reached.')
         break;
     end
+    
+    
 end
 
 OUT.Xpop=Parent;
@@ -167,7 +185,7 @@ if strcmp(options.SaveResults,'yes')
     geo0=options.geo0;
     per=options.per;
     mat=options.mat;
-    thisfilepath = fileparts(which('data0.m'));
+    thisfilepath = fileparts(which('GUI_Syre.m'));
     filename=fullfile(thisfilepath,'results',['OUT_' datestr(now,30)]);
     save(filename,'OUT','per','geo0','dataSet','mat'); %Results are saved
     clear geo0 per
@@ -184,8 +202,22 @@ disp('+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
 F=OUT.PFront;
 
-plot(F(:,1),F(:,2),'dk','MarkerFaceColor','k');...
-    grid on; hold on;
+if options.NOBJ==3
+    plot3(F(:,1),F(:,2),F(:,3),'dk','MarkerFaceColor','k');
+    grid on;
+    hold on;
+elseif options.NOBJ==2
+    plot(F(:,1),F(:,2),'dk','MarkerFaceColor','k');
+    grid on;
+    hold on;
+elseif options.NOBJ==1
+    plot(options.CounterGEN,log(min(F(:,1))),'dk','MarkerFaceColor','k');
+    grid on;
+    hold on;
+end
+
+% plot(F(:,1),F(:,2),'dk','MarkerFaceColor','k');...
+%     grid on; hold on;
 % PostProcessing of current optimization result
 % postProcExecution = questdlg('Do you want to run post processing??','Postprocessing','Yes','No','Yes');
 % if strcmp(postProcExecution,'Yes')
@@ -208,6 +240,8 @@ disp('------------------------------------------------')
 disp(['Generation: ' num2str(Dat.CounterGEN)]);
 disp(['FEs: ' num2str(Dat.CounterFES)]);
 disp(['Pareto Front Size: ' mat2str(size(OUT.PFront,1))]);
+disp(['Evaluation Time: ' int2str(Dat.EvalTime(4)) ' h ' num2str(Dat.EvalTime(5)) ' min ' num2str(round(Dat.EvalTime(6))) ' sec']);
+disp(['End of evolution process: ' datestr(Dat.EndTime)]);
 disp('------------------------------------------------')
 
 if mod(Dat.CounterGEN,1)==0

@@ -58,7 +58,18 @@ uicontrol('Parent',h0, ...
           'Position', [xpos(2) ypos w h], ...
           'BackgroundColor',BackColor(2,:), ...
           'String',num2str(mat.kgm3));
-
+      
+if isfield(mat,'BH')
+    % B-H curve
+    ypos = ypos-0.03;
+    axes('Units','Normalized','Position',[0.5-ypos*0.8*0.5,ypos*0.2,ypos*0.8,ypos*0.8])
+    hold on
+    box on
+    grid on
+    plot(mat.BH(:,2),mat.BH(:,1));
+    xlabel('H [A/m]')
+    ylabel('B [T]')
+else
 
 % mu_r
 ypos = ypos-0.03;
@@ -141,3 +152,4 @@ uicontrol('Parent',h0, ...
           'Position', [xpos(2) ypos w h], ...
           'BackgroundColor',BackColor(2,:), ...
           'String',num2str(mat.sigmaPM));
+end

@@ -12,11 +12,13 @@
 function plot_maps(pathname,filename)
 
 if (nargin<1)
-    pathname = cd;
-    filename = 'fdfq_idiq_n256.mat'
+    % pathname = cd;
+    % filename = 'fdfq_idiq_n256.mat'
+    [FILENAME, pathname, FILTERINDEX] = uigetfile(['.mat'], 'LOAD DATA');
+    load([pathname FILENAME]);
+else
+    load([pathname '\' filename])
 end
-
-load([pathname '\' filename])
 
 % run([pathname 'ReadParameters']);
 

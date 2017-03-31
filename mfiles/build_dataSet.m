@@ -95,8 +95,8 @@ else
     dataSet.randFactor = 0;
 end
 
-dataSet.RQnames = geo.RQnames;                              % RQ names
-dataSet.RQ = geo.RQ;
+dataSet.RQnames = [];                              % RQ names
+dataSet.RQ = [];
 
 dataSet.MaxGen = 60;                                        % max numer of generation
 dataSet.XPop = 60;                                          % number of population
@@ -120,20 +120,62 @@ dataSet.ToothLeBou = round(geo.lt*[0.8 1.2],2);             % tooth length
 dataSet.PhaseAngleCurrBou = [40 75];                        % gamma
 
 % check
-dataSet.Dalpha1BouCheck = 0;
-dataSet.DalphaBouCheck = 0;
-dataSet.hcBouCheck = 0;
-dataSet.DxBouCheck = 0;
-dataSet.BrBouCheck = 0;
-dataSet.GapBouCheck = 0;
-dataSet.AirgapRadiusBouCheck = 0;
-dataSet.ToothWidthBouCheck = 0;
-dataSet.StatorSlotOpenBouCheck = 0;
-dataSet.ToothTangDepthBouCheck = 0;
-dataSet.ToothLengthBouCheck = 0;
-dataSet.GammaBouCheck = 0;
+if isfield(geo,'RQnames')
+    dataSet.Dalpha1BouCheck = 0;
+    dataSet.DalphaBouCheck = 0;
+    dataSet.hcBouCheck = 0;
+    dataSet.DxBouCheck = 0;
+    dataSet.BrBouCheck = 0;
+    dataSet.GapBouCheck = 0;
+    dataSet.AirgapRadiusBouCheck = 0;
+    dataSet.ToothWidthBouCheck = 0;
+    dataSet.StatorSlotOpenBouCheck = 0;
+    dataSet.ToothTangDepthBouCheck = 0;
+    dataSet.ToothLengthBouCheck = 0;
+    dataSet.GammaBouCheck = 0;
+    for ii=1:length(geo.RQnames)
+        if isequal(geo.RQnames{ii},'dalpha')
+            dataSet.Dalpha1BouCheck = 1;
+            dataSet.DalphaBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'hc')
+            dataSet.hcBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'dx')
+            dataSet.DxBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'Br')
+            dataSet.BrBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'g')
+            dataSet.GapBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'r')
+            dataSet.AirgapRadiusBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'wt')
+            dataSet.ToothWidthBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'lt')
+            dataSet.ToothLengthBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'acs')
+            dataSet.StatorSlotOpenBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'ttd')
+            dataSet.ToothTangDepthBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'gamma')
+            dataSet.GammaBouCheck = 1;
+        end
+    end
+else
+    dataSet.Dalpha1BouCheck = 0;
+    dataSet.DalphaBouCheck = 0;
+    dataSet.hcBouCheck = 0;
+    dataSet.DxBouCheck = 0;
+    dataSet.BrBouCheck = 0;
+    dataSet.GapBouCheck = 0;
+    dataSet.AirgapRadiusBouCheck = 0;
+    dataSet.ToothWidthBouCheck = 0;
+    dataSet.StatorSlotOpenBouCheck = 0;
+    dataSet.ToothTangDepthBouCheck = 0;
+    dataSet.ToothLengthBouCheck = 0;
+    dataSet.GammaBouCheck = 0;
+    disp('Setted all boudary condition in optimization tab')
+end
 
-disp('Setted all boudary condition in optimization tab')
+
 
 %% Post-processing setting
 

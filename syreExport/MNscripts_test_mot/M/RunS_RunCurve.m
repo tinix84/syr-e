@@ -40,11 +40,11 @@ for kk = 1:size(Sim.Id_,2)
     end
     
     %% Cartella del Caso (Nstep simulazioni)
-%     temp4 = [FilePath 'CaseBackup' SLASH temp3];
-      % 2013/06/10 MG modificata la cartella di salvataggio dei dati,
-      % adesso il nome è lo stesso del file ParMachine usato.
-      temp4 = [pathname,FileName(1:end-4) 'CaseBackup' SLASH temp3];
-
+    %     temp4 = [FilePath 'CaseBackup' SLASH temp3];
+    % 2013/06/10 MG modificata la cartella di salvataggio dei dati,
+    % adesso il nome è lo stesso del file ParMachine usato.
+    temp4 = [pathname,FileName(1:end-4) 'CaseBackup' SLASH temp3 '_' num2str(Cas.n) 'rpm'];
+    
     if exist('RQ','var')
         %% batch
         temp4 = [temp4 '_' RQ.name '_' num2str(RQ.values(batch_step))];
@@ -87,8 +87,8 @@ for kk = 1:size(Sim.Id_,2)
         RunS_PostProcessing;
         
         %save the model (.mn)
-Command=['Call getDocument().save("',CaseFileName,'")'];
-invoke(MN6, 'processCommand', Command);
+        Command=['Call getDocument().save("',CaseFileName,'")'];
+        invoke(MN6, 'processCommand', Command);
         
     end
 end

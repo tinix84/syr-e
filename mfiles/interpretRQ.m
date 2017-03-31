@@ -30,6 +30,9 @@ if not(isempty(geo.RQnames))
     % the sum of pu angles is rescaled to one
     % alpha1 is not rescaled: only the angles from the second barrier onwards
     if sum(geo.dalpha_pu) > (1-0.05) % 0.05 is the angular space guaranteed for the spider
+        if geo.dalpha_pu(1)>(1-0.05*(geo.nlay)) % max geo.dalpha_pu(1)=1-0.05-0.05*(nlay-1)
+            geo.dalpha_pu(1)=1-0.05*(geo.nlay);
+        end
         geo.dalpha_pu(2:end) = geo.dalpha_pu(2:end)/sum(geo.dalpha_pu(2:end))*(1-0.05-geo.dalpha_pu(1));
     end
     

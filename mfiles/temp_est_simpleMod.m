@@ -106,7 +106,7 @@ ws=ps-wt;
 Rse=x*R+lt;
 % Aslot=(pi*R^2*(1-b*x/p).*(1+x-2*b*kt*x))/(6*p*q)
 Aslot=pi*lt.*(2*R-lt-ly)./(6*p*q)-wt.*lt;
-
+Acu=Aslot*Kcu;
 Rsa=x*R+g;
 Rsb=Rsa+lt;
 wsEq=0.5*(Rsa+Rsb)*pi/3/p/q-wt;
@@ -127,11 +127,13 @@ for kk=1:n_element
 end
 eval(['Rcu',num2str(n_element+1),'=0.5*teq./lamdaEQ./(wsEq*L)/(6*p*q);']);
 %
-Rcu11=teq./lamdaEQ./(hsEq/2*L)/(6*p*q);
-Rcu22=Rcu11;
-Rcu33=teq./lamdaEQ./(wsEq*L)/(6*p*q);
+% Rcu11=teq./lamdaEQ./(hsEq/2*L)/(6*p*q);
+% Rcu22=Rcu11;
+% Rcu33=teq./lamdaEQ./(wsEq*L)/(6*p*q);
 %
 w=(wsEq-2*teq)/3;
+h1=hsEq-teq-w;
+Acu1=w*h1;
 Ps1=2*hsEq-w;
 Rcu01=0.5*teq/(lamdaEQ*Ps1*L)/(6*p*q);
 % yoke
@@ -206,23 +208,23 @@ Rrag=1./(2*pi*x.*R*L*hag);
 % rotor +shaft
 Rrshf=1./(2*pi*LambdaFE*L)*log(1.5*x*R./(x*R-ly))+0.25*0.5*L./(LambdaFE*pi*0.08^2)+0.5*0.5*1.3*L./(LambdaFE*pi*0.08^2);
 % %%%
-    Req1=Rst+Rsy+Rcu_ir;
-    Rtmp=(Rcu11+Rst11).*Rcu22./(Rcu11+Rst11+Rcu22)+Rst22;
-    
-    for kk=1:n_element
-        if kk==1
-            Rtemp=((Rcu1+Rst1).*Rcu2)./(Rcu1+Rst1+Rcu2);
-        else
-            eval(['Rtemp=((Rtemp+Rst',num2str(kk),').*Rcu',num2str(kk+1),')./(Rtemp+Rst',num2str(kk),'+Rcu',num2str(kk+1),');']);
-        end
-    end
-    
-    Req2=(Rtmp.*Rcu33)./(Rtmp+Rcu33)+Rsy+R2;
-    Req3=Rtemp+Rsy+R2;
-    
-tetaW1=Req1*Pjs+tetaFrame;
-tetaW2=Req2*Pjs+tetaFrame;
-tetaW3=Req3*Pjs+tetaFrame;
+%     Req1=Rst+Rsy+Rcu_ir;
+%     Rtmp=(Rcu11+Rst11).*Rcu22./(Rcu11+Rst11+Rcu22)+Rst22;
+%     
+%     for kk=1:n_element
+%         if kk==1
+%             Rtemp=((Rcu1+Rst1).*Rcu2)./(Rcu1+Rst1+Rcu2);
+%         else
+%             eval(['Rtemp=((Rtemp+Rst',num2str(kk),').*Rcu',num2str(kk+1),')./(Rtemp+Rst',num2str(kk),'+Rcu',num2str(kk+1),');']);
+%         end
+%     end
+%     
+%     Req2=(Rtmp.*Rcu33)./(Rtmp+Rcu33)+Rsy+R2;
+%     Req3=Rtemp+Rsy+R2;
+%     
+% tetaW1=Req1*Pjs+tetaFrame;
+% tetaW2=Req2*Pjs+tetaFrame;
+% tetaW3=Req3*Pjs+tetaFrame;
 %%
 
 Gcu21=1/(Rst1+Rcu1);
@@ -244,7 +246,7 @@ B=[Pjs;0;tetaFrame/(Rsy+R2)];
 % tetaW44=AA\BB;
 
 tetaW4=A\B;
-Temp = tetaW4(1)+Rcu01*Pjs*1/3;
+Temp = tetaW4(1)+Rcu01*Pjs*Acu1/Acu;
 % tetaCU2=tetaW4(1);
 % Rtmp222=Rcu01;
 % teta_th1=tetaW4(2);

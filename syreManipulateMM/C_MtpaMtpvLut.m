@@ -13,7 +13,7 @@
 %    limitations under the License.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% C_MtpaMtpvLut.m
+function C_MtpaMtpvLut(pathname,filename)
 % evaluates MTPA and MTPV in id,iq and in fd,fq
 
 % input:    1) fdfq_idiq_n256 (direct model)
@@ -30,22 +30,49 @@
 
 % release: July 22, 2015
 
-close all, clear all; addpath mfiles, load LastPath
 
-% load the two motor data: mat file and ReadParameters.m
-% 1) flux linkage map
-[FILENAME, pathname, FILTERINDEX] = uigetfile([pathname '/*_n*.mat'], 'LOAD DATA');
-% 2) associated ReadParameters.m
-load([pathname FILENAME]); %run([pathname 'ReadParameters']);
-save LastPath pathname
+%% old input
+% close all, clear all; addpath mfiles, load LastPath
+% 
+% % load the two motor data: mat file and ReadParameters.m
+% % 1) flux linkage map
+% [FILENAME, pathname, FILTERINDEX] = uigetfile([pathname '/*_n*.mat'], 'LOAD DATA');
+% % 2) associated ReadParameters.m
+% load([pathname FILENAME]); %run([pathname 'ReadParameters']);
+% save LastPath pathname
+% 
+% [success,message,messageid] = mkdir(pathname,'AOA')
+% GoAhead = 'Yes';
+% if not(isempty(message))
+%     GoAhead = questdlg('Existing folder: proceed anyway?', ...
+%         'WARNING!', ...
+%         'Yes', 'No', 'No');
+% end
 
-[success,message,messageid] = mkdir(pathname,'AOA')
-GoAhead = 'Yes';
-if not(isempty(message))
-    GoAhead = questdlg('Existing folder: proceed anyway?', ...
-        'WARNING!', ...
-        'Yes', 'No', 'No');
+%% new input
+
+close all
+
+if nargin()<2
+    load LastPath
+    [filename, pathname, ~] = uigetfile([pathname '/*_n*.mat'], 'LOAD DATA');
+    save LastPath pathname
+    
+    [success,message,messageid] = mkdir(pathname,'AOA');
+    GoAhead = 'Yes';
+    if not(isempty(message))
+        GoAhead = questdlg('Existing folder: proceed anyway?', ...
+            'WARNING!', ...
+            'Yes', 'No', 'No');
+    end
+else
+    [success,message,messageid] = mkdir(pathname,'AOA');
+    if ~isempty(message)
+        warning('Existing folder: the old data will be lost');
+    end
 end
+
+load([pathname filename]);
 
 % if isempty(axes_type)
 if sum(Id(:,1)) < 0
@@ -67,7 +94,7 @@ end
 
 if (0)
     % plot the initial magnetic model
-    plot_maps(pathname,FILENAME);
+    plot_maps(pathname,filename);
 end
 
 % Performance maps
@@ -216,7 +243,7 @@ T_KtMax(1) = 0;
 
 % LUT
 m = 1;  % # of lines
-n = 15; % # of columns (table size is 1 x n)
+n = 20; % # of columns (table size is 1 x n)
 
 Tmax = T_KtMax(end);
 step = Tmax/n;

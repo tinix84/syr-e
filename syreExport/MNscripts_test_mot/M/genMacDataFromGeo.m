@@ -1,6 +1,6 @@
 
 
-function Mac=genMacDataFromGeo(geo)
+function Mac=genMacDataFromGeo(geo,mat)
 
 Mac.g=geo.g;
 Mac.R=geo.R;
@@ -16,7 +16,8 @@ Mac.N_turn=geo.Ns;
 Mac.N_cond=geo.Ns/geo.p/Mac.q/size(geo.avv,1); % numero di conduttori in cava per strato
 Mac.N_parallel=1;
 Mac.avv=geo.avv;
-if (geo.Br==0.0)
+Br = mat.LayerMag.Br;
+if (Br==0.0)
     Mac.n_mag_simulati=0;
 else
     Mac.n_mag_simulati=size(geo.BLKLABELS.rotore.BarName,1);

@@ -49,7 +49,7 @@ FemmProblem.BoundaryProps = [];
 FemmProblem.Circuits = [];
 FemmProblem.BlockLabels = [];
 FemmProblem.PointProps = [];
-eval_type = 'MO_OA';
+eval_type = 'singt';
 cd
 openfemm
 [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat);

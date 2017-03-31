@@ -40,7 +40,11 @@ IPM = isfield(Mac,'tipo_strati');
 
 %% 21 nov 2011
 if isfield(Mac,'n_mag_simulati')
-    n_mag = Mac.n_mag_simulati;
+    if IPM
+        n_mag = Mac.n_mag_simulati;
+    else
+        n_mag = Mac.n_mag_simulati*geo.dx(1);
+    end
 else
     if IPM
         n_mag = size(Mac.magneti,1)/3;
