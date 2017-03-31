@@ -5,7 +5,7 @@ function [MatrixWin] = MatrixWin()
 %% which is used in Syre
 %%=========================================================================
 
-thisfilepath = fileparts(which('data0'));
+thisfilepath = fileparts(which('GUI_Syre.m'));
 addpath (fullfile (thisfilepath,'koil'));
 
 run koil.m

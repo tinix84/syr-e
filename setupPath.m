@@ -13,7 +13,7 @@
 %    limitations under the License.
 
 % add the required directories to the path
-thisfilepath = fileparts(which('data0'));
+thisfilepath = fileparts(which('GUI_Syre.m'));
 
 %if isoctave
 %    thisfilepath = fileparts(canonicalize_file_name(thisfilepath));
