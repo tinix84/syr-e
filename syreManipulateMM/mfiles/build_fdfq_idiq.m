@@ -22,7 +22,7 @@ i_d=linspace(round(min(min(F_map.Id))),round(max(max(F_map.Id))),n);
 i_q=linspace(round(min(min(F_map.Iq))),round(max(max(F_map.Iq))),n);
 [Id,Iq]=meshgrid(i_d,i_q);
 % interp flux linkages
-Fd = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.Fd,Id,Iq,'spline',NaN);
+Fd = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.Fd,Id,Iq,'spline');
 Fq = interp2(F_map.Id(1,:),F_map.Iq(:,1),F_map.Fq,Id,Iq,'spline');
 % change number of turns
 Id=Id/Kr;

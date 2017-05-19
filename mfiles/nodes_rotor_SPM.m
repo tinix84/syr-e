@@ -57,6 +57,9 @@ else
     [x5, y5] = rot_point(xPMco,yPMco,90/p*pi/180);                  % Air zone point   
     [x6, y6] = rot_point(xPMco,yPMco,phi/2*pi/180);                 % Air zone point
     
+    x6= x5;
+    y6= y5;
+    
     xPMci = r-lm; yPMci = 0;            
     [xPMi,yPMi] = rot_point(xPMci,yPMci,phi/2*pi/180);              % PM edge point on the steel
     

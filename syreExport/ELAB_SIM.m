@@ -47,6 +47,7 @@ if exist('Sim','var')
         ElabSkew
         CoppiaTot = Coppia_skew1;
         TensioniTot=Va_skew;
+        VaSave=Va_skew;
         FdTot = Fd_skew;
         FqTot = Fq_skew;
         

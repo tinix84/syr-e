@@ -67,17 +67,17 @@ else
     y6 = temp.y6;
     
     rotor = [0 0 xPMci yPMci xPMi yPMi 1;
-        0 0 xPMi yPMi x4 y4 1;
-        0 0 x6 y6 x5 y5 1];
+        0 0 xPMi yPMi x4 y4 1];
+%         0 0 x6 y6 x5 y5 1];
     
     %% chao 2017.01.09 use an arc to assume sinusoidal
     rotor = [rotor;
         xArccenter yArccenter xPMco yPMco xPMo yPMo 1];
     
     rotor = [ rotor;
-        xPMo yPMo xPMi yPMi NaN NaN 0;
-        x4 y4 x5 y5 NaN NaN 0;
-        x6 y6 xPMo yPMo NaN NaN 0];
+        xPMo yPMo xPMi yPMi NaN NaN 0];
+%         x4 y4 x5 y5 NaN NaN 0];
+%         x6 y6 xPMo yPMo NaN NaN 0];
 end
 
 if seg ~=1

@@ -79,7 +79,8 @@ geo.Bx0=Bx0; % Initialization of central non-moved line of the flux barrier
 geo = calcHcCheckGeoControlwDx(geo);
 %%
 %  hc=geo.hc;
-B1k=geo.B1k; B2k=geo.B2k;
+B1k=geo.B1k;
+B2k=geo.B2k;
 hc=B1k-B2k;
 % Instruction for flux barrier translaction in function of range dx=[-1:1]:
 for k=1:length(dx)

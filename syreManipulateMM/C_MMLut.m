@@ -40,6 +40,53 @@ else
 end
 % end
 
+%% winding and stretching
+prompt={'Kr=Ns_new/Ns_old','Kl=l_new/l_old','Lld [H]','Llq [H]'};
+name='Input';
+numlines=1;
+defaultanswer={'1','1','0','0'};
+
+setup=inputdlg(prompt,name,numlines,defaultanswer);
+Kr=eval(setup{1});
+Kl=eval(setup{2});
+Lld=eval(setup{3});
+Llq=eval(setup{4});
+
+if (Kr~=1 || Kl~=1 || Lld~=0 || Llq~=0)
+    %FILENAME=[FILENAME(1:end-4) '_Kr' num2str(Kr,2) '_Kl' num2str(Kl,2) '_Lld=' num2str(Lld,4) '_Llq=' num2str(Llq,4) '.mat'];
+    newFolder=['Kr' num2str(Kr,2) '_Kl' num2str(Kl,2) '_Lld=' num2str(Lld,4) '_Llq=' num2str(Llq,4)];
+    [~,message,~] = mkdir(pathname,newFolder);
+    if not(isempty(message))
+        disp('Warning : existing folder')
+    end
+    pathname=[pathname newFolder '\'];
+    
+    % change number of turns
+    Id=Id/Kr;
+    Iq=Iq/Kr;
+    Fd=Fd*Kr;
+    Fq=Fq*Kr;
+    % change stack length
+    Fd=Fd*Kl;
+    Fq=Fq*Kl;
+    % add end-connections term
+    Fd = Fd + Lld * Id;
+    Fq = Fq + Llq * Iq;
+    save([pathname FILENAME],'Id','Iq','Fd','Fq');
+    if exist('T')
+        T=T*Kl;
+        save([pathname FILENAME],'T','-append')
+    end
+    if exist('dTpp')
+        dTpp=dTpp*Kl;
+        save([pathname FILENAME],'dTpp','-append')
+    end
+    if exist('dT')
+        dT=dT*Kl;
+        save([pathname FILENAME],'dT','-append')
+    end
+end
+
 % plot the initial magnetic model
 plot_maps(pathname,FILENAME);
 

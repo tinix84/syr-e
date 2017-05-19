@@ -70,10 +70,18 @@ if exist('T','var')
 end
 if exist('dT','var')
     figure
-    mesh(Id,Iq,dT), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple [Nm]')
+    mesh(Id,Iq,dT), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple (std) [Nm]')
 %     axis([0 30 0 30 0 0.5])
 %    adapt_figure_fonts('Times New Roman',14,12)
     saveas(gcf,[pathname 'Torque Ripple mesh'])
+end
+
+if exist('dTpp','var')
+    figure
+    mesh(Id,Iq,dTpp), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple (peak-to-peak) [Nm]')
+%     axis([0 30 0 30 0 0.5])
+%    adapt_figure_fonts('Times New Roman',14,12)
+    saveas(gcf,[pathname 'Torque Ripple pp mesh'])
 end
 
 % core loss

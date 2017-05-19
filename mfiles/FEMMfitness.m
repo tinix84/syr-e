@@ -39,7 +39,7 @@ if ~isempty(RQ)
     end
     
     % debug .. when syre crashes it is useful to have visibility of last RQ
-    % RQ
+    RQ
     % debug .. end
     [geo,gamma,mat] = interpretRQ(RQ,geo,mat);
         

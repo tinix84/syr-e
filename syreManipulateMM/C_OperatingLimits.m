@@ -33,8 +33,43 @@ close all, clear all, addpath mfiles, load LastPath
 
 % load the two motor data: mat file and ReadParameters.m
 [FILENAME, pathname, FILTERINDEX] = uigetfile([pathname '/*_n*.mat'], 'LOAD DATA');
-load([pathname FILENAME]); run([pathname 'ReadParameters']);
+load([pathname FILENAME]);
+if exist([pathname 'ReadParameters.m'])
+    run([pathname 'ReadParameters']);
+else
+    if ~exist('motor_name')
+        prompt={'Motor Name','Axes type (SR or PM)','Number of pole pairs','Peak phase voltage [V]','Peak phase current [A]','Max speed [rpm]'};
+        name='Operating Limits';
+        numlines=1;
+        defaultanswer={'MotName','SR','2','310','15','8000'};
+        
+        setup=inputdlg(prompt,name,numlines,defaultanswer);
+        motor_name = setup{1};
+        axes_type = setup{2};
+        p = eval(setup{3});
+        Vmax = eval(setup{4});
+        Imax = eval(setup{5});
+        Nmax = eval(setup{6});
+        
+        save([pathname FILENAME],'p','Vmax','Imax','motor_name','axes_type','Nmax','-append');
+    else
+        prompt={'Peak phase voltage [V]','Peak phase current [A]','Max speed [rpm]'};
+        name='Operating Limits';
+        numlines=1;
+        defaultanswer={num2str(Vmax),num2str(Imax),num2str(Nmax)};
+        
+        setup=inputdlg(prompt,name,numlines,defaultanswer);
+        Vmax = eval(setup{1});
+        Imax = eval(setup{2});
+        Nmax = eval(setup{3});
+        
+        save([pathname FILENAME],'Vmax','Imax','Nmax','-append');
+    end
+end
+
 save LastPath pathname
+
+rad2rpm=30/pi/p;
 
 % pathname for output
 pathname1 = [pathname 'Imax = ' num2str(Imax) '\'];
@@ -79,5 +114,5 @@ for jj = 1:n
 end
 
 % save mat\Plim Plim
-save([pathname1 'Plim'],'Plim');
+save([pathname1 'Plim'],'Plim','Plim_all');
 

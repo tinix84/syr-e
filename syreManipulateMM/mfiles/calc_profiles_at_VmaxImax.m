@@ -3,7 +3,12 @@ function Plim = calc_profiles_at_VmaxImax(pathname,FILENAME,imax,rot_temperature
 debug = 0;
 
 
-load([pathname FILENAME]); run([pathname 'ReadParameters']);
+load([pathname FILENAME]);
+if exist([pathname 'ReadParameters.m'])
+    run([pathname 'ReadParameters']);
+end
+
+rad2rpm=30/pi/p;
 
 % load MTPA and MTPV files
 pathname = [pathname,'AOA\'];
@@ -39,9 +44,11 @@ if strcmp(axes_type,'SR')
     iq_KtMax_p = polyval(p_KtMax_i,id_KtMax_p);
     T_KtMax_p = polyval(p_KtMax_T,id_KtMax_p);
     % poly fit KvMax
-    [p_KvMax_i,s] = polyfit(id_KvMax,iq_KvMax,3);
-    id_KvMax = linspace(0,1.10*max(id_KvMax),length(id_KvMax))
-    iq_KvMax = polyval(p_KvMax_i,id_KvMax);
+    if ~isempty(id_KvMax)
+        [p_KvMax_i,s] = polyfit(id_KvMax,iq_KvMax,3);
+        id_KvMax = linspace(0,1.10*max(id_KvMax),length(id_KvMax))
+        iq_KvMax = polyval(p_KvMax_i,id_KvMax);
+    end
 else
     % poly fit KtMax
     [p_KtMax_i,s] = polyfit(iq_KtMax,id_KtMax,7);
@@ -82,38 +89,51 @@ if strcmp(axes_type,'SR')
     
     id_A = interp1(I_KtMax,id_KtMax,imax);
     iq_A = polyval(p_KtMax_i,id_A);
+    %iq_A = interp1(I_KtMax,iq_KtMax,imax);
     
   
     if (ich>imax)
         % no MTPV or no MTPV and Imax crossing
-        id_B = 0; iq_B =imax;
+        id_B = 0;
+        iq_B = imax;
+        id_C = id_B;
+        iq_C = iq_B;
     else % SR style axes
         id_B = interp1(I_KvMax,id_KvMax,imax);
         iq_B = polyval(p_KvMax_i,id_B);
+        %iq_B = interp1(I_KvMax,iq_KvMax,imax);
+        id_C = 0;
+        iq_C = polyval(p_KvMax_i,id_C);
     end
-    id_C = 0;
-    iq_C = polyval(p_KvMax_i,id_C);
     
 else
     % PM style axes
     iq_A = interp1(I_KtMax,iq_KtMax,imax);
     id_A = polyval(p_KtMax_i,iq_A);
+    %id_A = interp1(I_KtMax,id_KtMax,imax);
     
     if (ich>imax)
         % no MTPV or no MTPV and Imax crossing
-        id_B = - imax; iq_B = 0;
+        id_B = -imax;
+        iq_B = 0;
+        id_C = id_B;
+        iq_C = iq_B;
     else
         iq_B = interp1(I_KvMax,iq_KvMax,imax);
         id_B = polyval(p_KvMax_i,iq_B);
+        %id_B = interp1(I_KvMax,id_KvMax,imax);
+        iq_C = 0;
+        id_C = polyval(p_KvMax_i,iq_C);
     end
-    
-    iq_C = 0;
-    id_C = polyval(p_KvMax_i,iq_C);
 end
 
 
-F_A = interp2(id,iq,FI,id_A,iq_A,'spline');  % rated flux
-T_A = interp2(id,iq,TI,id_A,iq_A,'spline');  % rated torque
+% F_A = interp2(id,iq,FI,id_A,iq_A,'spline',0);  % rated flux
+% T_A = interp2(id,iq,TI,id_A,iq_A,'spline',0);  % rated torque
+
+F_A = interp2(id,iq,FI,id_A,iq_A);  % rated flux
+T_A = interp2(id,iq,TI,id_A,iq_A);  % rated torque
+
 
 w1 = Vmax / F_A;                    % base speed - elt rad/s
 w1_rpm = w1 * rad2rpm;
@@ -135,17 +155,29 @@ if strcmp(axes_type,'SR')
     id_AB = id_Imax((iq_Imax >= iq_A) & (iq_Imax <= iq_B));
     iq_AB = iq_Imax((iq_Imax >= iq_A) & (iq_Imax <= iq_B)); %avoid interp errors
     % B --> C
-    id_BC = linspace(id_B,id_C,50);
-    id_BC = id_BC(1:end-1);
-    iq_BC = polyval(p_KvMax_i,id_BC);
+    if (ich<=imax)
+        id_BC = linspace(id_B,id_C,50);
+        id_BC = id_BC(1:end-1);
+        %iq_BC = polyval(p_KvMax_i,id_BC);
+        iq_BC = interp1(id_KvMax,iq_KvMax,id_BC);
+    else
+        id_BC = [id_B id_C];
+        iq_BC = [iq_B iq_C];
+    end
 else
     % SPM style axes
     id_AB = id_Imax((iq_Imax >= iq_B) & (iq_Imax <= iq_A));
     iq_AB = iq_Imax((iq_Imax >= iq_B) & (iq_Imax <= iq_A)); %avoid interp errors
     % tratto B --> C
-    iq_BC = linspace(iq_B,iq_C,50);
-    iq_BC = iq_BC(1:end-1);
-    id_BC = polyval(p_KvMax_i,iq_BC);
+    if (ich<=imax)
+        iq_BC = linspace(iq_B,iq_C,50);
+        iq_BC = iq_BC(1:end-1);
+        %id_BC = polyval(p_KvMax_i,iq_BC);
+        iq_BC = interp1(iq_KvMax,id_KvMax,iq_BC);
+    else
+        id_BC = [id_B id_C];
+        iq_BC = [iq_B iq_C];
+    end
 end
 
 % clear id_Imax iq_Imax
