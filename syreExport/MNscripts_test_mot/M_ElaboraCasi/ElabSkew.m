@@ -25,7 +25,8 @@ for jj=1:Sim.skew_Nstep
     Fqq(:,jj)      =   Fq;
     Va(:,jj)       =   Tensioni(:,1);
     Tcc1(:,jj)      =  -Coppia(:,1);
-    Tcc2(:,jj)      =  Coppia(:,2);
+    %Tcc2(:,jj)      =  Coppia(:,2);
+    Tcc2(:,jj)      =  Coppia(:,1);
     
 end
 
@@ -73,7 +74,7 @@ temp_Coppia = mean(Tcc1,1);
 temp_V_conc_pk = sqrt(3)*abs(temp_Fd+ j*temp_Fq)*Mac.p*Cas.n*pi/30;
 temp_PF = sin(Cas.gamma_' - angle(temp_Fd + j* temp_Fq))
 
-temp_fette = [temp_Fd(3),temp_Fq(3),temp_Coppia(3),temp_V_conc_pk(3) temp_PF(3)]
+%temp_fette = [temp_Fd(3),temp_Fq(3),temp_Coppia(3),temp_V_conc_pk(3) temp_PF(3)]
 temp_fette = [temp_Fd',temp_Fq',temp_Coppia',temp_V_conc_pk',temp_PF']
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%

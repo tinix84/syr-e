@@ -202,9 +202,12 @@ switch eval_type
                     idvect = linspace(-iAmp(1),0,n_grid);
                     iqvect = linspace(0,iAmp(2),n_grid);
                 else
-                    idvect = linspace(0,iAmp,n_grid);
-                    iqvect = linspace(0,iAmp,n_grid);
+                    idvect = linspace(0,iAmp(1),n_grid);
+                    iqvect = linspace(0,iAmp(2),n_grid);
                 end
+            case 4 % CurrLoPP = [IdMin IdMax IqMin IqMax]
+                idvect=linspace(iAmp(1),iAmp(2),n_grid);
+                iqvect=linspace(iAmp(3),iAmp(4),n_grid);
         end
         
         F_map = eval_FdFq_tables_in_FEMM(geo,per,idvect,iqvect,eval_type,[pathname filemot],mat,dataIn);

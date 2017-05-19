@@ -40,10 +40,13 @@ dxfName=[pathname,docName(1:end-4),'.dxf'];
 
 CENTRIstat=geo.BLKLABELS.statore;
 CENTRIrot=geo.BLKLABELS.rotore;
-if geo.BarFillFac~=0
-    BarNum=length(CENTRIrot.BarName);
-    for ii=1:BarNum/2
-        CENTRIrot.BarName{ii+BarNum/2}={'Barrier_Air_' int2str(ii)};
+
+if ~strcmp(geo.RotType,'SPM')
+    if geo.BarFillFac~=0
+        BarNum=length(CENTRIrot.BarName);
+        for ii=1:BarNum/2
+            CENTRIrot.BarName{ii+BarNum}={'Barrier_Air_' int2str(ii)};
+        end
     end
 end
 CodificaMateriali;
@@ -117,7 +120,6 @@ end
 [var1,var2]=size(CENTRIstat.names.FeYoke);
 for kk=1:var1
     h = MakeComponentMagnet(h,[CENTRIstat.xy(kk+indice_Cu_slot,1), CENTRIstat.xy(kk+indice_Cu_slot,2)],cell2mat(CENTRIstat.names.FeYoke{kk,1}),L_assiale,CENTRI.materials(4,:),'None',[0, 0, 1],CENTRIstat.xy(kk+indice_Cu_slot,4));
-    
 end
 
 %%%%%%%%%%%
@@ -126,7 +128,7 @@ end
 % Barrier
 % Mac.Br=0.4;
 % CENTRI.materials(7,:)='NMF3F';
-if (Br==0)
+if Br==0 || strcmp(geo.RotType,'SPM')
     [BarSize,var2]=size(CENTRIrot.BarName);
     for kk=1:BarSize
         h = MakeComponentMagnet(h,[CENTRIrot.xy(kk,1), CENTRIrot.xy(kk,2)],cell2mat(CENTRIrot.BarName{kk,1}),L_assiale,CENTRI.materials(2,:),'None',[0, 0, 1],CENTRIrot.xy(kk,4));
@@ -144,40 +146,42 @@ else
         end
         h = MakeComponentMagnet(h,[CENTRIrot.xy(kk,1), CENTRIrot.xy(kk,2)],cell2mat(CENTRIrot.BarName{kk,1}),L_assiale,tmpmat,'Uniform',[CENTRIrot.xy(kk,6),CENTRIrot.xy(kk,7), CENTRIrot.xy(kk,8)],CENTRIrot.xy(kk,4));
     end
-
-% for ii=1:length(CENTRIrot.xy(:,1))
-%     switch CENTRIrot.xy(ii,3)
-%         case 1 %air
-%             MatName=CENTRI.materials(1,:);
-%             PartName='AIR';
-%             magType='None';
-%         case 5 %rotor iron
-%             MatName=CENTRI.materials(5,:);
-%             PartName='rotor';
-%             magType='None';
-%             CENTRIrot.xy(6:8)=[0 0 1]; % to avoid NaN in MagNet
-%         case 6 %PM
-%             MatName=CENTRI.materials(7,:);
-%             PartName=cell2mat(CENTRIrot.BarName{kk,1});
-%             magType='Uniform';
-%         case 7 %shaft
-%             MatName=CENTRI.materials(8,:);
-%             PartName='shaft';
-%             magType='None';
-%             CENTRIrot.xy(6:8)=[0 0 1]; % to avoid NaN in MagNet
-%     end
-%     
-%     h = MakeComponentMagnet(h,[CENTRIrot.xy(kk,1), CENTRIrot.xy(kk,2)],PartName,L_assiale,MatName,magType,[CENTRIrot.xy(kk,6),CENTRIrot.xy(kk,7), CENTRIrot.xy(kk,8)],CENTRIrot.xy(kk,4));
-%     
-% end
+    
+    % for ii=1:length(CENTRIrot.xy(:,1))
+    %     switch CENTRIrot.xy(ii,3)
+    %         case 1 %air
+    %             MatName=CENTRI.materials(1,:);
+    %             PartName='AIR';
+    %             magType='None';
+    %         case 5 %rotor iron
+    %             MatName=CENTRI.materials(5,:);
+    %             PartName='rotor';
+    %             magType='None';
+    %             CENTRIrot.xy(6:8)=[0 0 1]; % to avoid NaN in MagNet
+    %         case 6 %PM
+    %             MatName=CENTRI.materials(7,:);
+    %             PartName=cell2mat(CENTRIrot.BarName{kk,1});
+    %             magType='Uniform';
+    %         case 7 %shaft
+    %             MatName=CENTRI.materials(8,:);
+    %             PartName='shaft';
+    %             magType='None';
+    %             CENTRIrot.xy(6:8)=[0 0 1]; % to avoid NaN in MagNet
+    %     end
+    %
+    %     h = MakeComponentMagnet(h,[CENTRIrot.xy(kk,1), CENTRIrot.xy(kk,2)],PartName,L_assiale,MatName,magType,[CENTRIrot.xy(kk,6),CENTRIrot.xy(kk,7), CENTRIrot.xy(kk,8)],CENTRIrot.xy(kk,4));
+    %
+    % end
 end
 
 if strcmp(geo.RotType,'SPM')
-    for jj = kk+1:kk+geo.p*2
-        h = MakeComponentMagnet(h,[CENTRIrot.xy(jj,1), CENTRIrot.xy(jj,2)],['Rotor_Air_Zone_',num2str(jj-kk)],L_assiale,CENTRI.materials(1,:),'None',[0, 0, 1],-1);
-    end
+%     for jj = kk+1:kk+geo.ps*2
+%         h = MakeComponentMagnet(h,[CENTRIrot.xy(jj,1), CENTRIrot.xy(jj,2)],['Rotor_Air_Zone_',num2str(jj-kk)],L_assiale,CENTRI.materials(1,:),'None',[0, 0, 1],-1);
+%     end
+    
+    jj = 1;
     % rotor Iron
-    jj=(jj+1);
+    jj=jj+1;
     h = MakeComponentMagnet(h,[CENTRIrot.xy(jj,1), CENTRIrot.xy(jj,2)],'rotor',L_assiale,CENTRI.materials(5,:),'None',[0, 0, 1],CENTRIrot.xy(jj,4));
     
     % Shaft
@@ -339,9 +343,11 @@ for kk=1:var1
     Motion_Components{kk}=cell2mat(CENTRIrot.BarName{kk,1});
 end
 if strcmp(geo.RotType,'SPM')
-    for jj = kk+1:kk+geo.p*2
-        Motion_Components{jj}=['Rotor_Air_Zone_',num2str(jj-kk)];
-    end
+%     for jj = kk+1:kk+geo.ps*2
+%         Motion_Components{jj}=['Rotor_Air_Zone_',num2str(jj-kk)];
+%     end
+    
+    jj = 1;
     Motion_Components{jj+1}='rotor';
     Motion_Components{jj+2}='shaft';
     Motion_Components{jj+3}= 'air_gap_rotor';

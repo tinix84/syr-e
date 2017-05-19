@@ -111,6 +111,9 @@ switch geo.RotType
         Aircentro1 = [xAir1,yAir1,codMatAir,res,1,NaN,NaN,0];
         Aircentro2 = [xAir2,yAir2,codMatAir,res,1,NaN,NaN,0];
         Aircentro = [Aircentro1;Aircentro2];
+        
+        % Chao delete air zone
+        Aircentro = [];
         % Replicate poles ps-1 times
         Temp=[]; kk=1;
         if not(isempty(Aircentro))
@@ -152,8 +155,6 @@ switch geo.RotType
             BarCenter=[];
         else
             
-            %             a=(geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType);
-            %             if (a==0)
             if(sum(geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType))
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%just for circular type with BarFillFac~=0
                 XpontRadBarSx=temp.XpontRadBarSx;
