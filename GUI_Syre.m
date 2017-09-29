@@ -36,7 +36,7 @@ function varargout = GUI_Syre(varargin)
 
 % Edit the above text to modify the response to help GUI_Syre
 
-% Last Modified by GUIDE v2.5 08-Mar-2017 13:25:40
+% Last Modified by GUIDE v2.5 01-Aug-2017 16:46:18
 
 % Begin initialization code - DO NOT EDIT
 % clc
@@ -120,6 +120,7 @@ set(handles.AlphadegreeEdit,'Enable','off');
 set(handles.hcmmEdit,'Enable','off');
 set(handles.EstimatedCoppTemp,'Enable','off');
 set(handles.CalculatedRatedCurrent,'Enable','off');
+set(handles.Rsedit,'Enable','off');
 
 %% === FLAG VARI ==========================================================
 handles.MatrixWinFlag = 1;
@@ -231,7 +232,7 @@ set(handles.WinTable,'rowname',rowName);
 set(handles.WinTable,'columnname',columnName);
 set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
 dataSet.ToothLength = dataSet.StatorOuterRadius * (1-dataSet.AirGapRadius/dataSet.StatorOuterRadius*(1+dataSet.MagLoadingYoke/dataSet.NumOfPolePairs));
-dataSet.ToothLength = roundn(dataSet.ToothLength,-4);
+dataSet.ToothLength = round(dataSet.ToothLength*10000)/10000;
 set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
 handles.dataSet = dataSet;
 handles = DrawPush_Callback(hObject, eventdata, handles);
@@ -617,7 +618,7 @@ function StatorOuterRadEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.StatorOuterRadius = str2double(get(hObject,'String'));
 dataSet.ToothLength = dataSet.StatorOuterRadius * (1-dataSet.AirGapRadius/dataSet.StatorOuterRadius*(1+dataSet.MagLoadingYoke/dataSet.NumOfPolePairs));
-dataSet.ToothLength = roundn(dataSet.ToothLength,-4);
+dataSet.ToothLength = round(dataSet.ToothLength*10000)/10000;
 set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
 set(handles.ToothLenBouEdit,'String',mat2str(dataSet.ToothLeBou));
 handles.dataSet = dataSet;
@@ -646,7 +647,7 @@ function AirGapRadiusEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.AirGapRadius = str2double(get(hObject,'String'));
 dataSet.ToothLength = dataSet.StatorOuterRadius * (1-dataSet.AirGapRadius/dataSet.StatorOuterRadius*(1+dataSet.MagLoadingYoke/dataSet.NumOfPolePairs));
-dataSet.ToothLength = roundn(dataSet.ToothLength,-4);
+dataSet.ToothLength = round(dataSet.ToothLength*10000)/10000;
 set(handles.ToothLengEdit,'String',mat2str(dataSet.ToothLength));
 handles.dataSet = dataSet;
 handles = DrawPush_Callback(hObject, eventdata, handles);
@@ -815,7 +816,7 @@ else
     end
     flag_plot = 'Y';
     h = handles.axes5;
-    [hc,dalpha] = Plot_Machine(h,dataSet,flag_plot);
+    [hc,dalpha,~] = Plot_Machine(h,dataSet,flag_plot);
     view = round(100*[dalpha hc])/100;
     set(handles.AlphadegreeEdit,'String',mat2str(view(1:dataSet.NumOfLayers)));
     set(handles.hcmmEdit,'String',mat2str(view((dataSet.NumOfLayers+1):end)));
@@ -1185,7 +1186,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function CopperTempEdit_Callback(hObject, eventdata, handles)
-% copper temperature
+% Target Copper Temperature
 % hObject    handle to CopperTempEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -1196,6 +1197,7 @@ dataSet.TargetCopperTemp = str2double(get(hObject,'String'));
 handles.dataSet = dataSet;
 handles = DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
+
 
 % --- Executes during object creation, after setting all properties.
 function CopperTempEdit_CreateFcn(hObject, eventdata, handles)
@@ -1281,7 +1283,7 @@ if(dataSet.DalphaBouCheck)
     dataSet.ALPHApu = data(1:last_index);
 else
     last_index = 0;
-    dataSet.ALPHApu = ones(1,dataSet.NumOfLayers)*roundn(1/(dataSet.NumOfLayers+0.5),-2);
+    dataSet.ALPHApu = ones(1,dataSet.NumOfLayers)*round(1/(dataSet.NumOfLayers+0.5)*100)/100;
 end
 if(dataSet.hcBouCheck)
     dataSet.HCpu = data((last_index+1):end-1);
@@ -1836,7 +1838,7 @@ if exist('dataSet')~=1
     disp('dataSet reconstructed. Please check the data')
 end
 [dataSet,geo,per] = back_compatibility(dataSet,geo,per);
-dataSet.RQ = roundn(dataSet.RQ,-4);
+dataSet.RQ = round(dataSet.RQ*10000)/10000;
 GeometricTab_Callback(hObject, eventdata, handles)
 
 dataSet.currentpathname = PathName;
@@ -2119,8 +2121,9 @@ dataSet = handles.dataSet;
 per.tempcuest = temp_est_simpleMod(geo,per);
 dataSet.EstimatedCopperTemp = per.tempcuest;
 set(handles.EstimatedCoppTemp,'String',num2str(per.tempcuest));
-per.io = calc_io(geo,per);
+[per.io dataSet.Rs] = calc_io(geo,per);
 set(handles.CalculatedRatedCurrent,'String',num2str(per.io));
+set(handles.Rsedit,'String',num2str(dataSet.Rs));
 temp = round(100*[dalpha hc])/100;
 if ~strcmp (geo.RotType, 'SPM')
     set(handles.AlphadegreeEdit,'String',mat2str(temp(1:dataSet.NumOfLayers)));
@@ -3434,6 +3437,7 @@ end
 
 
 function EstimatedCoppTemp_Callback(hObject, eventdata, handles)
+% per.tempcuest
 % hObject    handle to EstimatedCoppTemp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -4271,6 +4275,30 @@ guidata(hObject,handles)
 % --- Executes during object creation, after setting all properties.
 function ktEdit_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to ktEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Rsedit_Callback(hObject, eventdata, handles)
+% phase Resistance Rs
+% hObject    handle to Rsedit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of Rsedit as text
+%        str2double(get(hObject,'String')) returns contents of Rsedit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function Rsedit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Rsedit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

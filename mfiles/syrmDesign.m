@@ -27,14 +27,14 @@ function [dataSet,flagS] = syrmDesign(dataSet)
 
 clc
 
-
-mu0 = 4e-7*pi;                              % air permeability
+mu0 = 4e-7*pi;                                                              % air permeability
 % DATA not (yet) included into syre GUI
-%Bfe = 1.4;                                  % steel loading (yoke flux density [T])
-Bs = 2.4;                                   % saturation flux density in the ribs [T]
-%kt = 1.0;                                   % kt = wt/wt_unsat
-Bfe = dataSet.Bfe;
-kt = dataSet.kt;
+Bs = 2.4;                                                                   % saturation flux density in the ribs [T]
+
+% load('mot_01.mat');
+
+Bfe = dataSet.Bfe;                                                          % steel loading (yoke flux density [T])
+kt = dataSet.kt;                                                            % kt = wt/wt_unsat
 
 [~, ~, geo, per, mat] = data0(dataSet);
 
@@ -65,83 +65,91 @@ tempcuest = per.tempcuest;
 
 %flag for SyR design
 flag_kw=1;      % flag_kw=0 --> use Vagati's equations, with kw=pi/(2*sqrt(3))
-                % flag_kw=1 --> use the winding factor
+% flag_kw=1 --> use the winding factor
 
 flag_pb=1;      % flag_pb=0 --> hc         = costant
-                % flag_pb=1 --> hc/sk      = costant (reduce harmonics content)
-                % flag_pb=2 --> hc/(df*sk) = costant (reduce Lfq)
+% flag_pb=1 --> hc/sk      = costant (reduce harmonics content)
+% flag_pb=2 --> hc/(df*sk) = costant (reduce Lfq)
 
 flag_dx=1;      % flag_dx=0 --> dx=0
-                % flag_dx=1 --> constant rotor carrier width
-                % flag_dx=2 --> rotor carrier width proportional to sine integral
-                % flag_dx=3 --> rotor carrier width proportional to flux of d-axis staircase (kt needed)
+% flag_dx=1 --> constant rotor carrier width
+% flag_dx=2 --> rotor carrier width proportional to sine integral
+% flag_dx=3 --> rotor carrier width proportional to flux of d-axis staircase (kt needed)
 
 
 
 switch dataSet.TypeOfRotor
     case 'SPM'
         % design domain according to x and lm
-        m = 31; n = 21;                                                 % m x n grid of evaluated machines
+        m = 31; n = 21;                                                     % m x n grid of evaluated machines
         lm_g = linspace(dataSet.bRange(1),dataSet.bRange(2),m);
-        x = linspace(dataSet.xRange(1),dataSet.xRange(2),n);            % rotor/stator split factor
-                
+        x = linspace(dataSet.xRange(1),dataSet.xRange(2),n);                % rotor/stator split factor
+        ap = geo.phi/180;                                                   % PM/pole ratio
+
         % parametric analysis: design domain (x,b)
         [xx,lm_gp] = meshgrid(x,lm_g);
         
         r = R * xx;
-        rocu = 17.8*(234.5 + tempcuest)/(234.5+20)*1e-9;               % resistivity of copper [Ohm m]
-        ssp = r * pi/(3*p*q);                          % stator slot pitch (x)
-        sso = ssp * acs;                                            % stator slot opening (x)
-        kc = ssp./(ssp-2/pi*g*(sso/g.*atan(sso/(2*g))-log(1+(sso/(2*g)).^2)));   % Carter coefficient (x)
-        Ar = r*(sqrt(2)-1);                                       % shaft radius (x) [mm]
-        [kw, ~] = calcKwTh0(avv,6*p*q,p);               % winding factor calculation
+        rocu = 17.8*(234.5 + tempcuest)/(234.5+20)*1e-9;                    % resistivity of copper [Ohm m]
+        ssp = (r+g) * pi/(3*p*q);                                           % stator slot pitch (x)
+        sso = ssp * acs;                                                    % stator slot opening (x)
+        Ar = r*(sqrt(2)-1);                                                 % shaft radius (x) [mm]
+        [kw, ~] = calcKwTh0(avv,6*p*q,p);                                   % winding factor calculation
+        
         % Bg calculation
+        %         lm = lm_gp*g;
+        %         xPMco = r;
+        %         xPMregular = r-lm + beta*lm; yPMregular = 0;
+        %         [xPMo,yPMo] = rot_point(xPMregular,yPMregular,phi/2*pi/180);        % PM edge point
+        %         xArccenter = (xPMco + xPMo - (yPMo.^2./(xPMco-xPMo)))/2;            % find arc center location
+        %         Rc = r - xArccenter;
+        %
+        %         csi = linspace(-phi*pi/180/2,phi*pi/180/2,300);
+        %         air = zeros(size(csi,1),ceil((180*size(csi,2)/phi-size(csi,2))/2)); % the size of no mag zone relates to Am
+        %         for mm = 1:m
+        %             for nn = 1:n
+        %                 Lm{mm,nn} = (r(mm,nn)-Rc(mm,nn))*cos(csi) + sqrt(Rc(mm,nn)^2-(r(mm,nn)*sin(csi)-Rc(mm,nn)*sin(csi)).^2)-r(mm,nn)+lm(mm,nn);
+        %                 G{mm,nn} = lm(mm,nn) +geo.g - Lm{mm,nn};
+        %                 kc{mm,nn} = ssp(mm,nn)./(ssp(mm,nn)-2/pi*G{mm,nn}.*(sso(mm,nn)./G{mm,nn}.*atan(sso(mm,nn)./(2*G{mm,nn}))-log(1+(sso(mm,nn)./(2*G{mm,nn})).^2)));
+        %                 Bg{mm,nn} = Lm{mm,nn}./G{mm,nn}./(Lm{mm,nn}./G{mm,nn}+kc{mm,nn}*mur)*Br;
+        %                 temp{mm,nn} = [air,Bg{mm,nn},air];
+        %                 Bg_avg(mm,nn) = mean(Bg{mm,nn});
+        %                 Bg_pole{mm,nn} = [temp{mm,nn},-temp{mm,nn}];
+        %                 L = length(Bg_pole{mm,nn});
+        %                 Y = fft(Bg_pole{mm,nn});
+        %                 P2 = abs(Y/L);
+        %                 Bg1(mm,nn) = 2*P2(2);                                       % get Bg1 from fft of Bg
+        %             end
+        %         end
         
         if Br ==0
             h = errordlg('Please use a real magnet material and define Br in Other Options tab');
             uiwait(h);
             return
         end
-                                                              % permeanbility
-        Cphi = 1;                                                       % ratio between airgap area and PM area
-        Bg = Br * lm_gp*g/mur./(lm_gp*g/mur +Cphi* kc * g); % TAB 8 WEMPEC 2015
-        
-        %%  Rounded PM 07/12/2016
-        %% calculate Bg1
-        if geo.dx < 1
-            Bg = Bg;                             % rounded PM: Bg1 is equivalent with Bg of longest magnet
-        else
-            Bg = 4/pi*Bg*sind(phi/2);        % rectangle PM : Bg1 is calculated by Fourier transform
-        end
-        %%  Hybrid PM 08/12/2016
-        %         Br2 = 0.5;
-        %         Bg2 = Br2 * lm_gp*g/mur./(lm_gp*g/mur +Cphi* kc * g);
-        %         Bg = 4/pi*(Bg*cos(7/24*pi)+Bg2*(cos(pi/12)-cos(7/24*pi)));
-        %
-        if q < 1
-            ly = 0.94*r.*Bg/Bfe/p;                           % Soong 2014 ECCE ty
-            wt = 4*sqrt(2)*r.*Bg/(6*p*q)/Bfe;            % tooth width (x,lm) [mm]
-        else
-            ly = 1.2*r.*Bg/Bfe/p;                            % Soong 2014 ECCE ty
-            wt = 6*r.*Bg/(6*p*q)/Bfe;                    % tooth width (x,lm) [mm]
-        end
-        lt = R - r -g - ly;                            % slot length (x,lm) [mm]
+                
+        [Bt_max,Bg_avg,Bg1] = evalBgapSyrmDesign_SPM(geo,mat,lm_g,x);
+ 
+        wt = 2*pi*r.*Bt_max/(6*p*q)/Bfe;
+        ly = pi*r.*Bg_avg*ap/(2*p)/Bfe;                                     % Bianchi 'Theory and design of fractional-slot pm machines'(7.1)
+        lt = R - r -g - ly;                                                 % slot length (x,lm) [mm]
         lt(lt<2*ttd)=NaN;
         
         % d axis
-        Fmd = pi*l*Ns/(sqrt(3)*p)* Bg.*r*1e-6;       % flux linkage Fmd = Lmd*id [Vs]
+        Fmd = 2*r.*Bg1'*l*Ns*kw/p*1e-6;
+        
         % stator design
         if q<1
-            lend = 2*lt + 0.5*(wt+pi*(r+lt/2)*sin(pi/(6*p*q)));
+            lend = 0.5*(wt+pi*(r+lt/2)*sin(pi/(6*p*q)));
         else
-            lend=(2*lt+(0.5*pi*(R-ly+r)/p));             % end turn length (x,lm) [mm]
+            lend = 2*lt+(r+g+lt/2)*2*pi/(p*q);                              % end-turn length [mm]
         end
         
-        %% calculate slot area (regualr region subtract redundant region of fillet radius) 
+        %% calculate slot area (regualr region subtract redundant region of fillet radius)
         for ii=1:m
             for jj=1:n
-                alpha_slot=2*pi/(ns*p);          % angolo di mezzo passo cava
-                RSI=r(ii,jj)+g;                  % r traferro statore
+                alpha_slot=2*pi/(ns*p);                                     % angolo di mezzo passo cava
+                RSI=r(ii,jj)+g;                                             % r traferro statore
                 
                 % r eq for middle of slot computation
                 mr=tan(alpha_slot/2);
@@ -157,7 +165,7 @@ switch dataSet.TypeOfRotor
                     x1=x1t;
                     y1=y1t;
                 end
-            
+                
                 x2=x1+ttd;
                 y2=y1;
                 
@@ -171,9 +179,9 @@ switch dataSet.TypeOfRotor
                 y6=0;
                 % LT2 position at the tooth
                 [xLT2,yLT2]=intersezione_retta_circonferenza(0,0,x6,mm2,q2);
-                mm1 = (yLT2-y6)./(xLT2-x6);       % slope of slot bottom line
-                mm2 = (y3-yLT2)./(x3-xLT2);       % slope of slot side line
-                angle1 = atan(abs((mm2-mm1)./(1+mm1.*mm2)));        % angle between two lines (minor than 90)
+                mm1 = (yLT2-y6)./(xLT2-x6);                                 % slope of slot bottom line
+                mm2 = (y3-yLT2)./(x3-xLT2);                                 % slope of slot side line
+                angle1 = atan(abs((mm2-mm1)./(1+mm1.*mm2)));                % angle between two lines (minor than 90)
                 area_corner(ii,jj) = RaccordoFC^2 * (1./tan(angle1/2)-(pi-angle1)/2);           % redundant area at bottom slot area
                 
                 xArea{ii,jj} = [x2 x2 x3 xLT2 x6 x2];
@@ -184,17 +192,17 @@ switch dataSet.TypeOfRotor
         Aslots = 2 * area_half_slot *6*p*q;
         Aslots(Aslots<0)=NaN;
         
-        kj = Loss/(2*pi*R*l)*1e6;                           % specific loss (x,lm) [W/m2]
-        K = sqrt(kcu*kj/rocu*l./(l+lend));                  % factor K [] (x,lm)
-        
-        i0 = pi/(3*Ns)*(R/1000)^1.5*K.*sqrt(Aslots/(pi*R^2));                       % rated current i0 [A] pk
-        loadpu = dataSet.CurrLoPP;                                      % current load in p.u. of i0
+        kj = Loss/(2*pi*R*l)*1e6;                                           % specific loss (x,lm) [W/m2]
+        K = sqrt(kcu*kj/rocu*l./(l+lend));                                  % factor K [] (x,lm)
+        i0 = pi/(3*Ns)*(R/1000)^1.5*K.*sqrt(Aslots/(pi*R^2));               % rated current i0 [A] pk
+        loadpu = dataSet.CurrLoPP;                                          % current load in p.u. of i0
         
         %% Inductance calculation
+        kc = ssp./(ssp-2/pi*g*(sso/g.*atan(sso/(2*g))-log(1+(sso/(2*g)).^2)));   % Carter coefficient (x)
         
         % megnetization inductance
         % use the formula 3.110 of Pyrhonen: total Lm
-        Lmd = (6/pi*mu0)/p^2*r.*l./(lm_gp*g+g*kc).*(Ns*kw)^2;   %[mH] Juha Pyrhonen 'Design of rotating electrical machines' (3.110)
+        Lmd = (6/pi*mu0)/p^2*r.*l./(lm_gp*g+g*kc).*(Ns*kw)^2;               %[mH] Juha Pyrhonen 'Design of rotating electrical machines' (3.110)
         
         % slot leakage inductance, dependent on slot shape
         h1 = ttd;
@@ -202,16 +210,14 @@ switch dataSet.TypeOfRotor
         h2 = 0;
         h4 = lt-h1-h2;
         b4 = pi*(r+g+0.5*lt)./(3*p*q)-wt;
-        Lslot = 12*(h4./b4/3+h1./b1)/(6*p*q)*mu0*l*(Ns*kw)^2;                     %[mH] Juha Pyrhonen ' Design of rotating electrical machines'
+        Lslot_self = 12*(h4./b4/3+h1./b1)/(6*p*q)*mu0*l*(Ns*kw)^2;          %[mH] Juha Pyrhonen ' Design of rotating electrical machines' (4.30)
+        %% mutual inductance is included
+        Lslot_mutual = 2*(h4./b4/3+h1./b1)/(6*p*q)*mu0*l*(Ns*kw)^2;
+        Lslot = Lslot_self + Lslot_mutual;                                  %[mH] El-Refaie "Winding Inductances of Fractional Slot Surface-Mounted Permanent Magnet Brushless Machines," (17)
         
-        % tip leakage inductance
-        if q >1
-            t = 1-kracc;
-        else
-            t = 1-p/Qs;
-        end
-        Ltip = 5*((g+lm_gp*g/mur)./b1)./(5+4*(g+lm_gp*g/mur)./b1)*3*4/(6*p*q)*mu0*l*(Ns*kw)^2*(1-3/4*t);  % [mH] Juha Pyrhonen ' Design of rotating electrical machines'
-        iq = i0*loadpu;                                                        % q-axis current [A] pk
+        % tip leakage inductance, short pitching is neglected
+        Ltip = 5*((g+lm_gp*g/mur)./b1)./(5+4*(g+lm_gp*g/mur)./b1)*3*4/(6*p*q)*mu0*l*(Ns*kw)^2;  % [mH] Juha Pyrhonen ' Design of rotating electrical machines' (4.63)
+        iq = i0*loadpu;                                                     % q-axis current [A] pk
         T = 3/2*p*Fmd.*iq;
         
         %% PF calculation
@@ -220,11 +226,10 @@ switch dataSet.TypeOfRotor
         PF = Fmd./sqrt(Fmd.^2 + (0.001*Lq.* iq).^2);
         
         figure(1)
-        [c, h] = contour(x,lm_g,T); clabel(c,h,'Color','Red','FontSize',28); grid on, hold on
-        [c, h] = contour(x,lm_g,PF,0.7:0.01:1); clabel(c,h,'FontSize',28); grid on,
+        [c, h] = contour(x,lm_g,T); clabel(c,h,'FontSize',12); grid on, hold on
+        [c, h] = contour(x,lm_g,PF,0.7:0.01:1); clabel(c,h,'FontSize',12); grid on,
         xlabel('x - rotor / stator split'), ylabel('lm/g - magnet / airgap split');
         legend('Torque [Nm]','PF');
-        %         title('torque and PF tradeoff');
         
         button = questdlg('pick up a machine?','SELECT','Yes','No','Yes');
         while isequal(button,'Yes')
@@ -238,12 +243,12 @@ switch dataSet.TypeOfRotor
             disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
             
             % Export to Syre GUI
-            geo.r = geo.x*R;                                            % rotor radius [mm]
-            geo.wt = interp2(x,lm_g,wt,geo.x,geo.lm_g);                 % tooth width [mm]
+            geo.r = geo.x*R;                                                % rotor radius [mm]
+            geo.wt = interp2(x,lm_g,wt,geo.x,geo.lm_g);                     % tooth width [mm]
             geo.wt = round(geo.wt*100)/100;
-            geo.lt=interp2(x,lm_g,lt,geo.x,geo.lm_g);                   % slot length [mm]
+            geo.lt=interp2(x,lm_g,lt,geo.x,geo.lm_g);                       % slot length [mm]
             geo.lt=round(geo.lt*100)/100;
-            geo.Ar=interp2(x,lm_g,Ar,geo.x,geo.lm_g);                    % shaft radius [mm]
+            geo.Ar=interp2(x,lm_g,Ar,geo.x,geo.lm_g);                       % shaft radius [mm]
             geo.Ar=round(geo.Ar*100)/100;
             
             % adjourn dataSet
@@ -276,29 +281,31 @@ switch dataSet.TypeOfRotor
         end
     otherwise
         % design domain according to b and x
-        m = 31; n = 21;                                                 % m x n grid of evaluated machines
-        b = linspace(dataSet.bRange(1),dataSet.bRange(2),m);            % iron/copper split factor
-        x = linspace(dataSet.xRange(1),dataSet.xRange(2),n);            % rotor/stator split factor
+        m = 31; n = 21;                                                     % m x n grid of evaluated machines
+        b = linspace(dataSet.bRange(1),dataSet.bRange(2),m);                % iron/copper split factor
+        x = linspace(dataSet.xRange(1),dataSet.xRange(2),n);                % rotor/stator split factor
         
-%         [~, ~, geo, per, ~] = data0(dataSet);
+        %         [~, ~, geo, per, ~] = data0(dataSet);
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % parametric analysis: design domain (x,b)
         [xx,bb] = meshgrid(x,b);
         
-        [xGap,yGap,kf1,kfm] = evalBgapSyrmDesign(q,kt); % airgap induction shape, first harmonics factor and mean value factor
+        kt = 1;
+        
+        [xGap,yGap,kf1,kfm] = evalBgapSyrmDesign(q,kt);                     % airgap induction shape, first harmonics factor and mean value factor
         
         r = R*xx;
-        rocu = 17.8*(234.5 + tempcuest)/(234.5+20)*1e-9;               % resistivity of copper [Ohm m]
-        ssp = r * pi/(3*p*q);                          % stator slot pitch (x,b)
-        sso = ssp * acs;                                            % stator slot opening (x,b)
+        rocu = 17.8*(234.5 + tempcuest)/(234.5+20)*1e-9;                    % resistivity of copper [Ohm m]
+        ssp = r * pi/(3*p*q);                                               % stator slot pitch (x,b)
+        sso = ssp * acs;                                                    % stator slot opening (x,b)
         kc = ssp./(ssp-2/pi*g*(sso/g.*atan(sso/(2*g))-log(1+(sso/(2*g)).^2)));   % Carter coefficient (x,b)
-        ly = pi/2*R/p*xx.*bb*kfm;                                     % yoke or back iron (x,b) [mm]
-        %ly = R/p*xx.*bb;                                        % yoke [mm], do not depend on kt
-        wt = 2*pi*R/(6*p*q)*xx.*bb.*kt;               % tooth width (x,b) [mm]
+        ly = pi/2*R/p*xx.*bb*kfm;                                           % yoke or back iron (x,b) [mm]
+        %ly = R/p*xx.*bb;                                                   % yoke [mm], do not depend on kt
+        wt = 2*pi*R/(6*p*q)*xx.*bb.*kt;                                     % tooth width (x,b) [mm]
         cos_x0 = cos(pi/2/p);
         sin_x0 = sin(pi/2/p);
-        Ar = geo.R*xx*(1/cos_x0-sqrt(((1-cos_x0^2)/cos_x0)^2+sin_x0^2)); % (max) shaft radius (x,b) [mm]
+        Ar = geo.R*xx*(1/cos_x0-sqrt(((1-cos_x0^2)/cos_x0)^2+sin_x0^2));    % (max) shaft radius (x,b) [mm]
         
         lt = R*(1-xx)-g-ly;
         lt(lt<2*ttd) = NaN;
@@ -308,22 +315,22 @@ switch dataSet.TypeOfRotor
         % la0 = R * xx - Ar - ly;
         % 1) la(x,b) = x0 - rbeta - ly (reduced radial space x0-rbeta-Ar: too much iron)
         % la1 = x0 - rbeta - Ar - ly;
-        x0 = r /cos(pi/2/p);                               % center of barriers circles
-        geo.dalpha = geo.dalpha_pu*(90/p);                          % [mec degrees]
+        x0 = r /cos(pi/2/p);                                                % center of barriers circles
+        geo.dalpha = geo.dalpha_pu*(90/p);                                  % [mec degrees]
         beta_temp = atand(r*sind(geo.dalpha(1))./(x0 - r * cosd(geo.dalpha(1))));
-        rbeta = (x0 - r*cosd(geo.dalpha(1)))./(cosd(beta_temp)); % radius of barrier circle
+        rbeta = (x0 - r*cosd(geo.dalpha(1)))./(cosd(beta_temp));            % radius of barrier circle
         % 2) 1st carrier takes 1-cos(p*alpha1) p.u. flux
         la = (x0 - rbeta - Ar - ly*cosd(p*geo.dalpha(1)))*nlay/(nlay-0.5);
         %%
         % rotor design + slot evaluation + Lfqpu + Lcqpu
-        alpha = cumsum(geo.dalpha);                                     % alpha in syre coordinates (mech deg, zero is axis Q)
-        [df,da] = staircaseAnyAlpha(alpha*p*pi/180);                % rotor staircase: set of rotor slots positions
-        f = cumsum((df));                                               % stator MMF staircase
+        alpha = cumsum(geo.dalpha);                                         % alpha in syre coordinates (mech deg, zero is axis Q)
+        [df,da] = staircaseAnyAlpha(alpha*p*pi/180);                        % rotor staircase: set of rotor slots positions
+        f = cumsum((df));                                                   % stator MMF staircase
         sumDf2r = sum(df.^2);
         Lcqpu = 1-4/pi*sum(f.^2.*da);
         
-        alpha = cumsum(da);                                             % alpha defined as in Vagati tutorial (0 = d axis)
-        geo.alpha = cumsum(geo.dalpha);                                 % alpha in syre coordinates (mech deg, zero is axis Q)
+        alpha = cumsum(da);                                                 % alpha defined as in Vagati tutorial (0 = d axis)
+        geo.alpha = cumsum(geo.dalpha);                                     % alpha in syre coordinates (mech deg, zero is axis Q)
         
         
         % initializing matrix
@@ -349,6 +356,7 @@ switch dataSet.TypeOfRotor
         c2 = zeros(m,n);
         
         dfQ=fliplr(df); % df using syre conventions (alpha=0 is the q-axis)
+        %% calculate slot area (regualr region subtract redundant region of fillet radius)
         for rr=1:m
             for cc=1:n
                 % slot area evaluation
@@ -404,7 +412,7 @@ switch dataSet.TypeOfRotor
                 rbeta = (x0(rr,cc) - R*xx(rr,cc) * cosd(geo.alpha))./(cos(beta));
                 [xpont,ypont] = calc_intersezione_cerchi(R*xx(rr,cc)-geo.pont0, rbeta, x0(rr,cc));
                 sk{rr,cc}=rbeta.*beta;
-                lr(rr,cc)=mean(sk{rr,cc}(end-1:end)); % length of the inner flux carrier (for saturation factor)
+                lr(rr,cc)=mean(sk{rr,cc}(end-1:end));                       % length of the inner flux carrier (for saturation factor)
                 % hc (flux barrier design)
                 switch flag_pb
                     case 0 % hc = cost
@@ -424,7 +432,7 @@ switch dataSet.TypeOfRotor
                 delta(rr,cc)=(0.5*hc{rr,cc}(1)+sum(hc{rr,cc}(2:end-1))+0.5*hc{rr,cc}(end)-hc_min*(geo.nlay-1))/(Bx0{rr,cc}(1)-Bx0{rr,cc}(end)-hfe_min*(geo.nlay-1)-hc_min*(geo.nlay-1));
                 hc_pu{rr,cc}=hc{rr,cc}*(delta(rr,cc)*geo.nlay)/sum(hc{rr,cc});
                 % dx (flux carrier design)
-                alphad=[0 90-fliplr(geo.alpha)*geo.p 90]; % 0<=alphad<=90 [° elt]
+                alphad=[0 90-fliplr(geo.alpha)*geo.p 90];                   % 0<=alphad<=90 [° elt]
                 r_all=geo.R*xx(rr,cc);
                 for ii=1:geo.nlay
                     r_all=[r_all Bx0{rr,cc}(ii)+hc{rr,cc}(ii)/2 Bx0{rr,cc}(ii)-hc{rr,cc}(ii)/2];
@@ -432,6 +440,8 @@ switch dataSet.TypeOfRotor
                 r_all=[r_all Ar(rr,cc)];
                 hf0=r_all(1:2:end)-r_all(2:2:end);
                 switch flag_dx
+                    case 0
+                        hf{rr,cc}=hf0;
                     case 1 % constant iron
                         hf_cost=[ones(1,geo.nlay-1) 0.5]/(geo.nlay-0.5);
                         hf{rr,cc}=hf_cost*sum(hf0(2:end));
@@ -483,7 +493,7 @@ switch dataSet.TypeOfRotor
         if flag_kw
             [kw, ~] = calcKwTh0(avv,6*p*q,p);
         else
-            kw=pi/2/sqrt(3);
+            kw = pi/2/sqrt(3);
         end
         
         Ht = interp1(mat.Stator.BH(:,1),mat.Stator.BH(:,2),Bfe./kt);
@@ -491,46 +501,45 @@ switch dataSet.TypeOfRotor
         %ks = 1+mu0*(Hy*2*pi/(6*p*q)*(R-ly/2)+Ht*lt+Hy*mean(sk{rr,cc}(end-1:end)))./(bb.*Bfe.*kf1.*kc.*g);
         ks = 1+mu0*pi/2*(Hy*pi/(6*p*q)*(R-ly/2) + Ht*lt + Hy*lr)./(bb*Bfe*kf1.*kc*g);
         
-        Fmd = 2*(R*1e-3)*(l*1e-3)*kw*Ns*Bfe.*kf1/p.*xx.*bb;             % flux linkage [Vs]
-        id = pi*Bfe*kc*(g*1e-3)*p.*ks/(mu0*3*kw*Ns).*bb;                % id [A]
+        Fmd = 2*(R*1e-3)*(l*1e-3)*kw*Ns*Bfe.*kf1/p.*xx.*bb;                 % flux linkage [Vs]
+        id = pi*Bfe*kc*(g*1e-3)*p.*ks/(mu0*3*kw*Ns).*bb;                    % id [A]
         
-        Lmd = Fmd./id;                                                  % d magnetization inductance Lmd [Vs]
+        Lmd = Fmd./id;                                                      % d magnetization inductance Lmd [Vs]
         
         % q axis
-        kdq = 1 - Lcqpu - Lfqpu;                                        % anisotrophy factor
+        kdq = 1 - Lcqpu - Lfqpu;                                            % anisotrophy factor
         
         % stator design
         if q<1
-            lend = 2*lt + 0.5*(wt+pi*(r+lt/2)*sin(pi/(6*p*q)));
+            lend = 0.5*(wt+pi*(r+lt/2)*sin(pi/(6*p*q)));
         else
-            lend=(2*lt+(0.5*pi*(R-ly+r)/p));             % end turn length (x,b) [mm]
+            lend = 2*lt+(0.5*pi*(R-ly+r)/p);                                % end turn length (x,b) [mm]
         end
         
-        %% calculate slot area and rated current 
-        
+        %% calculate slot area and rated current
         Aslots = 2 * area_half_slot *6*p*q;
         
-        kj = Loss/(2*pi*R*l)*1e6;                           % specific loss (x,b) [W/m2]
-        K = sqrt(kcu*kj/rocu*l./(l+lend));                  % factor K [] (x,b)
+        kj = Loss/(2*pi*R*l)*1e6;                                           % specific loss (x,b) [W/m2]
+        K = sqrt(kcu*kj/rocu*l./(l+lend));                                  % factor K [] (x,b)
         
-        i0 = pi/(3*Ns)*(R/1000)^1.5*K.*sqrt(Aslots/(pi*R^2)); % rated current i0 [A] pk
+        i0 = pi/(3*Ns)*(R/1000)^1.5*K.*sqrt(Aslots/(pi*R^2));               % rated current i0 [A] pk
         i0=real(i0);
-        loadpu = dataSet.CurrLoPP;                                      % current load in p.u. of i0
+        loadpu = dataSet.CurrLoPP;                                          % current load in p.u. of i0
         
         id(id>loadpu*i0)=i0(id>loadpu*i0);
         gamma=acos(id./(loadpu*i0));
-        iq=i0.*sin(gamma);                                              % q-axis current [A] pk
+        iq=i0.*sin(gamma);                                                  % q-axis current [A] pk
         
-        %iq = sqrt((loadpu*i0).^2 - id.^2); iq = real(iq);               % q-axis current [A] pk
-        Am = Aslots.* id./(loadpu*i0);                                  % slots area dedicated to id [mm2]
+        %iq = sqrt((loadpu*i0).^2 - id.^2); iq = real(iq);                  % q-axis current [A] pk
+        Am = Aslots.* id./(loadpu*i0);                                      % slots area dedicated to id [mm2]
         
-        Nbob  = Ns/p/(q)/2;                             % conductors in slot per layer
-        J = 2*Nbob * loadpu*i0 ./ (Aslots/(q*6*p)*kcu); % current density in copper [A/mm2] pk
-        A = 2*Nbob * loadpu*i0 ./ (r*2*pi/(q*6*p));  % linear current density [A/mm] pk
+        Nbob  = Ns/p/(q)/2;                                                 % conductors in slot per layer
+        J = 2*Nbob * loadpu*i0 ./ (Aslots/(q*6*p)*kcu);                     % current density in copper [A/mm2] pk
+        A = 2*Nbob * loadpu*i0 ./ (r*2*pi/(q*6*p));                         % linear current density [A/mm] pk
         
         % tangential ribs effect
         
-        Lrib = 4/pi*kw*Ns*2*(geo.pont0*1e-3)*(l*1e-3)*Bs./iq;
+        Lrib = 4/pi*kw*Ns*2*(pont0*1e-3)*(l*1e-3)*Bs./iq;
         Lrqpu = Lrib./Lmd;
         
         kdq = kdq-Lrqpu;
@@ -539,7 +548,7 @@ switch dataSet.TypeOfRotor
         T = 3/2*p*(kdq.*Fmd.*iq);
         
         % stator leakage inductance Ls
-        [dfs] = staircaseRegular(6*q);                              % stator staircase
+        [dfs] = staircaseRegular(6*q);                                      % stator staircase
         f = cumsum(dfs);
         sumDf2s = sum(dfs.^2);
         d0 = ttd;
@@ -553,17 +562,17 @@ switch dataSet.TypeOfRotor
         h = (beta.^2-beta.^4/4-log(beta)-0.75)./((1-beta).*(1-beta.^2).^2);
         ps = d0./c0 + d1./c0.*1./(c1./c0-1).*log(c1./c0)+d2./c2.*h;
         
-        Lspu = 4/pi*p*kc*g*sumDf2s.*ps./r;               % Ls/Lmd: p.u. leakage inductance
+        Lspu = 4/pi*p*kc*g*sumDf2s.*ps./r;                                  % Ls/Lmd: p.u. leakage inductance
         % power factor
         Ld = Lmd.*(1 +Lspu);
         Lq = (Lcqpu + Lfqpu + Lspu + Lrqpu).*Lmd;
         
         csi = Ld./Lq;
-        gamma = atand(iq./id);                                          % current phase angle [deg]
-        delta = atand((Lq.*iq)./(Ld.*id));                              % flux linkage phase angle [deg]
+        gamma = atand(iq./id);                                              % current phase angle [deg]
+        delta = atand((Lq.*iq)./(Ld.*id));                                  % flux linkage phase angle [deg]
         
-        PF = sind(gamma-delta);                                         % PF @ gamma (same gamma as torque)
-        PFmax = (Ld-Lq)./(Ld+Lq);                                       % PF @ max PF gamma
+        PF = sind(gamma-delta);                                             % PF @ gamma (same gamma as torque)
+        PFmax = (Ld-Lq)./(Ld+Lq);                                           % PF @ max PF gamma
         % PF2 = (csi-1)./sqrt(csi.^2.*(sind(gamma)).^-2+(cosd(gamma)).^-2);  % alternative formula
         
         hfig=figure();
@@ -591,16 +600,16 @@ switch dataSet.TypeOfRotor
             
             
             % Export to Syre GUI
-            geo.r = geo.x*R;                                        % rotor radius [mm]
-            %     bt = geo.b;                                           % Bgap/Bfe,tooth (tooth p.u. size)
-            geo.wt = interp2(x,b,wt,geo.x,geo.b);                       % tooth width
+            geo.r = geo.x*R;                                                % rotor radius [mm]
+            %     bt = geo.b;                                               % Bgap/Bfe,tooth (tooth p.u. size)
+            geo.wt = interp2(x,b,wt,geo.x,geo.b);                           % tooth width
             geo.wt = round(geo.wt*100)/100;
-            geo.lt=interp2(x,b,lt,geo.x,geo.b);                         % slot length
+            geo.lt=interp2(x,b,lt,geo.x,geo.b);                             % slot length
             geo.lt=round(geo.lt*100)/100;
             geo.x0=R * geo.x /cos(pi/2/p);
-            geo.Ar=interp2(x,b,Ar,geo.x,geo.b);                          % shaft radius [mm]
+            geo.Ar=interp2(x,b,Ar,geo.x,geo.b);                             % shaft radius [mm]
             geo.Ar=round(geo.Ar*100)/100;
-            geo.la=interp2(x,b,la,geo.x,geo.b);                         % total insulation
+            geo.la=interp2(x,b,la,geo.x,geo.b);                             % total insulation
             
             % hc evaluation - flux barriers design
             geo.alpha=cumsum(geo.dalpha);

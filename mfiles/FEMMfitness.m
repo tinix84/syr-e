@@ -18,6 +18,7 @@ currentDir=pwd;
 [thisfilepath,dirName]=createTempDir();
 
 if ~isempty(RQ)
+    
     % MODE optimization (RQ geometry)
     RQ=RQ';
     if  strcmp(eval_type,'MO_GA')

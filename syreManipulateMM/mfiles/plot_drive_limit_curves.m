@@ -54,6 +54,4 @@ legend(num2str(Imax_vect))
 %adapt_figure_fonts('Times New Roman',12,10)
 saveas(gcf,[pathname1 'PF'])
 
-
-
 % print -dpsc2 AOA_CurrProf

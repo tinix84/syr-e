@@ -20,6 +20,8 @@ else
     load([pathname '\' filename])
 end
 
+plot_defaults;
+
 % run([pathname 'ReadParameters']);
 
 % Fd Fq curves
@@ -38,7 +40,7 @@ saveas(gcf,[pathname 'fdfq curves'])
 
 % Fd [Vs]
 figure
-mesh(Id,Iq,Fd), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('\lambda_d [Vs]')
+mesh(Id,Iq,Fd), grid on, xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'), zlabel('$$ \lambda_d [Vs] $$')
 hold on
 plot3(Id(1,:),Iq(1,:),Fd(1,:),'k','LineWidth',2),
 plot3(Id(end,:),Iq(end,:),Fd(end,:),'k--','LineWidth',2),
@@ -49,7 +51,7 @@ saveas(gcf,[pathname 'Fd mesh'])
 
 % Fq [Vs]
 figure
-mesh(Id,Iq,Fq), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('\lambda_q [Vs]')
+mesh(Id,Iq,Fq), grid on, xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'), zlabel('$$ \lambda_q [Vs] $$')
 hold on
 plot3(Id(:,1),Iq(:,1),Fq(:,1),'k','LineWidth',2),
 plot3(Id(:,end),Iq(:,end),Fq(:,end),'k--','LineWidth',2),
@@ -64,13 +66,13 @@ saveas(gcf,[pathname 'Fq mesh'])
 % TORQUE
 if exist('T','var')
     figure
-    mesh(Id,Iq,abs(T)), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque [Nm]')
+    mesh(Id,Iq,abs(T)), grid on, xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'), zlabel('Torque [Nm]')
 %    adapt_figure_fonts('Times New Roman',14,12)
     saveas(gcf,[pathname 'Torque mesh'])
 end
 if exist('dT','var')
     figure
-    mesh(Id,Iq,dT), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple (std) [Nm]')
+    mesh(Id,Iq,dT), grid on, xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'), zlabel('Torque ripple (std) [Nm]')
 %     axis([0 30 0 30 0 0.5])
 %    adapt_figure_fonts('Times New Roman',14,12)
     saveas(gcf,[pathname 'Torque Ripple mesh'])
@@ -78,7 +80,7 @@ end
 
 if exist('dTpp','var')
     figure
-    mesh(Id,Iq,dTpp), grid on, xlabel('i_d [A]'), ylabel('i_q [A]'), zlabel('Torque ripple (peak-to-peak) [Nm]')
+    mesh(Id,Iq,dTpp), grid on, xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'), zlabel('Torque ripple (peak-to-peak) [Nm]')
 %     axis([0 30 0 30 0 0.5])
 %    adapt_figure_fonts('Times New Roman',14,12)
     saveas(gcf,[pathname 'Torque Ripple pp mesh'])
@@ -90,19 +92,19 @@ if exist('Pfes_h','var')
     figure
     subplot(2,2,1)
     mesh(Id,Iq,Pfes_c); grid on, hold on
-    xlabel('i_d [A]'),ylabel('i_q [A]'),zlabel('Pc-stat [W]')
+    xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'),zlabel('Pc-stat [W]')
     % zlim([-0.1 0.15])
     subplot(2,2,3)
     mesh(Id,Iq,Pfes_h); grid on, hold on
-    xlabel('i_d [A]'),ylabel('i_q [A]'),zlabel('Ph-stat [W]'),
+    xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'),zlabel('Ph-stat [W]'),
     % zlim([0 0.25])
     subplot(2,2,2)
     mesh(Id,Iq,Pfer_c); grid on, hold on
-    xlabel('i_d [A]'),ylabel('i_q [A]'),zlabel('Pc-rot [W]')
+    xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'),zlabel('Pc-rot [W]')
     % zlim([-0.1 0.15])
     subplot(2,2,4)
     mesh(Id,Iq,Pfer_h); grid on, hold on
-    xlabel('i_d [A]'),ylabel('i_q [A]'),zlabel('Ph-rot [W]')
+    xlabel('$$ i_d [A] $$'), ylabel('$$ i_q [A] $$'),zlabel('Ph-rot [W]')
     % zlim([0 0.25])
 %    adapt_figure_fonts('Times New Roman',14,10)
     saveas(gcf,[pathname 'Loss mesh'])

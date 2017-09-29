@@ -15,9 +15,9 @@
 function rotor = build_matrix_SPM(temp,geo)
 
 seg = geo.dx;
-% NoSeg = max(floor(seg),3);
+Beta = geo.BarFillFac;
 NoSeg = floor(seg);
-hybrid = geo.hybrid;
+
 for jj = 1:floor(NoSeg/2)
     xPMso(jj) = temp.xPMso(jj);
     yPMso(jj) = temp.yPMso(jj);
@@ -40,7 +40,7 @@ y5 = temp.y5;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if hybrid == 1
+if geo.BarFillFac == 2
     
     %% hybrid shape
     xFeo = temp.xFeo;
@@ -69,7 +69,6 @@ else
     rotor = [0 0 xPMci yPMci xPMi yPMi 1;
         0 0 xPMi yPMi x4 y4 1];
 %         0 0 x6 y6 x5 y5 1];
-    
     %% chao 2017.01.09 use an arc to assume sinusoidal
     rotor = [rotor;
         xArccenter yArccenter xPMco yPMco xPMo yPMo 1];
@@ -77,7 +76,12 @@ else
     rotor = [ rotor;
         xPMo yPMo xPMi yPMi NaN NaN 0];
 %         x4 y4 x5 y5 NaN NaN 0];
-%         x6 y6 xPMo yPMo NaN NaN 0];
+    
+%     if Beta <1
+%         rotor = [rotor;
+%             x6 y6 xPMo yPMo NaN NaN 0];
+%     end
+
 end
 
 if seg ~=1

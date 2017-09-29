@@ -24,7 +24,7 @@
 % IEEE IAS Annual Meeting 2004 - Seattle
 % cap. 6 - Vagati
 
-function io = calc_io(geo,per)
+function [io Rs] = calc_io(geo,per)
 
 % input
 loss = per.Loss; % [W]
@@ -33,7 +33,9 @@ l = geo.l/1e3; % [m]
 kcu = geo.kcu;
 Aslots = geo.Aslot*(6*geo.p*geo.q)/1e6; % [m^2]
 N=geo.Ns;
-rocu = 17.8*(234.5+per.tempcuest)/(234.5+20)*1e-9;
+% rocu = 17.8*(234.5+per.tempcuest)/(234.5+20)*1e-9;
+rocu = 17.8*(234.5+per.tempcu)/(234.5+20)*1e-9;
+
 
 % Calcolo lend avvolgimento
 avv=geo.avv;
@@ -69,6 +71,8 @@ end
 kj=loss/(2*pi*R*l);
 
 io = (kj*kcu/rocu*l/(l+lend)*2*pi*2*R*Aslots/36/N^2)^0.5;
+
+Rs = loss/(1.5*io^2);
 
 
 

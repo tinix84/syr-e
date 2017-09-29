@@ -20,8 +20,6 @@ clear all; close all; clc;
 
 current_path=cd;
 [pathstr, name, ext] = fileparts(current_path);
-addpath dxf_conv_fun
-
 load ultimo.mat;
 
 [filemot, pathname] = uigetfile([pathname '\*.mat'], 'Pick a motor');

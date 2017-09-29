@@ -23,6 +23,12 @@ lm = geo.lm;                    % the thickness of permant magnet
 hc = 0;
 seg = geo.dx;                   % the number of segments of magnet
 
+if geo.dx == 1
+    geo.PMdir = 'p';
+else
+    geo.PMdir = 'r';
+end
+
 PMregular = geo.BarFillFac;
 if PMregular > 1
     PMregular =1;                      % limit to per unit
@@ -30,12 +36,11 @@ end
 %% COMPLETE DESIGN (ARCO OUTDOOR AIR GAP AND LAYER 1) AND ASSIGNMENTS (MATERIALS AND BOUNDARY CONDITIONS)
 x = r * cos(90/p * pi/180);
 y = r * sin(90/p * pi/180);
-%% DISEGNO LO STRATO 1 DEL TRAFERRO (VA DA (th_m0) A (th_m0+180/p))
 
-hybrid = 0;
-if hybrid == 1
+%% hybrid
+if geo.BarFillFac == 2
     %% hybrid shape
-    PM_angle = phi/4;
+    PM_angle = phi/5;
     Fe_angle = phi/4;
     xPMco = r; yPMco = 0;
     [xPMo,yPMo] = rot_point(xPMco,yPMco,PM_angle*pi/180);
@@ -49,27 +54,32 @@ if hybrid == 1
     [x4, y4] = rot_point(xPMci,yPMci,90/p*pi/180);
 else
     %%  regular or rounded shape
-    xPMco = r; yPMco = 0;   
-
+    xPMco = r; yPMco = 0;
+    
     xPMregular = r-lm + PMregular*lm; yPMregular = 0;
     
     [xPMo,yPMo] = rot_point(xPMregular,yPMregular,phi/2*pi/180);    % PM edge point
-    [x5, y5] = rot_point(xPMco,yPMco,90/p*pi/180);                  % Air zone point   
+    [x5, y5] = rot_point(xPMco,yPMco,90/p*pi/180);                  % Air zone point
     [x6, y6] = rot_point(xPMco,yPMco,phi/2*pi/180);                 % Air zone point
-    
-    x6= x5;
-    y6= y5;
-    
-    xPMci = r-lm; yPMci = 0;            
+        
+    xPMci = r-lm; yPMci = 0;
     [xPMi,yPMi] = rot_point(xPMci,yPMci,phi/2*pi/180);              % PM edge point on the steel
     
-    [x4, y4] = rot_point(xPMci,yPMci,90/p*pi/180);                  % Rotor edge point   
-        %% chao 2017.01.09 use an arc to assume sinusoidal
+    [x4, y4] = rot_point(xPMci,yPMci,90/p*pi/180);                  % Rotor edge point
+    %% chao 2017.01.09 use an arc to assume sinusoidal
     xArccenter = (xPMco + xPMo - (yPMo^2/(xPMco-xPMo)))/2;          % find arc center location
     yArccenter = 0;
+        %% calculate PM area
+    area2 = phi/2/360*pi*r^2 - 0.5*xArccenter*xPMo;
+    area3 = atan(yPMo/(xPMo-xArccenter))/2*(xPMco-xArccenter)^2 - area2;
+    PMarea = 2*(area3 + phi/2/360*pi*xPMregular^2 - phi/2/360*pi*xPMci^2);
+    geo.PMarea = PMarea * 2*p*1e-6;
+    geo.PMvol = geo.PMarea*geo.l*1e-3;
+    
+    geo.PMmass = geo.PMarea*geo.l*mat.LayerMag.kgm3*1e-3;
 end
 %% segmentation point build by sine wave
-% if seg ~=1    
+% if seg ~=1
 %     NoSeg = floor(seg);
 %     for jj = 1:floor(NoSeg/2)
 %         rPMso(jj) = r- lm*(1-PMregular)+ lm*(1-PMregular) * sin(pi/seg*jj);
@@ -80,10 +90,10 @@ end
 %         temp.yPMso(jj) = yPMso(jj);
 %         temp.xPMsi(jj) = xPMsi(jj);
 %         temp.yPMsi(jj) = yPMsi(jj);
-%     end 
+%     end
 % end
 
-%% segmentation point build by circular wave
+%% segmentation point build by outer circular wave
 if seg~=1
     % a quarter pole is considered
     NoSeg = 1:floor(seg/2);
@@ -99,15 +109,8 @@ if seg~=1
     temp.xPMsi = xPMsi;
     temp.yPMsi = yPMsi;
 end
-%% calculate PM area
-area2 = phi/2/360*pi*r^2 - 0.5*xArccenter*xPMo;
-area3 = atan(yPMo/(xPMo-xArccenter))/2*(xPMco-xArccenter)^2 - area2;
-PMarea = 2*(area3 + phi/2/360*pi*xPMregular^2 - phi/2/360*pi*xPMci^2);
-geo.PMarea = PMarea * 2*p*1e-6;
-geo.PMmass = geo.PMarea*geo.l*mat.LayerMag.kgm3*1e-3;
 
 %%  SAVE THE FINAL DATA:
-
 temp.xPMco = xPMco;
 temp.yPMco = yPMco;
 temp.xPMo = xPMo;
@@ -120,7 +123,7 @@ temp.x4 = x4;
 temp.y4 = y4;
 temp.x5 = x5;
 temp.y5 = y5;
-if hybrid == 0
+if geo.BarFillFac ~= 2
     temp.xArccenter = xArccenter;
     temp.yArccenter = yArccenter;
     temp.x6 = x6;
@@ -134,6 +137,5 @@ else
     geo.Fe_angle = Fe_angle;
     geo.hybrid = 1;
 end
-geo.hybrid = hybrid;
 geo.hc = hc;
 

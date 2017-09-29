@@ -38,10 +38,10 @@ if exist([pathname 'ReadParameters.m'])
     run([pathname 'ReadParameters']);
 else
     if ~exist('motor_name')
-        prompt={'Motor Name','Axes type (SR or PM)','Number of pole pairs','Peak phase voltage [V]','Peak phase current [A]','Max speed [rpm]'};
+        prompt={'Motor Name','Axes type (SR or PM)','Number of pole pairs','Peak phase voltage [V]','Peak phase current [A]','Max speed [rpm]','Number of curves'};
         name='Operating Limits';
         numlines=1;
-        defaultanswer={'MotName','SR','2','310','15','8000'};
+        defaultanswer={'MotName','SR','2','310','15','8000','2'};
         
         setup=inputdlg(prompt,name,numlines,defaultanswer);
         motor_name = setup{1};
@@ -50,18 +50,20 @@ else
         Vmax = eval(setup{4});
         Imax = eval(setup{5});
         Nmax = eval(setup{6});
+        n    = eval(setup{7});
         
         save([pathname FILENAME],'p','Vmax','Imax','motor_name','axes_type','Nmax','-append');
     else
-        prompt={'Peak phase voltage [V]','Peak phase current [A]','Max speed [rpm]'};
+        prompt={'Peak phase voltage [V]','Peak phase current [A]','Max speed [rpm]','Number of curves'};
         name='Operating Limits';
         numlines=1;
-        defaultanswer={num2str(Vmax),num2str(Imax),num2str(Nmax)};
+        defaultanswer={num2str(Vmax),num2str(Imax),num2str(Nmax),'2'};
         
         setup=inputdlg(prompt,name,numlines,defaultanswer);
         Vmax = eval(setup{1});
         Imax = eval(setup{2});
         Nmax = eval(setup{3});
+        n    = eval(setup{4});
         
         save([pathname FILENAME],'Vmax','Imax','Nmax','-append');
     end
@@ -84,20 +86,20 @@ if isempty(axes_type)
     end
 end
 
-n = 2;  % number of curves
+%n = 2;  % number of curves
 Imax_vect = Imax * linspace(0.5,1,n);
 Plim_all = cell(1,n);
 
 % rotor bars temperature (IM motor)
-if exist('Wslip','var')
-    prompt={'Rotor temperature (IM only)'};
-    name='Input for slip speed calculation';
-    numlines=1;
-    defaultanswer={num2str(Rr_temp)};
-    answer=inputdlg(prompt,name,numlines,defaultanswer);
-else
+% if exist('Wslip','var')
+%     prompt={'Rotor temperature (IM only)'};
+%     name='Input for slip speed calculation';
+%     numlines=1;
+%     defaultanswer={num2str(Rr_temp)};
+%     answer=inputdlg(prompt,name,numlines,defaultanswer);
+% else
     answer = 0;
-end
+% end
 
 
 for jj = 1:n

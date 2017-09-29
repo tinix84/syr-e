@@ -250,7 +250,7 @@ if (nargin<1)
     % eliminate unnecessary rows
     filt_bounds = (bounds(:,3)==1);
     bounds = bounds(filt_bounds,1:2);
-    bounds = roundn(bounds,-2);
+    bounds = round(bounds*100)/100;
     %     % eliminate the unnecessary RQnames
     %     RQnames = RQnames(filt_bounds);
     %     geo.RQnames = RQnames;

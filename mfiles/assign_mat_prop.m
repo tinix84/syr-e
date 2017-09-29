@@ -15,7 +15,7 @@ mat.Stator.ke = tmp.ke;
 mat.Stator.BH = tmp.BH;
 mat.Stator.MatName = tmp.MatName;
 % mat.mu = tmp.mu;
-mat.MatList.iron = tmp.MatList;
+%mat.MatList.iron = tmp.MatList;
 
 %% rotor iron
 tmp = material_properties_iron(dataSet.RotorMaterial);
@@ -40,7 +40,7 @@ end
 mat.SlotCond.sigma = tmp.sigma;
 mat.SlotCond.kgm3 = tmp.kgm3;
 mat.SlotCond.MatName = tmp.MatName;
-mat.MatList.conductor = tmp.MatList;
+%mat.MatList.conductor = tmp.MatList;
 
 %% slot air
 
@@ -66,7 +66,7 @@ else
     mat.LayerMag.mu = tmp.mu;
 end
 mat.LayerMag.MatName = tmp.MatName;
-mat.MatList.barrier = tmp.MatList;
+%mat.MatList.barrier = tmp.MatList;
 
 if isequal(dataSet.FluxBarrierMaterial,'Bonded-Magnet')
     mat.LayerMag.Br = dataSet.Br;

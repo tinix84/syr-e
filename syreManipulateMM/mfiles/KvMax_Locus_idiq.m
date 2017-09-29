@@ -62,27 +62,42 @@ test = id_KvMax == max(id);
 id_KvMax = id_KvMax(test == 0);
 iq_KvMax = iq_KvMax(test == 0);
 T_KvMax = T_KvMax(test == 0);
+fd_KvMax = fd_KvMax(test == 0);
+fq_KvMax = fq_KvMax(test == 0);
+F_KvMax = F_KvMax(test == 0);
 
 test = id_KvMax == min(id);
 id_KvMax = id_KvMax(test == 0);
 iq_KvMax = iq_KvMax(test == 0);
 T_KvMax = T_KvMax(test == 0);
+fd_KvMax = fd_KvMax(test == 0);
+fq_KvMax = fq_KvMax(test == 0);
+F_KvMax = F_KvMax(test == 0);
 
 test = iq_KvMax == max(iq);
 id_KvMax = id_KvMax(test == 0);
 iq_KvMax = iq_KvMax(test == 0);
 T_KvMax = T_KvMax(test == 0);
+fd_KvMax = fd_KvMax(test == 0);
+fq_KvMax = fq_KvMax(test == 0);
+F_KvMax = F_KvMax(test == 0);
 
 test = iq_KvMax == min(iq);
 id_KvMax = id_KvMax(test == 0);
 iq_KvMax = iq_KvMax(test == 0);
 T_KvMax = T_KvMax(test == 0);
+fd_KvMax = fd_KvMax(test == 0);
+fq_KvMax = fq_KvMax(test == 0);
+F_KvMax = F_KvMax(test == 0);
 
 % no PM machines
 if fm == 0
     id_KvMax = [0 id_KvMax];
     iq_KvMax = [0 iq_KvMax];
     T_KvMax = [0 T_KvMax];
+    fd_KvMax = fd_KvMax(test == 0);
+    fq_KvMax = fq_KvMax(test == 0);
+    F_KvMax = F_KvMax(test == 0);
 end
 
 if not(isempty(id_KvMax))
@@ -91,16 +106,28 @@ if not(isempty(id_KvMax))
         %% SR style axes
         [p_KvMax_i,s] = polyfit(id_KvMax,iq_KvMax,7);
         [p_KvMax_T,s] = polyfit(id_KvMax,T_KvMax,7);
-        id_KvMax_p = linspace(0,max(id_KvMax)*1.05,length(id_KvMax))
+        [p_KvMax_F,s] = polyfit(id_KvMax,F_KvMax,7);
+        [p_KvMax_fd,s] = polyfit(id_KvMax,fd_KvMax,7);
+        [p_KvMax_fq,s] = polyfit(id_KvMax,fq_KvMax,7);
+        id_KvMax_p = linspace(0,max(id_KvMax)*1.05,length(id_KvMax));
         iq_KvMax_p = polyval(p_KvMax_i,id_KvMax_p);
         T_KvMax_p = polyval(p_KvMax_T,id_KvMax_p);
+        F_KvMax_p = polyval(p_KvMax_F,id_KvMax_p);
+        fd_KvMax_p = polyval(p_KvMax_fd,id_KvMax_p);
+        fq_KvMax_p = polyval(p_KvMax_fq,id_KvMax_p);
     else
         %% PM style axes
         [p_KvMax_i,s] = polyfit(iq_KvMax,id_KvMax,7);
         [p_KvMax_T,s] = polyfit(iq_KvMax,T_KvMax,7);
-        iq_KvMax_p = linspace(0,max(iq_KvMax),length(iq_KvMax))
+        [p_KvMax_F,s] = polyfit(id_KvMax,F_KvMax,7);
+        [p_KvMax_fd,s] = polyfit(id_KvMax,fd_KvMax,7);
+        [p_KvMax_fq,s] = polyfit(id_KvMax,fq_KvMax,7)
+        iq_KvMax_p = linspace(0,max(iq_KvMax),length(iq_KvMax));
         id_KvMax_p = polyval(p_KvMax_i,iq_KvMax_p);
         T_KvMax_p = polyval(p_KvMax_T,iq_KvMax_p);
+        F_KvMax_p = polyval(p_KvMax_F,id_KvMax_p);
+        fd_KvMax_p = polyval(p_KvMax_fd,id_KvMax_p);
+        fq_KvMax_p = polyval(p_KvMax_fq,id_KvMax_p);
     end
     
     if debug
@@ -119,10 +146,15 @@ if not(isempty(id_KvMax))
     end
     
     %% uso le curve interpolate (solo per IPM)
-    id_KvMax = id_KvMax_p;
-    iq_KvMax = iq_KvMax_p;
-    T_KvMax = T_KvMax_p;
-    I_KvMax = abs(id_KvMax + j* iq_KvMax);
+    if(0)
+        id_KvMax = id_KvMax_p;
+        iq_KvMax = iq_KvMax_p;
+        T_KvMax = T_KvMax_p;
+        I_KvMax = abs(id_KvMax + j* iq_KvMax);
+        fd_KvMax = fd_KvMax_p;
+        fq_KvMax = fq_KvMax_p;
+        F_KvMax = F_KvMax_p;
+    end
     
 end
 

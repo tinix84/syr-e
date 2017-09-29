@@ -27,6 +27,7 @@ switch geo.RotType
         
         countPM=1;
         countdx=1;
+        
         for kk = 1:size(BLKLABELSrot.xy,1)
             mi_addblocklabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
             mi_selectlabel(BLKLABELSrot.xy(kk,1),BLKLABELSrot.xy(kk,2));
@@ -38,7 +39,7 @@ switch geo.RotType
                 else
                     angle = atan2(BLKLABELSrot.xy(kk,2),BLKLABELSrot.xy(kk,1))*180/pi+180*rem(countPM,2);
                 end
-                if geo.hybrid == 1
+                if geo.BarFillFac == 2
                     angle = atan2(BLKLABELSrot.xy(kk,2),BLKLABELSrot.xy(kk,1))*180/pi+180;
                 end
                 mi_setblockprop(BLKLABELS.materials{BLKLABELSrot.xy(kk,3)}, 0, fem.res, 'None',angle, group, 0);
