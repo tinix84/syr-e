@@ -164,7 +164,7 @@ for n = 1:n_freq,
     Io=I+Ife;
     
     % 5. Motor voltage Voc = back emf + RI
-    % Voc > Vbus is penalized by augmented loss, so to be excluded 
+    % Voc > Vbus is penalized by augmented loss, so to be excluded
     Vof=Vind+Rs.*Io;    % phase voltage
     Voc=sqrt(3)*Vof;    % line voltage
     cosfi=cos(angle(Io)-angle(Vof));    % PF
@@ -178,7 +178,7 @@ for n = 1:n_freq,
     if exist('P_BarRot', 'var')
         Perdite = Perdite+P_BarRot;
     end
-      
+    
     % (lim) equals 1 if Voc_m>Vbus and 0 otherwise
     lim=(sign(Voc_m-Vbus)+1)/2;
     lim(floor(Voc_m-Vbus)==0)=0;
@@ -208,7 +208,7 @@ for n = 1:n_freq,
     end
     
     % 6. torque (power) cycle:
-    %    for each torque (power) setpoin, finds the id,iq condition that minimizes total loss  
+    %    for each torque (power) setpoin, finds the id,iq condition that minimizes total loss
     m = 0;
     while ((m<n_coppie)&&(Tot+Valori+1<length(Curve)))
         

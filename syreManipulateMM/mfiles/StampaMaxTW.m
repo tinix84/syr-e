@@ -17,7 +17,7 @@ for n=1:n_freq,
 end
 
 % stampa le isocoppie
-h=figure;
+h = figure;
 [cc,hh]=contour(DatiOpt.IDtot,DatiOpt.IQtot',T,'k')%,DatiOpt.Tmap)
 clabel(cc,hh); grid on
 Tmax=d.TMAX;
@@ -32,8 +32,7 @@ adapt_figure_fonts('Times New Roman',14,10)
 
 % T_top_W: coppia limite
 figure(2)
-plot(DatiOpt.velmec(1:n_freq),DatiOpt.T_top_W,'bx-')
-axis(1.1*[0 d.velmax 0 Tmax])
+plot(DatiOpt.velmec(1:n_freq),DatiOpt.T_top_W,'bx-'), axis(1.1*[0 d.velmax 0 Tmax])
 grid on
 xlabel('Speed [rpm]')
 ylabel('Torque [Nm]')
@@ -58,6 +57,30 @@ grid on
 xlabel('Speed [rpm]')
 ylabel('Torque [Nm]')
 title('Motor Total Loss - W');
+
+figure
+plot(DatiOpt.velmec(1:n_freq),DatiOpt.T_top_W,'bx-','LineWidth',1)
+axis(1.1*[0 d.velmax 0 Tmax]), hold on
+[cc,hh]=contour(VV,TP,DatiOpt.PERDITE_MAG,[0:100:1000 1500:500:4000 5000:1000:8000]);
+clabel(cc,hh);
+colorbar;
+grid on
+xlabel('Speed [rpm]')
+ylabel('Torque [Nm]')
+title('PM Loss - W');
+
+figure
+plot(DatiOpt.velmec(1:n_freq),DatiOpt.T_top_W,'bx-','LineWidth',1)
+axis(1.1*[0 d.velmax 0 Tmax]), hold on
+[cc,hh] = contour(VV,TP,DatiOpt.PERDITE_FERRO,[0:10:100 1500:500:4000 5000:1000:8000]);
+clabel(cc,hh);
+colorbar;
+grid on
+xlabel('Speed [rpm]')
+ylabel('Torque [Nm]')
+title('Core Loss - W');
+
+
 
 % figure
 % % [cc,hh]=contourf(VV,TP,EffSYS,[70:1:max(max(EffSYS))]);

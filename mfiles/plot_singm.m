@@ -47,29 +47,31 @@ i_q=linspace(iq(1),iq(end),n2);
 % Fq = interp2(idvect,iqvect,Fq,Id,Iq,'cubic')*klength;
 % T = interp2(idvect,iqvect,T,Id,Iq,'cubic')*klength;
 
-Fd = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Fd,Id,Iq,'cubic')*klength;
-Fq = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Fq,Id,Iq,'cubic')*klength;
-T = interp2(F_map.Id(1,:),F_map.Iq(:,1)',T,Id,Iq,'cubic')*klength;
-
+% Fd = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Fd,Id,Iq,'cubic')*klength;
+% Fq = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Fq,Id,Iq,'cubic')*klength;
+% T = interp2(F_map.Id(1,:),F_map.Iq(:,1)',T,Id,Iq,'cubic')*klength;
+Fd = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Fd,3),Id,Iq,'cubic')*klength;
+Fq = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Fq,3),Id,Iq,'cubic')*klength;
+T = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(T,3),Id,Iq,'cubic')*klength;
 if isfield(F_map,'dT')
-    dT = interp2(F_map.Id(1,:),F_map.Iq(:,1)',dT,Id,Iq,'cubic');
+    dT = interp2(F_map.Id(1,:),F_map.Iq(:,1)',mean(dT,3),Id,Iq,'cubic');
     dT = dT*klength;
 end
 if isfield(F_map,'dTpp')
-    dTpp = interp2(F_map.Id(1,:),F_map.Iq(:,1)',dTpp,Id,Iq,'cubic');
+    dTpp = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(dTpp,3),Id,Iq,'cubic');
     dTpp = dTpp*klength;
 end
 if isfield(F_map,'Pfe')
-    Pfe = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Pfe,Id,Iq,'cubic');
+    Pfe = interp2(F_map.Id(1,:),F_map.Iq(:,1)',mean(Pfe,3),Id,Iq,'cubic');
 end
 if isfield(F_map,'Pfes_h')
-    Pfes_h = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Pfes_h,Id,Iq,'cubic')*klength;
-    Pfes_c = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Pfes_c,Id,Iq,'cubic')*klength;
-    Pfer_h = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Pfer_h,Id,Iq,'cubic')*klength;
-    Pfer_c = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Pfer_c,Id,Iq,'cubic')*klength;
+    Pfes_h = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Pfes_h,3),Id,Iq,'cubic')*klength;
+    Pfes_c = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Pfes_c,3),Id,Iq,'cubic')*klength;
+    Pfer_h = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Pfer_h,3),Id,Iq,'cubic')*klength;
+    Pfer_c = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Pfer_c,3),Id,Iq,'cubic')*klength;
 end
 if isfield(F_map,'Ppm')
-    Ppm = interp2(F_map.Id(1,:),F_map.Iq(:,1)',Ppm,Id,Iq,'cubic')*klength;
+    Ppm = interp2(F_map.Id(1,:,1),F_map.Iq(:,1,1)',mean(Ppm,3),Id,Iq,'cubic')*klength;
 end
 
 %% rewind

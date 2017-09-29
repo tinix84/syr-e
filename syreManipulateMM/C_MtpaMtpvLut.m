@@ -60,11 +60,11 @@ if nargin()<2
     
     [success,message,messageid] = mkdir(pathname,'AOA');
     GoAhead = 'Yes';
-    if not(isempty(message))
-        GoAhead = questdlg('Existing folder: proceed anyway?', ...
-            'WARNING!', ...
-            'Yes', 'No', 'No');
-    end
+%     if not(isempty(message))
+%         GoAhead = questdlg('Existing folder: proceed anyway?', ...
+%             'WARNING!', ...
+%             'Yes', 'No', 'No');
+%     end
 else
     [success,message,messageid] = mkdir(pathname,'AOA');
     if ~isempty(message)
@@ -74,12 +74,15 @@ end
 
 load([pathname filename]);
 
+plot_defaults;
+
 % if isempty(axes_type)
 if sum(Id(:,1)) < 0
     axes_type = 'PM';  % SPM style
 else
     axes_type = 'SR';  % IPM style
 end
+
 % end
 
 if(0)
@@ -96,6 +99,31 @@ if (0)
     % plot the initial magnetic model
     plot_maps(pathname,filename);
 end
+
+if (0)
+    % keep only the data of positive dq currents
+    
+    answ=inputdlg('axes type (SR or PM)?','Axes type',1,{axes_type});
+    axes_type=answ{1};
+    
+    Id0=Id;
+    Iq0=Iq;
+    Fd0=Fd;
+    Fq0=Fq;
+    T0=T;
+    dTpp0=dTpp;
+    dT0=dT;
+
+    Id=linspace(0,max(max(Id)),256);
+    Iq=linspace(0,max(max(Iq)),256);
+    [Id,Iq]=meshgrid(Id,Iq);
+    Fd=interp2(Id0,Iq0,Fd0,Id,Iq);
+    Fq=interp2(Id0,Iq0,Fq0,Id,Iq);
+    T=interp2(Id0,Iq0,T0,Id,Iq);
+    dT=interp2(Id0,Iq0,dT0,Id,Iq);
+    dTpp=interp2(Id0,Iq0,dTpp0,Id,Iq);
+end
+    
 
 % Performance maps
 id = Id(1,:); iq = Iq(:,1)';
@@ -193,21 +221,33 @@ if exist('dTpp_KtMax')
     hold on
     plot(I_KtMax,[(T_KtMax+dTpp_KtMax);(T_KtMax-dTpp_KtMax)],'r');
 end
-xlabel('phase current - Apk'), ylabel('torque - Nm')
-title('torque against peak current along the MPTA')
+set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
+xlabel('Phase current [A] pk'), ylabel('Torque [Nm]')
+title('Torque vs pk current, MPTA')
 saveas(gcf,[pathname 'AOA\torque_current']);
 
 figure
+% gamma_KtMax = atand(-id_KtMax./iq_KtMax);
+gamma_KtMax = atand(iq_KtMax./id_KtMax);
+plot(I_KtMax,gamma_KtMax), grid on
+set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
+xlabel('Phase current [A] pk'), ylabel('MTPA current angle [deg]')
+title('$$\gamma_{MPTA}(I)$$')
+saveas(gcf,[pathname 'AOA\gamma_current']);
+
+figure
 plot(T_KtMax,F_KtMax), grid on
-xlabel('torque - Nm'), ylabel('flux amplitude - Vs')
-title('torque against peak flux along the MPTA')
+set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
+xlabel('Torque [Nm]'), ylabel('Flux amplitude [Vs]')
+title('Torque vs pk flux, MPTA')
 saveas(gcf,[pathname 'AOA\flux_torque']);
 
 cut_point = 7;
 figure
 plot(I_KtMax(cut_point:end),T_KtMax(cut_point:end)./I_KtMax(cut_point:end)), grid on
-xlabel('phase current - Apk'), ylabel('kt - Nm/Apk')
-title('kt against current along the MPTA')
+set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
+xlabel('Phase current [A] pk'), ylabel('kt [Nm/Apk]')
+title('kt vs pk current, MPTA')
 saveas(gcf,[pathname 'AOA\kt_current']);
 
 % contours
@@ -216,9 +256,10 @@ figure
 [c,h]=contour(id,iq,II,'k'); clabel(c,h)
 plot(id_KtMax(1:end),iq_KtMax(1:end),'-b','LineWidth',2),
 plot(id_KvMax,iq_KvMax,'-b','LineWidth',2),
-grid on, xlabel('i_d [A]'),ylabel('i_q [A]'), hold off
+grid on, xlabel('$$i_d$$ [A]'),ylabel('$$i_q$$ [A]'), hold off
 axis equal, axis([min(id) max(id) min(iq) max(iq)])
-title('AOA in id,iq coordinates')
+title('Control curves in id iq coordinates')
+legend('[Nm]','[A]','MTPA','MTPV')
 % adapt_figure_fonts('Times New Roman',18,14)
 saveas(gcf,[pathname 'AOA\MTPAMTPV(id,iq)']);
 
@@ -277,10 +318,13 @@ fclose(fid);
 
 % debug
 figure
+set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 plot(T_KtMax,id_KtMax), hold on, grid on,
 plot(T_KtMax,iq_KtMax,'r'),
 plot(T_set,id_set,'xk'), plot(T_set,iq_set,'xk'), hold off,
-legend('id set point','iq set point','LUT','LUT');
-xlabel('T\_set - Nm'), ylabel('Apk')
+set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
+legend('id setpoint','iq setpoint','LUT','LUT');
+xlabel('$$T\_set [Nm]$$'), ylabel('[A] pk')
+saveas(gcf,[pathname 'AOA\tablesMTPA']);
 
 edit([pathname '\tablesMTPA.txt'])

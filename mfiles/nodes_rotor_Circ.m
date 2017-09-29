@@ -133,7 +133,7 @@ for jj = 1:2:length(r_all)                                                      
         %         [xp,yp]=calc_intersezione_cerchi(r-pont0, rbeta(ceil(jj/2)), x0);
         % DISEGNO DELLE BARRIERE DI FLUSSO -> Aggiunta dei nodi 3 (-3) e 4 (-4) (Bordi inferiore e superiore della barriera_inizio)
         
-        % 2014/02/25 MG no intersaction between circle mean that the
+        % 2014/02/25 MG no intersection between circle mean that the
         % barrier is unfeseable and is corresponding drawn like a circle
         if (not(isreal(xc))||not(isreal(yc))||yc<=eps)
             xc=r-pont0-hc(ceil(jj/2))/2;

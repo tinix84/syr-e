@@ -1,19 +1,17 @@
 function [mat] = material_properties_conductor(MatName)
 
+load('materialLibrary\conductor_material.mat')
 
-%% material list
-MatList = { 'Copper'
-            'Aluminium'};
-mat.MatList = MatList;
-mat.MatName = MatName;
+ind=0;
 
-if strcmp(MatName,MatList{1})
-    %% Copper
-    mat.sigma = 5.8e7;      % [S/m]
-    mat.kgm3 = 8940;        % [kg/m3]
-elseif strcmp(MatName,MatList{2})
-    mat.sigma = 2.9e7;      % [S/m]
-    mat.kgm3 = 2700;        % [kg/m3]
-    
+for ii=1:length(MatList)
+    if strcmp(MatList{ii},MatName)
+        ind=ii;
+    end
 end
-          
+if ind==0
+    mat.MatName=MatName;
+    mat.MatList=MatList;
+else
+    mat=MatLib{ind};
+end

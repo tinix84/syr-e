@@ -26,11 +26,11 @@ save LastPath pathname
 
 [success,message,messageid] = mkdir(pathname,'AOA')
 GoAhead = 'Yes';
-if not(isempty(message))
-    GoAhead = questdlg('Existing folder: proceed anyway?', ...
-        'WARNING!', ...
-        'Yes', 'No', 'No');
-end
+% if not(isempty(message))
+%     GoAhead = questdlg('Existing folder: proceed anyway?', ...
+%         'WARNING!', ...
+%         'Yes', 'No', 'No','none');
+% end
 
 % if isempty(axes_type)
 if sum(Id(:,1)) < 0
@@ -97,8 +97,8 @@ iq_tab_min = min(min(Iq));
 iq_tab_max = max(max(Iq));
 
 % LUT dimension
-m = 21;    % rows
-n = 21;   % columns
+m = 51;    % rows
+n = 51;   % columns
 
 % Fd table: current steps
 Didd = (id_tab_max-id_tab_min)/(n-1);
@@ -140,7 +140,7 @@ plot(idd',fd'), grid on, hold on
 plot(iqq ,fq'),
 plot(idd',fd','kx'),
 plot(iqq ,fq','kx'), hold off
-xlabel('i_d, i_q [A]'), ylabel('\lambda_d \lambda_q [Vs]'), %title(motor_name)
+xlabel('$$i_d$$, $$i_q$$ [A]'), ylabel('$$\lambda_d \lambda_q [Vs]$$'), %title(motor_name)
 
 saveas(gcf,[pathname 'FluxTables'])
 edit([pathname 'FluxTables.txt'])

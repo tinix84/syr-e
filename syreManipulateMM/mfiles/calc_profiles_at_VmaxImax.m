@@ -14,6 +14,28 @@ rad2rpm=30/pi/p;
 pathname = [pathname,'AOA\'];
 load([pathname 'ktMax_idiq']); load([pathname 'kvMax_idiq']);
 
+if (0) % take only 1st quadrant
+    Id0=Id;
+    Iq0=Iq;
+    Fd0=Fd;
+    Fq0=Fq;
+    T0=T;
+%     dTpp0=dTpp;
+%     dT0=dT;
+
+    Id=linspace(0,max(max(Id)),256);
+    Iq=linspace(0,max(max(Iq)),256);
+    [Id,Iq]=meshgrid(Id,Iq);
+    Fd=interp2(Id0,Iq0,Fd0,Id,Iq);
+    Fq=interp2(Id0,Iq0,Fq0,Id,Iq);
+    T=interp2(Id0,Iq0,T0,Id,Iq);
+%     dT=interp2(Id0,Iq0,dT0,Id,Iq);
+%     dTpp=interp2(Id0,Iq0,dTpp0,Id,Iq);
+end
+
+
+
+
 % Performance maps
 id = Id(1,:); iq = Iq(:,1)';
 TI = 3/2 * p * (Fd .* Iq - Fq .* Id);   % torque
@@ -45,9 +67,9 @@ if strcmp(axes_type,'SR')
     T_KtMax_p = polyval(p_KtMax_T,id_KtMax_p);
     % poly fit KvMax
     if ~isempty(id_KvMax)
-        [p_KvMax_i,s] = polyfit(id_KvMax,iq_KvMax,3);
-        id_KvMax = linspace(0,1.10*max(id_KvMax),length(id_KvMax))
-        iq_KvMax = polyval(p_KvMax_i,id_KvMax);
+%         [p_KvMax_i,s] = polyfit(id_KvMax,iq_KvMax,3);
+%         id_KvMax = linspace(0,1.10*max(id_KvMax),length(id_KvMax))
+%         iq_KvMax = polyval(p_KvMax_i,id_KvMax);
     end
 else
     % poly fit KtMax
@@ -87,10 +109,9 @@ end
 % point A
 if strcmp(axes_type,'SR')
     
-    id_A = interp1(I_KtMax,id_KtMax,imax);
-    iq_A = polyval(p_KtMax_i,id_A);
-    %iq_A = interp1(I_KtMax,iq_KtMax,imax);
-    
+    id_A = interp1(I_KtMax,id_KtMax,imax,'linear','extrap');
+    %iq_A = polyval(p_KtMax_i,id_A);
+    iq_A = interp1(I_KtMax,iq_KtMax,imax,'linear','extrap');
   
     if (ich>imax)
         % no MTPV or no MTPV and Imax crossing
@@ -99,16 +120,17 @@ if strcmp(axes_type,'SR')
         id_C = id_B;
         iq_C = iq_B;
     else % SR style axes
-        id_B = interp1(I_KvMax,id_KvMax,imax);
-        iq_B = polyval(p_KvMax_i,id_B);
-        %iq_B = interp1(I_KvMax,iq_KvMax,imax);
+        id_B = interp1(I_KvMax,id_KvMax,imax,'linear','extrap');
+        %iq_B = polyval(p_KvMax_i,id_B);
+        iq_B = interp1(id_KvMax,iq_KvMax,id_B,'linear','extrap');
         id_C = 0;
-        iq_C = polyval(p_KvMax_i,id_C);
+        %iq_C = polyval(p_KvMax_i,id_C);
+        iq_C = interp1(id_KvMax,iq_KvMax,id_C,'linear','extrap');
     end
     
 else
     % PM style axes
-    iq_A = interp1(I_KtMax,iq_KtMax,imax);
+    iq_A = interp1(I_KtMax,iq_KtMax,imax,'linear','extrap');
     id_A = polyval(p_KtMax_i,iq_A);
     %id_A = interp1(I_KtMax,id_KtMax,imax);
     
@@ -119,11 +141,12 @@ else
         id_C = id_B;
         iq_C = iq_B;
     else
-        iq_B = interp1(I_KvMax,iq_KvMax,imax);
-        id_B = polyval(p_KvMax_i,iq_B);
-        %id_B = interp1(I_KvMax,id_KvMax,imax);
+        iq_B = interp1(I_KvMax,iq_KvMax,imax,'linear','extrap');
+        %id_B = polyval(p_KvMax_i,iq_B);
+        id_B = interp1(I_KvMax,id_KvMax,imax,'linear','extrap');
         iq_C = 0;
-        id_C = polyval(p_KvMax_i,iq_C);
+        %id_C = polyval(p_KvMax_i,iq_C);
+        id_C = interp1(iq_KvMax,id_KvMax,iq_C,'linear','extrap');
     end
 end
 
@@ -159,7 +182,7 @@ if strcmp(axes_type,'SR')
         id_BC = linspace(id_B,id_C,50);
         id_BC = id_BC(1:end-1);
         %iq_BC = polyval(p_KvMax_i,id_BC);
-        iq_BC = interp1(id_KvMax,iq_KvMax,id_BC);
+        iq_BC = interp1(id_KvMax,iq_KvMax,id_BC,'linear','extrap');
     else
         id_BC = [id_B id_C];
         iq_BC = [iq_B iq_C];
@@ -173,7 +196,7 @@ else
         iq_BC = linspace(iq_B,iq_C,50);
         iq_BC = iq_BC(1:end-1);
         %id_BC = polyval(p_KvMax_i,iq_BC);
-        iq_BC = interp1(iq_KvMax,id_KvMax,iq_BC);
+        iq_BC = interp1(iq_KvMax,id_KvMax,iq_BC,'linear','extrap');
     else
         id_BC = [id_B id_C];
         iq_BC = [iq_B iq_C];
@@ -243,7 +266,8 @@ if exist('Wslip','var')
     wslip(isnan(wslip)) = wslip(last_number);
     %     rot_temperature = 20;
     %     ref_temperature = 100;
-    temp_coeff = (234.5 + rot_temperature)/(234.5 + Rr_temp);
+    %temp_coeff = (234.5 + rot_temperature)/(234.5 + Rr_temp);
+    temp_coeff=1;
     wslip = wslip * temp_coeff;
 else
     wslip = id_max * 0;
@@ -255,20 +279,31 @@ wr = w - wslip;
 % potenza meccanica corretta (a parte Pfe)
 P = [T_0A T_AB T_BC] .* wr/p;
 % calcolo sbagliato, manca wslip .. lascio per compatibilità con versioni prec
-P_AB = T_AB .* w_AB/p;
-P_BC = T_BC .* w_BC/p;
-P_0A = T_0A .* w_0A/p;
-
-% Tmax = T_A;
-% Pmax = max([P_AB P_BC])
-
-PFlim = P ./ (3/2 * [V_0A V_AB V_BC] .* [I_0A I_AB I_BC]);
-
+if ~exist('Wslip','var')
+    P_AB = T_AB .* w_AB/p;
+    P_BC = T_BC .* w_BC/p;
+    P_0A = T_0A .* w_0A/p;
+    % Tmax = T_A;
+    % Pmax = max([P_AB P_BC])
+    
+    PFlim = P ./ (3/2 * [V_0A V_AB V_BC] .* [I_0A I_AB I_BC]);
+else
+    w_0A=w_0A-wslip(1:length(w_0A));
+    w_AB=w_AB-wslip(length(w_0A)+1:length([w_0A w_AB]));
+    w_BC=w_BC-wslip(length([w_0A w_AB])+1:end);
+    
+    P_AB = T_AB .* w_AB/p;
+    P_BC = T_BC .* w_BC/p;
+    P_0A = T_0A .* w_0A/p;
+    
+    PFlim = P ./ (3/2 * [V_0A V_AB V_BC] .* [I_0A I_AB I_BC]);
+end
 
 % save Plim points
 Plim.wr = wr;
 Plim.n = wr * rad2rpm;
-Plim.P = P;
+Plim.w=w;
+Plim.P = [P_0A P_AB P_BC];
 Plim.V = [V_0A V_AB V_BC];
 Plim.I = [I_0A I_AB I_BC];
 Plim.T = [T_0A T_AB T_BC];
@@ -295,4 +330,5 @@ Plim.I_BC = I_BC;
 Plim.V_BC = V_BC;
 Plim.P_BC = P_BC;
 Plim.T_BC = T_BC;
+
 

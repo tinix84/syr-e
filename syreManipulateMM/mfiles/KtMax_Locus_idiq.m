@@ -3,7 +3,7 @@
 % I CONTOUR evaluation --> Kt max loci
 % CurveIsoII is the I Levels Contour in the id-iq plane
 
-cd, debug = 0;
+cd, debug = 1;
 
 Curve = CurveIsoII; Level = ILevel;
 Tot = 0; Valori = 0; NuovoValore=[];
@@ -41,7 +41,7 @@ while ((Tot+Valori)<length(Curve) && finito == 0),
         Tmax_I = NaN;
     end
     
-    if count_finito == 5
+    if count_finito == length(Curve)*3/4
         finito = 1;
     end
     T_KtMax(m) = Tmax_I;
@@ -63,8 +63,8 @@ T_KtMax = T_KtMax(not(isnan(T_KtMax)));
 % poly fit KtMax
 if strcmp(axes_type,'SR')
     %% IPM style axes
-    [p_KtMax_i,s] = polyfit(id_KtMax,iq_KtMax,7);
-    [p_KtMax_T,s] = polyfit(id_KtMax,T_KtMax,7);
+    [p_KtMax_i,s] = polyfit([0 id_KtMax],[0 iq_KtMax],7);
+    [p_KtMax_T,s] = polyfit([0 id_KtMax],[0 T_KtMax],7);
     id_KtMax_p = linspace(0,max(id_KtMax)*1.05,length(id_KtMax));
     iq_KtMax_p = polyval(p_KtMax_i,id_KtMax_p);
     T_KtMax_p = polyval(p_KtMax_T,id_KtMax_p);
@@ -72,14 +72,14 @@ else
     %% SPM style axes
     [p_KtMax_i,s] = polyfit(iq_KtMax,id_KtMax,7);
     [p_KtMax_T,s] = polyfit(iq_KtMax,T_KtMax,7);
-    iq_KtMax_p = linspace(0,max(iq_KtMax),length(iq_KtMax))
+    iq_KtMax_p = linspace(0,max(iq_KtMax),length(iq_KtMax));
     id_KtMax_p = polyval(p_KtMax_i,iq_KtMax_p);
     T_KtMax_p = polyval(p_KtMax_T,iq_KtMax_p);
 end
 
-if not(exist('Imax'))
+%if not(exist('Imax'))
     Imax = max(max(II))/sqrt(2);
-end
+%end
 ind = find(abs(iq_KtMax_p + j* id_KtMax_p)>=0.94*Imax,1,'first');
 
 if debug
@@ -104,7 +104,7 @@ if(0)
 end
 I_KtMax = abs(id_KtMax + j* iq_KtMax);
 save([pathname 'ktMax_idiq'],'id_KtMax','iq_KtMax','T_KtMax')
-if exist('dTpp')
+if exist('dTpp','var')
     dTpp_KtMax = interp2(id,iq,dTpp,id_KtMax,iq_KtMax);    % dT pk pk on MTPA
     dTpp_KtMax = dTpp_KtMax(not(isnan(T_KtMax)));
     save ([pathname 'ktMax_idiq'],'dTpp_KtMax','-append');

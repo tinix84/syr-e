@@ -54,8 +54,7 @@ switch geo.RotType
         %% find the center of permanent magnet
         PMBaricentro = [];
         
-        hybrid = geo.hybrid;
-        if hybrid == 0
+        if geo.BarFillFac ~= 2
             %% regular or rounded shape
             if seg~=1
                 % find the center of each PM segment; defined as the middle

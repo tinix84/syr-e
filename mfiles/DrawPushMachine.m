@@ -82,7 +82,7 @@ set(handles.currentMotFileName,'String',filename);  % update display
 
 %% refresh GUI display data
 load([dname '\' filename]);
-dataSet.RQ = roundn(dataSet.RQ,-4);
+dataSet.RQ = round(dataSet.RQ,4);
 dataSet.currentpathname = [dname '\'];
 dataSet.currentfilename = filename;
 

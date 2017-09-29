@@ -16,5 +16,7 @@ function data = buildDefaultRQ(bounds)
 
 data = mean(bounds,2);
 data = data';
-data = roundn(data,-2);
+data = round(data*100)/100;
+%data = round(data*100)/100;
+
 
