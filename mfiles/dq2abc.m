@@ -12,14 +12,21 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-% trasformazione dq -> abc
+% dq -> abc general transformation for multi 3-phase machines
+% same results as dq2abc.m for the case n3phase=1
 
-function i123 = dq2abc(id,iq,theta)
+function i123 = dq2abc(id,iq,theta,n3phase,index)
 
-% matrice di trasformazione (2 -> 3)
-T23 = [1      0
-    -0.5   sqrt(3)/2
-    -0.5  -sqrt(3)/2];
+% index vary between 0 to (n3phase-1)
+% n3phase = number of 3-phase circuits
+
+delta = pi/3;                   %sextant amplitude
+theta_i = delta*index/n3phase;  %angular difference between alpha-axis and first phase of the n3phase-th 3-phase circuit
+
+% Inverse transformation matrix (2 -> 3)
+T23 = [cos(theta_i)            sin(theta_i)
+       cos(theta_i+2*pi/3)     sin(theta_i+2*pi/3)
+       cos(theta_i-2*pi/3)     sin(theta_i-2*pi/3)];
 
 % dq -> alpha beta
 iab = (id + j * iq) .* exp(j*theta);

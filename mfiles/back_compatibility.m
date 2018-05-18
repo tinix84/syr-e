@@ -267,6 +267,115 @@ if ~isfield(dataSet,'RadRibCheck')
     flag = 1;
 end
 
+%% Bfe and kt
+if ~isfield(dataSet,'Bfe')
+    dataSet.Bfe=1.5;
+    dataSet.kt=1;
+    if Dflag
+        disp('rev289 - added Bfe and kt')
+    end
+    flag = 1;
+end
+
+%% PMs area in Seg and ISeg for bonded-to-real PMs (W. Ventura Master Thesis)
+if ~isfield(dataSet,'Areavert')
+    dataSet.Areavert  = zeros(1,4);
+    dataSet.Areaob    = zeros(1,4);
+    dataSet.Areatot   = zeros(1,4);
+    dataSet.Areavert0 = zeros(1,4);
+    dataSet.Areaob0   = zeros(1,4);
+    dataSet.dob       = ones(1,4);
+    dataSet.dvert     = ones(1,4);
+    if Dflag
+        disp('rev309 - added PMs area evaluation for Seg and ISeg')
+    end
+    flag = 1;
+end
+
+% In some case, Areavert and its friends are set as empty, but is an error.
+if isempty(dataSet.Areavert)
+    dataSet.Areavert  = zeros(1,4);
+    dataSet.Areaob    = zeros(1,4);
+    dataSet.Areatot   = zeros(1,4);
+    dataSet.Areavert0 = zeros(1,4);
+    dataSet.Areaob0   = zeros(1,4);
+    dataSet.dob       = ones(1,4);
+    dataSet.dvert     = ones(1,4);
+end
+
+%% Multi 3-phase option (Simone Adamo Master Thesis)
+if ~isfield(dataSet,'Num3PhaseCircuit') %AS
+    dataSet.Num3PhaseCircuit=1;
+    dataSet.WinFlag=[1 1 1];
+    dataSet.DefaultWinMatr=dataSet.WinMatr;
+    if Dflag
+        disp('rev319 - added multi 3-phase windings')
+    end
+    flag = 1;
+end
+
+%% Added parameters in dataSet for Vtype rotor geometry - rev.Gallo 17/01/2018 
+if ~isfield(dataSet,'SlopeBarrier')
+
+    dataSet.SlopeBarrier=60;
+    dataSet.SlopeBarrBou=[10 89];
+    dataSet.SlopeBarrBouCheck=0;
+    
+    if Dflag
+        disp('rev325 - added Vtype rotor geometry')
+    end
+    flag = 1;
+end
+
+%% Added parameters in dataSet for optimization Vtype rotor - rev.Gallo 20/03/2018
+if ~isfield(dataSet,'MaxPMMass')
+    dataSet.MaxPMMass= 1.58; %Massa volume magnete macchina di riferimento (mot.232 Pareto OUT_20180308T163427)
+    dataSet.MassPMOptCheck=0;
+    if Dflag
+        disp('rev325 - added PM Mass in optimization objective')
+    end
+    flag = 1;
+end
+
+%% Split radial ribs
+if ~isfield(dataSet,'RadRibSplit')
+    dataSet.RadRibSplit=0;
+    if Dflag
+        disp('rev326 - added splitted radial ribs for Seg geometry')
+    end
+    flag=1;
+end
+
+%% FEAfix syrmDesign
+if ~isfield(dataSet,'FEAfixN')
+    dataSet.FEAfixN=1;
+    if Dflag
+        disp('rev326 - added FEAfix for syrmDesign tool')
+    end
+    flag=1;
+end
+
+%% Flux Barrier Shift 
+if ~isfield(dataSet,'thetaFBS')
+    dataSet.thetaFBS=0;
+    dataSet.ThetaFBSBouCheck=0;
+    dataSet.ThetaFBSBou=[0 360/(6*dataSet.NumOfPolePairs*dataSet.NumOfSlots)];
+    if Dflag
+        disp('rev326 - added Flux Barrier Shift for Circular and Seg geometries')
+    end
+    flag=1;
+end
+
+%% BrDesign
+if ~isfield(dataSet,'BrDesign')
+    matTmp=material_properties_layer('Bonded-Magnet');
+    dataSet.BrDesign=matTmp.Br;
+    if Dflag
+        disp('rev326 - added BrDesign useful for PMs design')
+    end
+    flag=1;
+end
+
 %% rewriting geo, per and mat (and check if mat exist)
 % if ~exist('mat')
 %     flag_mat=1;
@@ -288,17 +397,6 @@ if (length(dataSet.RQ)~=length(dataSet.RQnames) || length(geo.RQ)~=length(dataSe
     end
     flag=1;
 end
-
-%% Bfe and kt
-if ~isfield(dataSet,'Bfe')
-    dataSet.Bfe=1.5;
-    dataSet.kt=1;
-    if Dflag
-        disp('rev289 - added Bfe and kt')
-    end
-    flag = 1;
-end
-
 
 %% message in command window if some data are added
 if flag && Dflag

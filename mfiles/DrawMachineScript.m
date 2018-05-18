@@ -1,7 +1,11 @@
 function DrawMachineScript(dataSet,pathname,filename)
 
 if nargin()<3
-    pathname = [cd '\'];
+    if isoctave()            %OCT
+      pathname = [pwd() '\'];                                   
+    else
+      pathname = [cd '\'];
+    end  
     filename = 'newmachine.fem';
     disp('You do not insert pathname and filename.')
     disp('Default parameters:')

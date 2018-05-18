@@ -28,6 +28,17 @@ for ii=1:nrig
         mi_setnodeprop('None',gruppo);
         mi_clearselected
         %         keyboard
+    elseif Mat(ii,ncol)== eps || Mat(ii,ncol)== -eps  %mod walter
+        mi_drawline(Mat(ii,1),Mat(ii,2),Mat(ii,3),Mat(ii,4));
+        mi_selectsegment(mean([Mat(ii,1) Mat(ii,3)]),mean([Mat(ii,2) Mat(ii,4)]));
+        
+        mi_setsegmentprop('None', res, 0, 0, gruppo);
+        mi_clearselected
+        mi_selectnode(Mat(ii,1),Mat(ii,2));
+        mi_selectnode(Mat(ii,3),Mat(ii,4));
+        mi_setnodeprop('None',gruppo);
+        mi_clearselected
+        
     else
         
         [maxsegdeg,raggio,ang1,ang]=Disegna_Arco(Mat(ii,:),res);

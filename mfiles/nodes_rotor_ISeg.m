@@ -357,17 +357,9 @@ rTemp = rbeta;
 
 calc_ribs_rad;
 
-% determination of different magnet segment, central point and magnetization direction
-MagnetFullFill_ISeg;
-
-mat.LayerMag.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
-
-temp.xc=xc;
-temp.yc=yc;
-temp.xmag=xmag;
-temp.ymag=ymag;
-temp.zmag=zmag;
 % Additional division for magnet insertion in flux barrier
+XpMag1B1=XpontRadBarSx;
+YpMag1B1=YpBar2;
 temp.XpMag1B1=XpMag1B1;
 temp.YpMag1B1=YpMag1B1;
 
@@ -409,6 +401,22 @@ temp.XpontRadBarSx=XpontRadBarSx;
 temp.YpontRadBarDx=YpontRadBarDx;
 temp.YpontRadBarSx=YpontRadBarSx;
 temp.error_mex=error_mex;
+%Aree e matrice Mag per posizionamento magneti
+[temp,geo]=area_magnet_ISeg(temp,geo);
+% determination of different magnet segment, central point and magnetization direction
+MagnetFullFill_ISeg;
+
+mat.LayerMag.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
+
+temp.xc=xc;
+temp.yc=yc;
+temp.xair=xair;
+temp.yair=yair;
+temp.xmag=xmag;
+temp.ymag=ymag;
+temp.xmagair=xmagair;
+temp.ymagair=ymagair;
+temp.zmag=zmag;
 % beta_f=0;
 hf=[r,B1k]-[B2k,Ar]; % calcolo dei Delta di ferro di rotore
 geo.hf = hf;

@@ -41,7 +41,14 @@ function post_proc_single_motor(dataIn,varargin)
 %% input dialog box
 if (nargin) == 0
     %% input dialog box
-    temp = inputdlg({'current load [p.u.]';'gamma [deg]';'Br [T]';'number of rotor positions';'angular span (elt. deg.)';'points in [0 Imax]'},'INPUT',1,{'[1 1 1 1 1 1 1 1]';'[40 45 50 55 60 65 70 75]';'0';'6';'60';'5'});
+    [filemot, pathname, fltidx]=uigetfile(' *.fem', 'Pick a motor');
+    load(strrep(filemot,'.fem','.mat'));
+    if isoctave()
+        temp = inputdlg({'current load [p.u.]';'gamma [deg]';'Br [T]';'number of rotor positions';'angular span (elt. deg.)';'points in [0 Imax]';'Evaluate loss? [1 - Yes, 0 - No]'},'INPUT',1,{dataSet.CurrLoPP;dataSet.GammaPP;dataSet.BrPP;dataSet.NumOfRotPosPP;dataSet.AngularSpanPP;dataSet.NumGrid;dataSet.LossEvaluationCheck});
+    else
+        temp = inputdlg({'current load [p.u.]';'gamma [deg]';'Br [T]';'number of rotor positions';'angular span (elt. deg.)';'points in [0 Imax]';'Evaluate loss? [1 - Yes, 0 - No]'},'INPUT',1,{num2str(dataSet.CurrLoPP);num2str(dataSet.GammaPP);num2str(dataSet.BrPP);num2str(dataSet.NumOfRotPosPP);num2str(dataSet.AngularSpanPP);num2str(dataSet.NumGrid);num2str(dataSet.LossEvaluationCheck)});
+    end
+    dataIn.LossEvaluationCheck = eval(cell2mat(temp(7)));
     
     CurrLoPP = eval(cell2mat(temp(1)));         % current to be simulated
     GammaPP = eval(cell2mat(temp(2)));          % current phase angle
@@ -49,7 +56,22 @@ if (nargin) == 0
     NumOfRotPosPP = eval(cell2mat(temp(4)));    % # simulated positions
     AngularSpanPP = eval(cell2mat(temp(5)));    % angular span of simulation
     NumGrid = eval(cell2mat(temp(6)));          % number of points in [0 Imax] for the single machine post-processing
+    
+    %[dataSet,~,~] = back_compatibility(dataSet,geo,per);
+    %name_file1 = strrep(filemot,'.fem','.mat');
+    %if isoctave()  %OCT
+    %    name_file = strcat(pathname, name_file1);
+    %    save ('-mat7-binary', name_file,'geo','per','dataSet','mat');
+    %else
+    %    save([pathname name_file1],'geo','per','dataSet','mat');
+    %end
+    %clear name_file1
 else
+    pathname=dataIn.currentpathname;
+    filemot = strrep(dataIn.currentfilename,'.mat','.fem');
+    load([dataIn.currentpathname dataIn.currentfilename]);
+    
+    
     CurrLoPP = dataIn.CurrLoPP;
     GammaPP  = dataIn.GammaPP;
     BrPP = dataIn.BrPP;
@@ -72,12 +94,6 @@ else
     eval_type = 'singt';    % single or multiple id, iq combination
 end
 
-% choose the .fem file and load the associated .mat file
-% [filemot, pathname] = uigetfile([syreRoot '\*.fem'], 'Pick a motor');
-pathname = dataIn.currentpathname;
-filemot = strrep(dataIn.currentfilename,'.mat','.fem');
-load([pathname strrep(filemot,'.fem','.mat')]);
-
 per.overload=CurrLoPP;
 per.BrPP=BrPP;
 
@@ -86,7 +102,12 @@ geo.delta_sim_singt = AngularSpanPP;  % angular span of simulation
 
 %% Iron Loss Input
 if dataIn.LossEvaluationCheck == 1
-    per.EvalSpeed = dataIn.EvalSpeed;
+    if isoctave()                                                                %OCT
+        temp = inputdlg({'Evaluated speed [rpm]'},'INPUT',1,{'0'});
+        per.EvalSpeed = eval(cell2mat(temp(1)));
+    else
+        per.EvalSpeed = dataIn.EvalSpeed;
+    end
 end
 
 % Magnet coercivity
@@ -136,8 +157,19 @@ switch eval_type
             [success,message,messageid] = mkdir(pathname,FILENAME);
             newDir=[pathname,FILENAME,'\'];
             
-            save([newDir,FILENAME,'.mat'],'geo','per','out');
-            movefile([syreRoot '\tmp\' dirName '\mot_temp.fem'],[newDir FILENAME '.fem']);
+            if isoctave()            %OCT
+                file_name1= strcat(newDir,FILENAME,'.mat');
+                save('-mat7-binary', file_name1,'geo','per','out');
+                dirIn=strcat(dirName, '\mot_temp.fem');
+                dirDest=strcat(newDir, FILENAME, '.fem');
+                movefile(dirIn, dirDest);
+                clear file_name1 dirIn dirDest
+            else
+                save([newDir,FILENAME,'.mat'],'geo','per','out');
+                %movefile([syreRoot '\tmp\' dirName '\mot_temp.fem'],[newDir FILENAME '.fem']);
+                movefile([dirName 'mot_temp.fem'],[newDir FILENAME '.fem']);
+            end
+            
             %             plot and save figs
             klength = 1; kturns = 1; delta_sim_singt = geo.delta_sim_singt;
             plot_singt(out,klength,kturns,delta_sim_singt,newDir,filemot);
@@ -172,14 +204,26 @@ switch eval_type
             subplot(2,1,2)
             plot(x,dTpp,'-x'), grid on, ylabel('torque ripple pk-pk [Nm]')
             xlabel('simulation #'),
-            saveas(gcf,[dirPower,filemot(1:end-4),'_torque_sens.fig'])
+            h=gcf();
+            if isoctave() %OCT
+                fig_name=strcat(dirPower, filemot(1:end-4), '_torque_sens');
+                hgsave(h,[fig_name]);
+            else
+                saveas(gcf,[dirPower,filemot(1:end-4),'_torque_sens.fig'])
+            end
             
             figure(11), subplot(2,1,1)
             plot(x,fd,'-x',x,fq,'-x'), grid on, ylabel('[Vs]'), legend('\lambda_d','\lambda_q'),
             subplot(2,1,2)
             plot(x,sin(atan(iq./id)-atan(fq./fd)),'-x'), grid on, ylabel('IPF')
             xlabel('simulation #'),
-            saveas(gcf,[dirPower,filemot(1:end-4),'_fdq_IPF_sens.fig'])
+            h=gcf();
+            if isoctave() %OCT
+                fig_name=strcat(dirPower, filemot(1:end-4), '_fdq_IPF_sens');
+                hgsave(h,[fig_name]);
+            else
+                saveas(gcf,[dirPower,filemot(1:end-4),'_fdq_IPF_sens.fig'])
+            end
             
         end
         
@@ -190,7 +234,7 @@ switch eval_type
         iAmp = overload_temp*calc_io(geo,per);
         switch length(iAmp)
             case 1  % square domain
-                if strcmp(geo.RotType,'SPM')
+                if (strcmp(geo.RotType,'SPM') || strcmp(geo.RotType,'Vtype')) 
                     idvect = linspace(-iAmp,0,n_grid);
                     iqvect = linspace(0,iAmp,n_grid);
                 else
@@ -198,7 +242,7 @@ switch eval_type
                     iqvect = linspace(0,iAmp,n_grid);
                 end
             case 2  % rectangular domain
-                if strcmp(geo.RotType,'SPM')
+                if (strcmp(geo.RotType,'SPM') || strcmp(geo.RotType,'Vtype')) 
                     idvect = linspace(-iAmp(1),0,n_grid);
                     iqvect = linspace(0,iAmp(2),n_grid);
                 else
@@ -210,7 +254,7 @@ switch eval_type
                 iqvect=linspace(iAmp(3),iAmp(4),n_grid);
         end
         
-        F_map = eval_FdFq_tables_in_FEMM(geo,per,idvect,iqvect,eval_type,[pathname filemot],mat,dataIn);
+        [F_map,OUT] = eval_FdFq_tables_in_FEMM(geo,per,idvect,iqvect,eval_type,[pathname filemot],mat,dataIn);
         
         % builds a new folder for each id, iq simulation
         Idstr=num2str(max(abs(idvect)),3); Idstr = strrep(Idstr,'.','A');
@@ -226,7 +270,14 @@ switch eval_type
         FILENAME = [filemot(1:end-4) '_F_map'];
         [success,message,messageid] = mkdir(pathname,[FILENAME '_' Idstr 'x' Iqstr]);
         NewDir=[pathname,[FILENAME '_' Idstr 'x' Iqstr],'\'];
-        save([NewDir,FILENAME,'.mat'],'F_map');
+        clear pathname; %AS
+        if isoctave()            %OCT
+            file_name1= strcat(NewDir,FILENAME,'.mat');
+            save('-v7', file_name1,'F_map','OUT');
+            clear file_name1
+        else
+            save([NewDir,FILENAME,'.mat'],'F_map','OUT');
+        end
         
         % interp and then plots the magnetic curves
         n_interp = 256;    % number of points in [0 Imax] for data interpolation

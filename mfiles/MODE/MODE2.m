@@ -131,7 +131,7 @@ for n=1:generations
     Tend = now;
     EvalTime = Tend-Tstart;
     EndTime = datevec(EvalTime*(generations-n)+now);
-        
+    
     PFront = Objectives(Ranks==1,:);
     PSet   = Parent(Ranks==1,:);
     OUT.MatrixPop      = cat(3, OUT.MatrixPop, Parent);
@@ -151,14 +151,48 @@ for n=1:generations
     
     [OUT, options]=PrinterDisplay(OUT,options); % To print results on screen
     
-    save(['partial_optimization\generation_' int2str(n)]);
+%        if isoctave()  %OCT
+%            current_dir = pwd();
+%            file_name2 = strcat(current_dir,'\partial_optimization\generation_', int2str(n),'.mat');
+%            save ('-mat-binary', file_name2);
+%            clear file_name2 current_dir
+%        else
+            save(['partial_optimization\generation_' int2str(n)]);
+%        end
     
     if functionEvaluations>options.MAXFUNEVALS || n>options.MAXGEN
         disp('Termination criteria reached.')
         break;
     end
     
-    
+   % Delete tmp files
+   if isoctave() %OCT
+%     if strcmp(dataSet.RMVTmp,'ON')
+%        disp('Deleting tmp files...')
+%        ttt1=pwd();
+%        tempdirname = strcat(ttt1,'\tmp');
+%        if exist(tempdirname,'dir')
+%            rmdir(tempdirname,'s');
+%            clear tempdirname ttt1
+%        end
+%        if exist([cd,'\tmp'],'dir') == 0
+%            mkdir([cd,'\tmp']);
+%        end
+%        disp('tmp files deleted')  
+%      end
+   else 
+    if strcmp(dataSet.RMVTmp,'ON')
+       disp('Deleting tmp files...')
+       if exist([cd,'\tmp'],'dir')
+           rmdir([cd,'\tmp'],'s');
+       end
+       if exist([cd,'\tmp'],'dir') == 0
+           mkdir([cd,'\tmp']);
+       end
+       disp('tmp files deleted')
+    end
+   end
+%    
 end
 
 OUT.Xpop=Parent;
@@ -177,7 +211,12 @@ else
         M2=[M2;OUT.MatrixPFront{i}]; %#ok<AGROW>
     end
 end
-I=isparetosetMember(M2);
+if isoctave() %OCT
+ I=paretoset(M2);      
+else
+ I=isparetosetMember(M2);
+end                                                                   
+
 OUT.PFront=(M2(I==1,:));
 OUT.PSet=(M1(I==1,:));
 
@@ -186,8 +225,14 @@ if strcmp(options.SaveResults,'yes')
     per=options.per;
     mat=options.mat;
     thisfilepath = fileparts(which('GUI_Syre.m'));
+%    if isoctave() %OCT
+%    filename=fullfile(thisfilepath,'results',['OUT_' datestr(now,30) '.mat']);
+%    save('-mat7-binary', filename,'OUT','per','geo0','dataSet','mat'); %Results are saved
+%    else
     filename=fullfile(thisfilepath,'results',['OUT_' datestr(now,30)]);
     save(filename,'OUT','per','geo0','dataSet','mat'); %Results are saved
+%    end
+    
     clear geo0 per
 end
 
@@ -223,11 +268,12 @@ end
 % if strcmp(postProcExecution,'Yes')
 disp('PostProcessing of current optimization result...');
 [~,ff]=fileparts(filename);
-if strcmp(func2str(options.CostProblem), '@(x)FEMMfitness(x,geo,per,mat,eval_type)')
-    evalParetoFront(ff,dataSet);
-else
-    evalParetoFrontX(ff,dataSet);
-end
+% if strcmp(func2str(options.CostProblem),
+% '@(x)FEMMfitness(x,geo,per,mat,eval_type)') 
+evalParetoFront(ff,dataSet);
+% else
+%     evalParetoFrontX(ff,dataSet);
+% end
 
 % end
 
@@ -241,6 +287,7 @@ disp(['Generation: ' num2str(Dat.CounterGEN)]);
 disp(['FEs: ' num2str(Dat.CounterFES)]);
 disp(['Pareto Front Size: ' mat2str(size(OUT.PFront,1))]);
 disp(['Evaluation Time: ' int2str(Dat.EvalTime(4)) ' h ' num2str(Dat.EvalTime(5)) ' min ' num2str(round(Dat.EvalTime(6))) ' sec']);
+disp(['Actual time             : ' datestr(now())]);
 disp(['End of evolution process: ' datestr(Dat.EndTime)]);
 disp('------------------------------------------------')
 

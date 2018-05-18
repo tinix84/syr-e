@@ -11,6 +11,6 @@ T32 = 2/3 * [	1 	-0.5 		-0.5
 % 123 -> alpha beta
 iab = T32 * [i1;i2;i3];
 % dq -> alpha beta
-temp = (iab(1) + j * iab(2)) * exp(-j*theta);
+temp = (iab(1,:) + j * iab(2,:)) .* exp(-j*theta);
 
-idq = [real(temp) imag(temp)];
+idq = [real(temp);imag(temp)];

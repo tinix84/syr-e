@@ -32,12 +32,28 @@ mi_probdef(0,'millimeters','planar',1e-8,geo.l,15);
 % calc winding factor (kavv) and rotor offset (phase1_offset)
 [kavv, phase1_offset] = calcKwTh0(geo.tempWinTable,geo.ns*geo.p,geo.p);
 
-% offset angle for coordinate transformations
-if strcmp(geo.RotType,'SPM')
+% Impostazione convenzione assi dq - rev.Gallo 09/03/2018
+% offset angle for coordinate transformations 
+if strcmp(geo.RotType,'SPM') || strcmp(geo.RotType,'Vtype')
     phase1_offset = phase1_offset-90;
 end
+
 th_m0 = 0;                              % rotor position [mec deg]
 geo.th0 = th_m0*geo.p - phase1_offset;  % d- to alpha-axis offset [elt deg]
+% if FBS, the mean q-axis must be aligned - used equation alignment with
+% mean q-axis
+alphaQs=[pi/(2*geo.p)];  % s=simmetrico
+alphaQa=[pi/(2*geo.p)];  % a=asimmetrico
+delta_FBS=geo.th_FBS*[-1 1];
+for ii=2:length(delta_FBS)
+    alphaQs(ii)=alphaQs(ii-1)+pi/geo.p;
+    alphaQa(ii)=alphaQa(ii-1)+delta_FBS(ii-1)/2+delta_FBS(ii)/2+pi/geo.p;
+end
+alphaQas=alphaQa-alphaQs;
+th_rot=geo.th_FBS/2;
+th_rot=+th_rot-mean(alphaQas);
+
+geo.th0=geo.th0-th_rot*geo.p*180/pi;
 
 % boundary conditions: definition (assigned to segments later)
 mi_addboundprop('A=0', 0, 0, 0, 0, 0, 0, 0, 0, 0);  % inner and outer circles
@@ -58,7 +74,7 @@ geo.x0 = geo.r/cos(pi/2/geo.p);
 geo.rotor = rotor;
 
 [geo,statore,BLKLABELSstat] = STATmatr(geo,fem); % statore and BLKLABELSstat describe the stator
-
+geo.stator=statore;
 % draw lines and arcs
 draw_lines_arcs(rotor,2,fem.res);
 draw_lines_arcs(statore,1,fem.res);
@@ -117,5 +133,11 @@ else
 end
 
 geo.fem=fem;
-mat.LayerMag.Br = unique(mat.LayerMag.Br,'stable');   % reset geo.Br to input value (either scalar or size = nlay)
-mi_saveas(filename); % saves the file with name ’filename’.
+if isoctave() %OCT
+    mat.LayerMag.Br = unique_oct(mat.LayerMag.Br,'stable');     
+    mi_saveas('mot0.fem');                                    
+
+else    
+    mat.LayerMag.Br = unique(mat.LayerMag.Br,'stable');   % reset geo.Br to input value (either scalar or size = nlay)
+    mi_saveas(filename);                                     %saves the file with name ’filename’end
+end

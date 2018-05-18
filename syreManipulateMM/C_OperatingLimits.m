@@ -87,7 +87,8 @@ if isempty(axes_type)
 end
 
 %n = 2;  % number of curves
-Imax_vect = Imax * linspace(0.5,1,n);
+Imax_vect = Imax * linspace(0,1,n+1);
+Imax_vect = Imax_vect(2:end);
 Plim_all = cell(1,n);
 
 % rotor bars temperature (IM motor)

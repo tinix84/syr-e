@@ -21,11 +21,19 @@ dirName=mang(1:end);
 warning off MATLAB:MKDIR:DirectoryExists
 thisfilepath = fileparts(which('MODEstart.m'));
 mkdir(fullfile(thisfilepath,'tmp'));
-cd(fullfile(thisfilepath,'tmp'))
+if isoctave() %OCT
+ file_path = strcat(thisfilepath,'\tmp\');
+ cd(file_path)
+ dirName=strcat(file_path,dirName);
+ clear file_path 
+else
+ cd(fullfile(thisfilepath,'tmp'))
+end                                                                   
 warning on MATLAB:MKDIR:DirectoryExists
 while(exist(dirName,'dir'))
     mang=num2str(randi((10^6),1));
     dirName=mang(1:end);
 end
 mkdir(dirName);
+dirName=[cd '\' dirName '\'];
 cd(dirName);

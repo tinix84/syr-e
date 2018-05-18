@@ -27,6 +27,12 @@ save ultimo.mat pathname -append;
 FilePath = pathname;
 % valore presunto della resistenza di statore
 Rs_totale=0.077;
+warning('NB: add the real value of Rs, evaluated with calc_io')
+% NB (SF): qui manca la resistenza vera. Per ottenerla bisogna utilizzare
+% la funzione [~,Rs]=calc_io(geo,per), ma bisogna avere le strutture di
+% SyR-e e non quelle di MagNet.
+
+
 %% %%%
 MachineName=FileName(1:end-4);
 temp0 = MachineName;
@@ -79,9 +85,9 @@ n_h = round(length(Coppia360)/8);
 
 %% Visualizza lo spettro della Coppia (360deg elt)
 
-Ctemp = [Coppia360' Coppia(1)];
-Coppia360 = repeat_n(Ctemp,round(360/Cas.sim_angle));
-Coppia360 = Coppia360(1:end-1);
+% Ctemp = [Coppia360' Coppia(1)];
+% Coppia360 = repeat_n(Ctemp,round(360/Cas.sim_angle));
+% Coppia360 = Coppia360(1:end-1);
 % 2013/05/01  MG mod: non è la posizione dell'asse d, ma l'equivalente in
 % gradi del tempo di rotazione.
 gradi360=theta360*180/pi-Mac.th0; % tempo preso da Magnet è in ms
@@ -103,8 +109,8 @@ title(['Coppia-' Descr ' - ' datestr(now)]);
 saveas(gcf,[pathname,'Coppia.fig']);
 
 %% Visualizza lo spettro della Tensione
-TensioniTot=VaSave;
-Tensione = repeat_n(TensioniTot',round(360/Cas.sim_angle));
+Tensione=VaSave;
+% Tensione = repeat_n(TensioniTot',round(360/Cas.sim_angle));
 
 ArmonicheTensione=spettro_pu(Tensione,n_h,0);
 
@@ -120,7 +126,7 @@ title(['Tensione-' Descr ' - ' datestr(now)]);
 saveas(gcf,[pathname,'Tensione.fig']);
 
 %% Perdite nel ferro e nei magneti
-if exist('pm_loss','var')
+if exist('Pfes_h','var')
     PerditeTXT = { 'Ppm','PfeSta_h','PfeSta_c','PfeSta_o','PfeRot_h','PfeRot_c','PfeRot_o','PfeTOT','PjBarRot'};
 
     if ~exist('PfeSta_o','var')
@@ -159,41 +165,49 @@ Pjs=3/2*Rs_totale*Sim.Imod(1)^2;
 % si tiene conto delle cadute resistive
 % debug .. excel
 % V_conc_pk = sqrt(3)*abs(mean(abs(FdTot+ 1i*FqTot)))*Mac.p * Cas.n*pi/30;
-V_conc_pk = sqrt(3)*sqrt((Rs_totale*Id-FqTot*Mac.p * Cas.n*pi/30).^2+(Rs_totale*Iq+FdTot*Mac.p * Cas.n*pi/30).^2);
-PF = cos(angle(mean(Rs_totale*Id-FqTot*Mac.p * Cas.n*pi/30) + 1i* mean(Rs_totale*Iq+FdTot*Mac.p * Cas.n*pi/30))-Cas.gamma * pi/180);
+V_conc_pk = sqrt(3)*sqrt((Rs_totale*Id(1)-FqTot*Mac.p * Cas.n*pi/30).^2+(Rs_totale*Iq(1)+FdTot*Mac.p * Cas.n*pi/30).^2);
+PF = cos(angle(mean(Rs_totale*Id(1)-FqTot*Mac.p * Cas.n*pi/30) + 1i* mean(Rs_totale*Iq(1)+FdTot*Mac.p * Cas.n*pi/30))-Cas.gamma * pi/180);
 ripple_pu = std(Coppia)/mean(Coppia);
 
-% efficiency
-eta=(mean(Coppia360)*Cas.n*pi/30)/(mean(Coppia360)*Cas.n*pi/30+Ppm+Pfes_h+Pfes_c+PfeSta_o+Pfer_h+Pfer_c+PfeRot_o+PjrBar+Pjs);
+% SF: le correnti dq sono costanti per la simulazione...
 
+
+% efficiency
+if exist('Pfes_h','var')
+    eta=(mean(Coppia360)*Cas.n*pi/30)/(mean(Coppia360)*Cas.n*pi/30+Ppm+Pfes_h+Pfes_c+PfeSta_o+Pfer_h+Pfer_c+PfeRot_o+PjrBar+Pjs);
+else
+    eta=NaN;
+end
 Excel_out = [mean(Pjs),Sim.Imod(1),Sim.gamma(1),Sim.skew,Sim.temperature,...
     Sim.n,mean(FdTot),mean(FqTot),mean(Coppia360),ripple_pu,mean(V_conc_pk),mean(PF),mean(eta)];
 
 out.MeanDescr={'Pjs','I' 'Gamma' 'sk' 'Temp' 'rpm' 'Fd' 'Fq' 'T' 'ripplepu' 'Vllpk' 'PF' 'eta'};
 out.Mean=mean(Excel_out,1);
 
-OutDati.Pjs=Pjs;
-OutDati.Im      = mean(Excel_out(:,1),1);
-OutDati.Iph     = mean(Excel_out(:,2),1);
-OutDati.sk      = mean(Excel_out(:,3),1);
-OutDati.Temp    = mean(Excel_out(:,4),1);
-OutDati.rpm     = mean(Excel_out(:,5),1);
-OutDati.Fd      = mean(Excel_out(:,6),1);
-OutDati.Fq      = mean(Excel_out(:,7),1);
-OutDati.T       = mean(Excel_out(:,8),1);
+OutDati.Pjs      = Pjs;
+OutDati.Im       = mean(Excel_out(:,1),1);
+OutDati.Iph      = mean(Excel_out(:,2),1);
+OutDati.sk       = mean(Excel_out(:,3),1);
+OutDati.Temp     = mean(Excel_out(:,4),1);
+OutDati.rpm      = mean(Excel_out(:,5),1);
+OutDati.Fd       = mean(Excel_out(:,6),1);
+OutDati.Fq       = mean(Excel_out(:,7),1);
+OutDati.T        = mean(Excel_out(:,8),1);
 OutDati.ripplepu = mean(Excel_out(:,9),1);
-OutDati.Vllpk   = mean(Excel_out(:,10),1);
-OutDati.PF      = mean(Excel_out(:,11),1);
-OutDati.eta=eta;
+OutDati.Vllpk    = mean(Excel_out(:,10),1);
+OutDati.PF       = mean(Excel_out(:,11),1);
+OutDati.eta      = eta;
 
-out.LegendaTXT=[PerditeTXT,out.MeanDescr];
-out.DATA=num2cell([Perdite,out.Mean]);
+if exist('Pfes_h','var')
+    out.LegendaTXT=[PerditeTXT,out.MeanDescr];
+    out.DATA=num2cell([Perdite,out.Mean]);
 
-StrDati=[out.LegendaTXT;out.DATA];
-%% Sceda riassunto dati:
-%2013/06/10 Aggiunto scheda riepilogo dati
-DataLog(StrDati,MachineName,100)
-saveas(gcf,[pathname,'DataLog.fig']);
+    StrDati=[out.LegendaTXT;out.DATA];
+    %% Sceda riassunto dati:
+    %2013/06/10 Aggiunto scheda riepilogo dati
+    DataLog(StrDati,MachineName,100)
+    saveas(gcf,[pathname,'DataLog.fig']);
+end
 
 save([pathname 'ElabMovHS']);
 

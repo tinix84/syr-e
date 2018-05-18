@@ -15,6 +15,8 @@ dataSet.TypeOfRotor       = 'Circular';     % type of rotor: Circular, Seg, ISeg
 dataSet.xRange       = [0.5 0.8];           % x=rotor/stator radius
 dataSet.bRange       = [0.3 0.7];           % b=iron/copper
 dataSet.CurrOverLoad = 2;                   % current overload [pu]
+dataSet.Bfe          = 1.5;                 % Steel loading [T]
+dataSet.kt           = 1;                   % tooth factor
 
 %% Geometrical data
 
@@ -36,6 +38,7 @@ dataSet.HCpu           = [0.5 0.5 0.5];     % width of flux barrier [pu]
 dataSet.DepthOfBarrier = [0 0 0];           % barrier translation on q-axis [pu]
 dataSet.RadRibCheck    = 0;                 % check for manual radial ribs input
 dataSet.RadRibEdit     = [0 0 0];           % manual input of radial ribs [mm]
+%dataSet.SlopeBarrier   = 60;               %angle in degree - rev.Gallo
 
 % SPM
 if strcmp(dataSet.TypeOfRotor,'SPM')
@@ -55,6 +58,17 @@ dataSet.MinMechTol          = 0.4;          % minimum mechanical dimension [mm]
 dataSet.BarFillFac          = 1;            % barrier filling factor [pu] (only for circular geometry)
 dataSet.Br                  = 0.4;          % remanence of PM [T] (used only for Bonded-Magnet)
 dataSet.EstimatedCopperTemp = 130;          % estimated copper temperature
+dataSet.Rs                  = NaN;          % phase resistance (evaluated from scripts)
+
+
+%Seg and ISeg PMs
+dataSet.Areaob    = zeros(1,4);
+dataSet.Areavert  = zeros(1,4);
+dataSet.Areatot   = zeros(1,4);
+dataSet.dob       = ones(1,4);
+dataSet.dvert     = ones(1,4);
+dataSet.Areaob0   = zeros(1,4);
+dataSet.Areavert0 = zeros(1,4);
 
 %% Windings data
 dataSet.SlotFillFactor    = 0.407;          % slot filling factor [pu]
@@ -76,8 +90,8 @@ dataSet.RotorCondMaterial   = 'Copper';         % rotor conductor material
 %% Optimization data
 
 % optimization parameters
-dataSet.MaxGen    = 60;                 % number of generation
-dataSet.XPop      = 60;                 % number of individuals for each generation
+dataSet.MaxGen    = 3;                 % number of generation
+dataSet.XPop      = 4;                 % number of individuals for each generation
 dataSet.SimPoMOOA = 5;                  % number of simulated position during evolution
 dataSet.RotPoMOOA = 30;                 % rotor angular excursion during evolution [elt degree]
 dataSet.SimPoFine = 31;                 % number of simulated position during Pareto front re-evaluation
@@ -89,15 +103,15 @@ dataSet.RMVTmp   = 'ON';                % remove temp files (only for XFEMM)
 dataSet.randFactor = 0;                 % noise factor for position number reduction
 
 % variables check
-dataSet.Dalpha1BouCheck      = 0;       % first (outer) barrier angle
-dataSet.DalphaBouCheck       = 0;       % other barrier angle
-dataSet.hcBouCheck           = 0;       % flux barrier width
-dataSet.DxBouCheck           = 0;       % flux barrier translation
-dataSet.GapBouCheck          = 0;       % airgap thickness
-dataSet.BrBouCheck           = 0;       % remanence of PM
-dataSet.AirgapRadiusBouCheck = 0;       % rotor radius
-dataSet.ToothWidthBouCheck   = 0;       % tooth width
-dataSet.ToothLengthBouCheck  = 0;       % tooth length
+dataSet.Dalpha1BouCheck        = 1;     % first (outer) barrier angle
+dataSet.DalphaBouCheck         = 1;     % other barrier angle
+dataSet.hcBouCheck             = 1;     % flux barrier width
+dataSet.DxBouCheck             = 1;     % flux barrier translation
+dataSet.GapBouCheck            = 0;     % airgap thickness
+dataSet.BrBouCheck             = 0;     % remanence of PM
+dataSet.AirgapRadiusBouCheck   = 0;     % rotor radius
+dataSet.ToothWidthBouCheck     = 0;     % tooth width
+dataSet.ToothLengthBouCheck    = 0;     % tooth length
 dataSet.StatorSlotOpenBouCheck = 0;     % stator slot open
 dataSet.ToothTangDepthBouCheck = 0;     % tooth shoe depth
 dataSet.GammaBouCheck          = 0;     % current phase angle
@@ -117,8 +131,8 @@ dataSet.ToothTangDepthBou = [0.8 1.2];      % tooth shoe depth
 dataSet.PhaseAngleCurrBou = [40 75];        % current phase angle
 
 % objectives check
-dataSet.TorqueOptCheck = 0;     % maximize torque
-dataSet.TorRipOptCheck = 0;     % minimize peak-to-peak torque ripple
+dataSet.TorqueOptCheck = 1;     % maximize torque
+dataSet.TorRipOptCheck = 1;     % minimize peak-to-peak torque ripple
 dataSet.MassCuOptCheck = 0;     % minimize the copper mass
 
 % objective values
@@ -139,7 +153,7 @@ dataSet.NumGrid       = 10;     % number of points for 1 side of the map
 % iron loss
 
 dataSet.LossEvaluationCheck = 0;    % evaluate also the iron losses
-dataSet.EvalSpeed = 1000;       % evaluation speed [rpm]
+dataSet.EvalSpeed           = 1000; % evaluation speed [rpm]
 
 
 

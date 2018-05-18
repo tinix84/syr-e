@@ -94,6 +94,10 @@ y5=y5(2);
 xRacSlot=xRacSlot(2);
 yRacSlot=yRacSlot(2);
 
+%% slot angle for SPM subdomain model
+geo.SlotAngle = atan(y4/x4)*2;                                              % bsa
+geo.SlotOpenAngle = slot_open_ang*2;                                        % boa
+
 mm1 = (yLT2-y6)./(xLT2-x6);       % slope of line slot bottom
 mm2 = (y3-yLT2)./(x3-xLT2);       % slope of line slot side
 angle1 = atan(abs((mm2-mm1)./(1+mm1.*mm2)));        % angle between two lines
@@ -368,12 +372,19 @@ BoundLAT=[xBoundLAT1,yBoundLAT1,codBound_periodic;xBoundLAT2,yBoundLAT2,codBound
 statore=CavaMat;
 
 % matrix 2: block labels
-BLKLABELSstat.xy=[Air_slot;Cu_slot;FeYoke];
-BLKLABELSstat.names.air_slot=nome_air_slot';
-BLKLABELSstat.names.Cu_slot=nome_Cu_slot';
-BLKLABELSstat.names.FeYoke=nome_FeYoke';
-BLKLABELSstat.names.legend={'air_slot','Cu_slot','FeYoke'};
-
+if acs~=0
+    BLKLABELSstat.xy=[Air_slot;Cu_slot;FeYoke];
+    BLKLABELSstat.names.air_slot=nome_air_slot';
+    BLKLABELSstat.names.Cu_slot=nome_Cu_slot';
+    BLKLABELSstat.names.FeYoke=nome_FeYoke';
+    BLKLABELSstat.names.legend={'air_slot','Cu_slot','FeYoke'};
+else
+    BLKLABELSstat.xy=[Cu_slot;FeYoke];
+    BLKLABELSstat.names.air_slot=[];
+    BLKLABELSstat.names.Cu_slot=nome_Cu_slot';
+    BLKLABELSstat.names.FeYoke=nome_FeYoke';
+    BLKLABELSstat.names.legend={'air_slot','Cu_slot','FeYoke'};
+end
 % matrix 3: buondary conditions
 BLKLABELSstat.boundary=[BoundLAT;BoundRSE];
 

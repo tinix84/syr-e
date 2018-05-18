@@ -26,9 +26,9 @@ if (0) % take only 1st quadrant
     Id=linspace(0,max(max(Id)),256);
     Iq=linspace(0,max(max(Iq)),256);
     [Id,Iq]=meshgrid(Id,Iq);
-    Fd=interp2(Id0,Iq0,Fd0,Id,Iq);
-    Fq=interp2(Id0,Iq0,Fq0,Id,Iq);
-    T=interp2(Id0,Iq0,T0,Id,Iq);
+    Fd=interp2(Id0,Iq0,Fd0,Id,Iq,'spline');
+    Fq=interp2(Id0,Iq0,Fq0,Id,Iq,'spline');
+    T=interp2(Id0,Iq0,T0,Id,Iq,'spline');
 %     dT=interp2(Id0,Iq0,dT0,Id,Iq);
 %     dTpp=interp2(Id0,Iq0,dTpp0,Id,Iq);
 end
@@ -38,14 +38,14 @@ end
 
 % Performance maps
 id = Id(1,:); iq = Iq(:,1)';
-TI = 3/2 * p * (Fd .* Iq - Fq .* Id);   % torque
+TI = 3/2 * p * n3phase * (Fd .* Iq - Fq .* Id);   %AS torque
 FI = sqrt(Fd.^2 + Fq.^2);               % flux linkage amplitude
 II = sqrt(Id.^2 + Iq.^2);               % current amplitude
 IPF = cos(atan(Fq./Fd)-atan(-Id./Iq));  % internal PF
 
 FImax = max(max(abs(FI)));
 % no load flux
-lm = interp2(Id,Iq,FI,0,0,'cubic');
+lm = interp2(Id,Iq,FI,0,0,'spline');
 if isnan(lm)
     lm = 0;
 end
@@ -154,15 +154,15 @@ end
 % F_A = interp2(id,iq,FI,id_A,iq_A,'spline',0);  % rated flux
 % T_A = interp2(id,iq,TI,id_A,iq_A,'spline',0);  % rated torque
 
-F_A = interp2(id,iq,FI,id_A,iq_A);  % rated flux
-T_A = interp2(id,iq,TI,id_A,iq_A);  % rated torque
+F_A = interp2(id,iq,FI,id_A,iq_A,'spline');  % rated flux
+T_A = interp2(id,iq,TI,id_A,iq_A,'spline');  % rated torque
 
 
 w1 = Vmax / F_A;                    % base speed - elt rad/s
 w1_rpm = w1 * rad2rpm;
 
-F_B = interp2(id,iq,FI,id_B,iq_B);  % b = 0, imax flux
-T_B = interp2(id,iq,TI,id_B,iq_B);  % rated torque
+F_B = interp2(id,iq,FI,id_B,iq_B,'spline');  % b = 0, imax flux
+T_B = interp2(id,iq,TI,id_B,iq_B,'spline');  % rated torque
 
 w2 = Vmax / F_B;                    % elt rad/s
 w2_rpm = w2 * rad2rpm
@@ -196,7 +196,8 @@ else
         iq_BC = linspace(iq_B,iq_C,50);
         iq_BC = iq_BC(1:end-1);
         %id_BC = polyval(p_KvMax_i,iq_BC);
-        iq_BC = interp1(iq_KvMax,id_KvMax,iq_BC,'linear','extrap');
+     %Definisco id_BC, prima non lo era - rev.Gallo
+        id_BC = interp1(iq_KvMax,id_KvMax,iq_BC,'linear','extrap');
     else
         id_BC = [id_B id_C];
         iq_BC = [iq_B iq_C];
@@ -206,7 +207,7 @@ end
 % clear id_Imax iq_Imax
 
 % PROFILO COPPIA - POT MAX
-F_AB = interp2(id,iq,FI,id_AB,iq_AB);
+F_AB = interp2(id,iq,FI,id_AB,iq_AB,'spline');
 
 if F_AB(end) > F_AB(1)
     F_AB = fliplr(F_AB);
@@ -214,15 +215,15 @@ if F_AB(end) > F_AB(1)
     iq_AB = fliplr(iq_AB);
 end
 w_AB = Vmax ./ F_AB;
-T_AB = interp2(id,iq,TI,id_AB,iq_AB);
+T_AB = interp2(id,iq,TI,id_AB,iq_AB,'spline');
 V_AB = w_AB .* F_AB;
-I_AB = interp2(id,iq,II,id_AB,iq_AB);
+I_AB = interp2(id,iq,II,id_AB,iq_AB,'spline');
 
-F_BC = interp2(id,iq,FI,id_BC,iq_BC);
+F_BC = interp2(id,iq,FI,id_BC,iq_BC,'spline');
 w_BC = Vmax ./ F_BC;
-T_BC = interp2(id,iq,TI,id_BC,iq_BC);
+T_BC = interp2(id,iq,TI,id_BC,iq_BC,'spline');
 V_BC = w_BC .* F_BC;
-I_BC = interp2(id,iq,II,id_BC,iq_BC);
+I_BC = interp2(id,iq,II,id_BC,iq_BC,'spline');
 
 % low speed values (w < w1)
 w_0A = linspace(0,w1,20);
@@ -238,13 +239,13 @@ F_max = [F_A*ones(size(w_0A)) F_AB F_BC];
 iq_min = zeros(size(iq_max));
 
 % a pieno carico
-fd_AB = interp2(id,iq,Fd,id_AB,iq_AB);
-fd_BC = interp2(id,iq,Fd,id_BC,iq_BC);
-fq_AB = interp2(id,iq,Fq,id_AB,iq_AB);
-fq_BC = interp2(id,iq,Fq,id_BC,iq_BC);
+fd_AB = interp2(id,iq,Fd,id_AB,iq_AB,'spline');
+fd_BC = interp2(id,iq,Fd,id_BC,iq_BC,'spline');
+fq_AB = interp2(id,iq,Fq,id_AB,iq_AB,'spline');
+fq_BC = interp2(id,iq,Fq,id_BC,iq_BC,'spline');
 %  a vuoto
-fq_AB_0 = interp2(id,iq,Fq,id_AB,0);
-fq_BC_0 = interp2(id,iq,Fq,id_BC,0);
+fq_AB_0 = interp2(id,iq,Fq,id_AB,0,'spline');
+fq_BC_0 = interp2(id,iq,Fq,id_BC,0,'spline');
 % fq_AB_0 = interp2(id,iq,Fd,id_AB,0);
 % fq_BC_0 = interp2(id,iq,Fd,id_BC,0);
 % a vuoto
@@ -261,7 +262,7 @@ iq_min(lm > F_max) = iq_max(lm > F_max);
 % mechanical speed evaluation (IM only)
 % synchronous speed
 if exist('Wslip','var')
-    wslip = interp2(Id,Iq,Wslip,id_max,iq_max);
+    wslip = interp2(Id,Iq,Wslip,id_max,iq_max,'spline');
     [a,last_number] = find(not(isnan(wslip)),1,'last');
     wslip(isnan(wslip)) = wslip(last_number);
     %     rot_temperature = 20;
@@ -286,7 +287,7 @@ if ~exist('Wslip','var')
     % Tmax = T_A;
     % Pmax = max([P_AB P_BC])
     
-    PFlim = P ./ (3/2 * [V_0A V_AB V_BC] .* [I_0A I_AB I_BC]);
+    PFlim = P ./ (3/2 * n3phase * [V_0A V_AB V_BC] .* [I_0A I_AB I_BC]); %AS
 else
     w_0A=w_0A-wslip(1:length(w_0A));
     w_AB=w_AB-wslip(length(w_0A)+1:length([w_0A w_AB]));

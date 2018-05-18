@@ -62,6 +62,7 @@ eval_type = 'MO_OA';                         % you can choose between "MO_OA" an
                                              % "MO_GA" use multi-objective algorithm from matlab ga toolbox
                                              % "MO_OA" use multi-objective de algorithm
 FitnessFunction = @(x)FEMMfitness(x,geo,per,mat,eval_type);
+FitnessFunction = @(x)FEMMfitness(x,geo,per,mat,eval_type);
 % FitnessFunction = @(x)FEMMfitness(x,geo,per,eval_type);
 %FitnessFunction = @(x)zdtTestFunctions(x,1);
 %bounds = [zeros(10,1) ones(10,1)];

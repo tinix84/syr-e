@@ -30,7 +30,7 @@
 function [SOL] = simulate_xdeg_IronLoss(geo,io,Br,gamma_in,eval_type,mat,per)
 
 % pathname = geo.pathname;
-pathname = cd;
+pathname = pwd();
 
 th0 = geo.th0;
 p   = geo.p;
@@ -168,25 +168,36 @@ for jj = 1:nsim
 %     mo_close, mi_close
 %     closefemm
     
-    SOL = [SOL; sol];
+    SOL.th(jj) = th(jj);
+    SOL.id(jj) = id;
+    SOL.iq(jj) = iq;
+    SOL.fd(jj) = fdq(1);
+    SOL.fq(jj) = fdq(2);
+    SOL.T(jj)  = Tblock;
+    %SOL.Tb(jj) = Tblock;
+    
 end
 mo_close, mi_close
 closefemm
 
 % Effective value of flux and current, simulation are done with one turns
 % in slot and consequently, current in fem simulation is increase by the number of conductors in slot Nbob....
-SOL(:,2)=SOL(:,2)/geo.Nbob;
-SOL(:,3)=SOL(:,3)/geo.Nbob;
-SOL(:,4)=SOL(:,4)*geo.Nbob;
-SOL(:,5)=SOL(:,5)*geo.Nbob;
+SOL.id=SOL.id/geo.Nbob;
+SOL.iq=SOL.iq/geo.Nbob;
+SOL.fd=SOL.fd*geo.Nbob;
+SOL.fq=SOL.fq*geo.Nbob;
 
 if io == 0 && strcmp(geo.BLKLABELSmaterials(6),'Air')
-    temp = zeros(nsim-4,1);
+    %temp = zeros(nsim-4,1);
     Pfes_h = 0;
     Pfes_c = 0;
     Pfer_h = 0;
     Pfer_c = 0;
-    SOL(:,7) = [Pfes_h;Pfes_c;Pfer_h;Pfer_c;temp];
+    %SOL(:,7) = [Pfes_h;Pfes_c;Pfer_h;Pfer_c;temp];
+    SOL.Pfes_h = Pfes_h;
+    SOL.Pfes_c = Pfes_c;
+    SOL.Pfer_h = Pfer_h;
+    SOL.Pfer_c = Pfer_c;
 else
     %% calculate losses
     FluxDens = [FluxDens; fluxdens];
@@ -328,8 +339,12 @@ else
     Pfer_c = sum(sum(PeddyRot))* 2*p/ps;        % whole rotor eddy current loss
     
     %% save losses data
-    temp = zeros(nsim-4,1);
-    SOL(:,7) = [Pfes_h;Pfes_c;Pfer_h;Pfer_c;temp];
+    %temp = zeros(nsim-4,1);
+    %SOL(:,7) = [Pfes_h;Pfes_c;Pfer_h;Pfer_c;temp];
+    SOL.Pfes_h = Pfes_h;
+    SOL.Pfes_c = Pfes_c;
+    SOL.Pfer_h = Pfer_h;
+    SOL.Pfer_c = Pfer_c;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

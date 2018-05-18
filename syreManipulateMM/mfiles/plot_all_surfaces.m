@@ -54,14 +54,26 @@ surf(fd,fq,ID_dato_fd_fq), grid on, xlabel('\lambda_d [Vs]'), ylabel('\lambda_q 
 zlabel('i_d [A]');% ylim([-0.1 0.25])
 adapt_figure_fonts('Times New Roman',14,14)
 axis([-0.1 0.1 0 0.2 -100 0])
-saveas(gcf,[pathname 'Id surf']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'Id surf');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(h,[pathname 'Id surf']);
+end
+
 
 figure,
 surf(fd,fq,IQ_dato_fd_fq), grid on, xlabel('\lambda_d [Vs]'), ylabel('\lambda_q [Vs]')
 zlabel('i_q [A]');% ylim([-0.1 0.25])
 adapt_figure_fonts('Times New Roman',14,14)
 axis([-0.1 0.1 0 0.2 0 100])
-saveas(gcf,[pathname 'Iq surf']);
-
-
-
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'Iq surf');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(h,[pathname 'Iq surf']);
+end

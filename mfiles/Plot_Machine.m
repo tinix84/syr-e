@@ -15,7 +15,7 @@ function [hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot)
 
 %% Plot GUI
 axes(h); cla(h);
-[~, ~, geo, per,mat] = data0(dataSet);
+[~, ~, geo,per,mat] = data0(dataSet);
 [geo,gamma,mat] = interpretRQ(dataSet.RQ,geo,mat);
 geo.x0 = geo.r/cos(pi/2/geo.p);
 
@@ -26,29 +26,53 @@ geo.th0 = th_m0*geo.p - 0;     % offset angle [elt deg] (for coordinate transfor
 fem.res = 0;
 fem.res_traf = 0;
 
+geo.Areaob0 = dataSet.Areaob0; %mod walter
+geo.Areaob = dataSet.Areaob;
+geo.Areavert0 = dataSet.Areavert0;
+geo.Areavert = dataSet.Areavert;
+geo.dob = dataSet.dob;
+geo.dvert = dataSet.dvert;
+% NB: questi vanno spostati in dataSet...
+
+
+
 % nodes
 [rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem,mat);
 [geo,statore,BLKLABELSstat] = STATmatr(geo,fem);
+
 
 dalpha = geo.dalpha;            % Angoli dalpha
 hc = geo.hc;                    % Altezze in mm
 
 %% === PLOT ===============================================================
 if strcmp(flag_plot,'Y')
-
+    
     Mat = [rotor; statore];
     
     [nrig,ncol] = size(Mat);
     hold(h,'on')
+    
     for i = 1 : nrig
         if Mat(i,ncol) == 0
+            
             % draw lines
             x1 = Mat(i,3); y1 = Mat(i,4);
             x2 = Mat(i,1); y2 = Mat(i,2);
             grid on
             plot(h,[x1,x2],[y1,y2],'Linewidth',2,'Color','k');
             grid minor, axis equal
-        else
+            
+            %         elseif Mat(i,ncol)== eps || Mat(i,ncol)== -eps   % tracciamento linee per area inserimento magneti nella geometria Seg/ISeg
+            %
+            %             if ~strcmp(dataSet.FluxBarrierMaterial,'Air')
+            %                 x1=Mat(i,1);
+            %                 x2=Mat(i,3);
+            %                 y1=Mat(i,2);
+            %                 y2=Mat(i,4);
+            %                 plot([x1,x2],[y1,y2],'Color','r','Linewidth',2);
+            %
+            %             end
+        elseif Mat(i,ncol) == 1 || Mat(i,ncol) == -1
             % draw arcs
             dati = Mat(i,:);
             % centro
@@ -85,6 +109,24 @@ if strcmp(flag_plot,'Y')
             grid on
             plot(h,x,y,'Linewidth',2,'Color','k');
             grid minor, axis equal
+            
+        elseif Mat(i,ncol)== eps || Mat(i,ncol)== -eps   % tracciamento linee per area inserimento magneti nella geometria Seg/ISeg
+            
+            if ~strcmp(dataSet.FluxBarrierMaterial,'Air')
+                x1=Mat(i,1);
+                x2=Mat(i,3);
+                y1=Mat(i,2);
+                y2=Mat(i,4);
+                if strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet') % green
+                    plot([x1,x2],[y1,y2],'Color',[0 0.5 0],'Linewidth',2);
+                else    %red
+                    plot([x1,x2],[y1,y2],'Color','r','Linewidth',2);
+                end
+                
+                
+            end
+        else
+            disp('error');
         end
     end
     hold off

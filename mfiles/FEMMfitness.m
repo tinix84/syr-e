@@ -12,10 +12,10 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function [cost,geo,mat,out,dirName] = FEMMfitness(RQ,geo,per,mat,eval_type,filemot)
+function [cost,geo,mat,out,pathname] = FEMMfitness(RQ,geo,per,mat,eval_type,filemot)
 
-currentDir=pwd;
-[thisfilepath,dirName]=createTempDir();
+currentDir=pwd();
+[thisfilepath,pathname]=createTempDir();
 
 if ~isempty(RQ)
     
@@ -25,7 +25,7 @@ if ~isempty(RQ)
         RQ=RQ';
     end
     
-    geo.pathname=cd;
+    geo.pathname=pwd();
     
     options.iteration=0;
     options.currentgen=1;
@@ -43,6 +43,7 @@ if ~isempty(RQ)
     RQ
     % debug .. end
     [geo,gamma,mat] = interpretRQ(RQ,geo,mat);
+    per.gamma=gamma;
         
     openfemm
     [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat);
@@ -50,31 +51,42 @@ if ~isempty(RQ)
 else
     % post proc or FEMM simulation (existing geometry)
     openfemm
-    opendocument([filemot]);
+    opendocument(filemot);
     mi_saveas('mot0.fem'); % saves the file with name ’filename’
 end
 
 % evaluates the candidate machine (T, DT, fd, fq)
-iAmp = per.overload*calc_io(geo,per);
-if isempty(RQ)
-    gamma=per.gamma;
+fem = dimMesh(geo,eval_type);           
+%[geo, ~, ~] = STATmatr(geo,fem);  
+%iAmp = per.overload*calc_io(geo,per);
+%iAmpCoil = iAmp*geo.Nbob*geo.n3phase; %AS
+
+if isoctave()            %OCT save geo before sim
+    save ('-mat7-binary', 'geo.mat');
+else
+    save 'geo.mat';
 end
-iAmpCoil = iAmp*geo.Nbob;
+%[SOL] = simulate_xdeg(geo,iAmpCoil,per.BrPP,gamma,eval_type);
+filename='mot0.fem';
+[SOL] = simulate_xdeg(geo,per,eval_type,pathname,filename);
 
-geo1 = geo;
-save geo geo1       % save geo before sim
-[SOL] = simulate_xdeg(geo,iAmpCoil,per.BrPP,gamma,eval_type);
-
-out.id = mean(SOL(:,2));
-out.iq = mean(SOL(:,3));
-out.fd = mean(SOL(:,4));
-out.fq = mean(SOL(:,5));
-out.T= abs(mean(SOL(:,6)));
-out.dT = std(SOL(:,6));
-out.dTpu = std(SOL(:,6))/out.T;
-out.dTpp = max(SOL(:,6))-min(SOL(:,6));
+out.id = mean(SOL.id);
+out.iq = mean(SOL.iq);
+out.fd = mean(SOL.fd);
+out.fq = mean(SOL.fq);
+out.T= abs(mean(SOL.T));
+out.dT = std(SOL.T);
+out.dTpu = std(SOL.T)/out.T;
+out.dTpp = max(SOL.T)-min(SOL.T);
 out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
+% Variabile calcolo Massa magneti rotore - rev.Gallo 20/03/2018
+out.MassPM=mean(SOL.VolPM)*mat.LayerMag.kgm3; %[kg]
 out.SOL = SOL;
+
+
+if isfield(SOL,'F')
+    out.F=mean(SOL.F);
+end
 
 if ~isempty(RQ)
     % Cost functions
@@ -93,7 +105,11 @@ if ~isempty(RQ)
         cost(temp1)=calcMassCu(geo);
         temp1=temp1+1;
     end
-    
+% MassPM inserito come funzione obiettivo da minimizzare - rev.Gallo 20/03/2018   
+    if temp1<=length(geo.OBJnames) && strcmp(geo.OBJnames{temp1},'MassPM')
+        cost(temp1) = out.MassPM;
+    end
+
     % penalize weak solutions
     for j = 1:length(cost)
         %     if (cost(2)>per.max_exp_ripple || cost(1)>-per.min_exp_torque)
@@ -108,13 +124,18 @@ if ~isempty(RQ)
     % end
     
     % if ~isempty(RQ)
+    dataSetPath = strcat(thisfilepath,'\dataSet.mat');    %OCT
+    copyfile(dataSetPath, '.');
+    load('dataSet.mat');
     geo.RQ = RQ;
-    dataSetPath = [thisfilepath filesep 'dataSet.mat'];
-    copyfile(dataSetPath,'.');
-    load('dataSet');
+
     [dataSet] = SaveInformation(geo,mat,dataSet);
     delete('dataSet.mat');
-    save('mot0','geo','cost','per','dataSet','mat');   % save geo and out
+    if isoctave()            %OCT
+        save('-mat7-binary', 'mot0.mat','geo','cost','per','dataSet','mat');
+    else
+        save('mot0','geo','cost','per','dataSet','mat');
+    end
 else
     cost = [];
     save('geo','geo','out','mat','-append');   % save geo and out

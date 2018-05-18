@@ -33,14 +33,14 @@ function C_MtpaMtpvLut(pathname,filename)
 
 %% old input
 % close all, clear all; addpath mfiles, load LastPath
-% 
+%
 % % load the two motor data: mat file and ReadParameters.m
 % % 1) flux linkage map
 % [FILENAME, pathname, FILTERINDEX] = uigetfile([pathname '/*_n*.mat'], 'LOAD DATA');
 % % 2) associated ReadParameters.m
 % load([pathname FILENAME]); %run([pathname 'ReadParameters']);
 % save LastPath pathname
-% 
+%
 % [success,message,messageid] = mkdir(pathname,'AOA')
 % GoAhead = 'Yes';
 % if not(isempty(message))
@@ -60,11 +60,11 @@ if nargin()<2
     
     [success,message,messageid] = mkdir(pathname,'AOA');
     GoAhead = 'Yes';
-%     if not(isempty(message))
-%         GoAhead = questdlg('Existing folder: proceed anyway?', ...
-%             'WARNING!', ...
-%             'Yes', 'No', 'No');
-%     end
+    %     if not(isempty(message))
+    %         GoAhead = questdlg('Existing folder: proceed anyway?', ...
+    %             'WARNING!', ...
+    %             'Yes', 'No', 'No');
+    %     end
 else
     [success,message,messageid] = mkdir(pathname,'AOA');
     if ~isempty(message)
@@ -74,7 +74,7 @@ end
 
 load([pathname filename]);
 
-plot_defaults;
+%plot_defaults;
 
 % if isempty(axes_type)
 if sum(Id(:,1)) < 0
@@ -113,7 +113,7 @@ if (0)
     T0=T;
     dTpp0=dTpp;
     dT0=dT;
-
+    
     Id=linspace(0,max(max(Id)),256);
     Iq=linspace(0,max(max(Iq)),256);
     [Id,Iq]=meshgrid(Id,Iq);
@@ -123,13 +123,17 @@ if (0)
     dT=interp2(Id0,Iq0,dT0,Id,Iq);
     dTpp=interp2(Id0,Iq0,dTpp0,Id,Iq);
 end
-    
+
 
 % Performance maps
 id = Id(1,:); iq = Iq(:,1)';
 if exist('T')
     TI = abs(T);
-    p = round(abs(2/3 * T(2,2)./(Fd(2,2) .* Iq(2,2) - Fq(2,2) .* Id(2,2))));   % pole pairs reconstruction
+    if ~exist('n3phase')
+        n3phase=1;
+        warning('Number of 3 phase sets equal to one as default setting')
+    end
+    p = round(abs(2/3 * T(2,2)./(Fd(2,2) .* Iq(2,2) - Fq(2,2) .* Id(2,2))/n3phase));   %AS pole pairs reconstruction
 else
     if exist([pathname 'ReadParameters'],'file')
         run([pathname 'ReadParameters']);
@@ -164,7 +168,7 @@ if (0)
     C_IdIq_FqFd
     
     [FD,FQ]=meshgrid(fd,fq);
-    T = 3/2 * p * (FD .* IQ_dato_fd_fq - FQ .* ID_dato_fd_fq);
+    T = 3/2 * p * n3phase * (FD .* IQ_dato_fd_fq - FQ .* ID_dato_fd_fq); %AS
     F = sqrt(FD.^2 + FQ.^2);
     delta = zeros(size(FD));
     delta(FD ~= 0) = atan(FQ(FD ~= 0)./FD(FD ~= 0));
@@ -216,42 +220,86 @@ pathname = strrep(pathname,'AOA\','');
 
 % Performance Curves
 figure
+if ~isoctave()
+   figSetting
+end    
 plot(I_KtMax,T_KtMax), grid on,
 if exist('dTpp_KtMax')
     hold on
-    plot(I_KtMax,[(T_KtMax+dTpp_KtMax);(T_KtMax-dTpp_KtMax)],'r');
+    plot(I_KtMax,[(T_KtMax+dTpp_KtMax/2);(T_KtMax-dTpp_KtMax/2)],'r');
 end
 set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 xlabel('Phase current [A] pk'), ylabel('Torque [Nm]')
 title('Torque vs pk current, MPTA')
-saveas(gcf,[pathname 'AOA\torque_current']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'AOA\torque_current');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'AOA\torque_current']);
+end
 
 figure
+if ~isoctave()
+   figSetting
+end  
 % gamma_KtMax = atand(-id_KtMax./iq_KtMax);
 gamma_KtMax = atand(iq_KtMax./id_KtMax);
 plot(I_KtMax,gamma_KtMax), grid on
 set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 xlabel('Phase current [A] pk'), ylabel('MTPA current angle [deg]')
 title('$$\gamma_{MPTA}(I)$$')
-saveas(gcf,[pathname 'AOA\gamma_current']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'AOA\gamma_current');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'AOA\gamma_current']);
+end
 
 figure
+if ~isoctave()
+   figSetting
+end  
 plot(T_KtMax,F_KtMax), grid on
 set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 xlabel('Torque [Nm]'), ylabel('Flux amplitude [Vs]')
 title('Torque vs pk flux, MPTA')
-saveas(gcf,[pathname 'AOA\flux_torque']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'AOA\flux_torque');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'AOA\flux_torque']);
+end
 
 cut_point = 7;
 figure
+if ~isoctave()
+   figSetting
+end  
 plot(I_KtMax(cut_point:end),T_KtMax(cut_point:end)./I_KtMax(cut_point:end)), grid on
 set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 xlabel('Phase current [A] pk'), ylabel('kt [Nm/Apk]')
 title('kt vs pk current, MPTA')
-saveas(gcf,[pathname 'AOA\kt_current']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'AOA\kt_current');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'AOA\kt_current']);
+end
+
 
 % contours
 figure
+if ~isoctave()
+   figSetting
+end  
 [c,h]=contour(id,iq,TI,'k'); clabel(c,h,'LabelSpacing',200), hold on
 [c,h]=contour(id,iq,II,'k'); clabel(c,h)
 plot(id_KtMax(1:end),iq_KtMax(1:end),'-b','LineWidth',2),
@@ -261,10 +309,20 @@ axis equal, axis([min(id) max(id) min(iq) max(iq)])
 title('Control curves in id iq coordinates')
 legend('[Nm]','[A]','MTPA','MTPV')
 % adapt_figure_fonts('Times New Roman',18,14)
-saveas(gcf,[pathname 'AOA\MTPAMTPV(id,iq)']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'AOA\MTPAMTPV(id,iq)');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'AOA\MTPAMTPV(id,iq)']);
+end
 
 if exist('F')
     figure
+    if ~isoctave()
+       figSetting
+    end  
     temp = max(max(abs(F)));
     [c,h]=contour(FD,FQ,F,temp * [0.1:0.1:0.9]);
     clabel(c,h,'Color','k'); hold on
@@ -276,7 +334,14 @@ if exist('F')
     title('AOA in fd,fq coordinates')
     plot(fd_KtMax,fq_KtMax,'-b','LineWidth',2)   % MTPA
     plot(fd_KvMax,fq_KvMax,'-b','LineWidth',2)   % MTPV
-    saveas(gcf,[pathname 'AOA\MTPAMTPV(fd,fq)']);
+    h=gcf(); %AS
+    if isoctave()
+        fig_name=strcat(pathname, 'AOA\MTPAMTPV(fd,fq)');
+        hgsave(h,[fig_name]);
+        clear fig_name
+    else
+        saveas(gcf,[pathname 'AOA\MTPAMTPV(fd,fq)']);
+    end
 end
 
 % print MTPA tables into a txt file
@@ -318,6 +383,9 @@ fclose(fid);
 
 % debug
 figure
+if ~isoctave()
+   figSetting
+end  
 set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 plot(T_KtMax,id_KtMax), hold on, grid on,
 plot(T_KtMax,iq_KtMax,'r'),
@@ -325,6 +393,13 @@ plot(T_set,id_set,'xk'), plot(T_set,iq_set,'xk'), hold off,
 set(gca,'PlotBoxAspectRatio',[1 0.6 1]);
 legend('id setpoint','iq setpoint','LUT','LUT');
 xlabel('$$T\_set [Nm]$$'), ylabel('[A] pk')
-saveas(gcf,[pathname 'AOA\tablesMTPA']);
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'AOA\tablesMTPA');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'AOA\tablesMTPA']);
+end
 
 edit([pathname '\tablesMTPA.txt'])
