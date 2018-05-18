@@ -62,7 +62,7 @@ switch geo.RotType
     otherwise
         % Assegna aria alle barriere di flux:
         %     for kk=1:length(BLKLABELSrot.BarName)
-        if ((geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType))
+        if ((max(geo.BarFillFac)~=0)&&strcmp('Circular',geo.RotType))
             tmp = [mat.LayerMag.Br mat.LayerMag.Br];
             Br = repmat(tmp,1,geo.ps);
             % Br=[Br 0*Br];

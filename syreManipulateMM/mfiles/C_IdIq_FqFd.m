@@ -142,8 +142,12 @@ argIF = atan(IQ_dato_fd_fq./ID_dato_fd_fq);
 % fi = pi/2 + delta - argI;    % PF angle
 % PF = cos(fi);
 
-save ([pathname 'IdIq_FdFq.mat'],'fd','fq','IQ_dato_fd_fq','ID_dato_fd_fq', ...
-    'TF','FF','IF','deltaF','argIF');
-
-
-
+if isoctave()  %OCT
+    name_file = strcat(pathname, 'IdIq_FdFq.mat');
+    save ('-mat7-binary', name_file,'fd','fq','IQ_dato_fd_fq','ID_dato_fd_fq', ...
+        'TF','FF','IF','deltaF','argIF');
+    clear name_file
+else
+    save ([pathname 'IdIq_FdFq.mat'],'fd','fq','IQ_dato_fd_fq','ID_dato_fd_fq', ...
+        'TF','FF','IF','deltaF','argIF');
+end

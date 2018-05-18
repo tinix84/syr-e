@@ -68,18 +68,20 @@ iAmpCoil=iAmp*geo.Nbob;
 
 [SOL] = simulate_xdeg_IronLoss(geo,iAmpCoil,per.BrPP,gamma,eval_type,mat,per);
 
-out.id = mean(SOL(:,2));
-out.iq = mean(SOL(:,3));
-out.fd = mean(SOL(:,4));
-out.fq = mean(SOL(:,5));
-out.T= abs(mean(SOL(:,6)));
-out.dTpu = std(SOL(:,6))/out.T;
-% out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
+out.id = mean(SOL.id);
+out.iq = mean(SOL.iq);
+out.fd = mean(SOL.fd);
+out.fq = mean(SOL.fq);
+out.T= abs(mean(SOL.T));
+out.dT = std(SOL.T);
+out.dTpu = std(SOL.T)/out.T;
+out.dTpp = max(SOL.T)-min(SOL.T);
+out.IPF = sin(atan(out.iq./out.id)-atan(out.fq./out.fd));
 out.SOL = SOL;
-out.Pfes_h = SOL(1,7);
-out.Pfes_c = SOL(2,7);
-out.Pfer_h  = SOL(3,7);
-out.Pfer_c  = SOL(4,7);
+out.Pfes_h = SOL.Pfes_h;
+out.Pfes_c = SOL.Pfes_c;
+out.Pfer_h = SOL.Pfer_h;
+out.Pfer_c = SOL.Pfer_c;
 out.Pfe_total = out.Pfes_h + out.Pfes_c + out.Pfer_h + out.Pfer_c;
 %% Cost functions
 cost1 = -out.T;

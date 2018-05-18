@@ -113,6 +113,7 @@ switch geo.RotType
         
         % Chao delete air zone
         Aircentro = [];
+        
         % Replicate poles ps-1 times
         Temp=[]; kk=1;
         if not(isempty(Aircentro))
@@ -132,6 +133,59 @@ switch geo.RotType
         ShaftBaricentro=[mean([0,Ar]),0,codMatShaft,res,1,NaN,NaN,NaN];
         
         BarCenter=[PMBaricentro;Aircentro;RotBaricentro;ShaftBaricentro];
+       
+    case 'Vtype' % definzione regioni barriera - rev.Gallo 20/03/2018 
+        xc = temp.xc;
+        yc = temp.yc;
+        
+        % Barriers: magnetization direction
+        xmag=temp.xmag; ymag=temp.ymag; zmag=temp.zmag;
+        
+        xc = temp.xc;
+        yc = temp.yc;
+        xair = temp.xair;
+        yair = temp.yair;
+        xmagair= temp.xmagair;
+        ymagair= temp.ymagair;
+        
+        if isempty(xc) %devo distinguere il caso in cui c'e magnete o no
+            
+            xair=[xair';xair']; yair=[yair';-yair'];
+            xmagair=[xmagair';xmagair']; ymagair=[ymagair';-ymagair'];
+            BarCenter=[ xair,yair,codMatAir*ones(length(xair),1),res*ones(length(xair),1),1*ones(length(xair),1),zeros(length(xair),1),zeros(length(xair),1),zeros(length(xair),1)];
+            magdir=atan2(ymagair,xmagair);
+        else
+            xc=[xc';xc']; yc=[yc';-yc'];
+            xair=[xair';xair']; yair=[yair';-yair'];
+            xmag=[xmag';xmag']; ymag=[ymag';-ymag']; zmag=[zmag';zmag'];
+            xmagair=[xmagair';xmagair']; ymagair=[ymagair';-ymagair'];
+            BarCenter=[xc,yc,codMatBar*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag;
+                xair,yair,codMatAir*ones(length(xair),1),res*ones(length(xair),1),1*ones(length(xair),1),zeros(length(xair),1),zeros(length(xair),1),zeros(length(xair),1)];
+            magdir=atan2(ymag,xmag);
+            magdir=[magdir;atan2(ymagair,xmagair)];
+        end    
+
+        % Replicate poles ps-1 times
+        Temp=[]; kk=1;
+        if not(isempty(BarCenter))
+            while kk<=ps-1
+                [xtemp,ytemp]=rot_point(BarCenter(:,1),BarCenter(:,2),kk*180/p*pi/180);
+                magdir_tmp=magdir+(kk*pi/p-eps)+(cos((kk-1)*pi)+1)/2*pi;
+                Temp=[Temp;xtemp,ytemp,BarCenter(:,3),BarCenter(:,4),BarCenter(:,5),cos(magdir_tmp),sin(magdir_tmp),BarCenter(:,8)];
+                kk=kk+1;
+            end
+            BarCenter=[BarCenter;Temp];
+            clear Temp xtemp ytemp;
+        end
+        
+        % rotor iron
+        XBan1sx=geo.B1k;
+        RotBaricentro=[mean([Ar,XBan1sx(nlay)]),0,codMatFe,res,1,NaN,NaN,NaN];
+        
+        % shaft
+        ShaftBaricentro=[mean([0,Ar]),0,codMatShaft,res,1,NaN,NaN,NaN];
+        
+        BarCenter=[BarCenter;RotBaricentro;ShaftBaricentro];        
         
     otherwise
         
@@ -140,6 +194,15 @@ switch geo.RotType
         
         % Barriers: magnetization direction
         xmag=temp.xmag; ymag=temp.ymag; zmag=temp.zmag;
+
+        if strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'ISeg') %mod walter
+            xc = temp.xc;
+            yc = temp.yc;
+            xair = temp.xair;
+            yair = temp.yair;
+            xmagair= temp.xmagair;
+            ymagair= temp.ymagair;
+        end
         
         if (0)  % put 1 to define the magnet direction parallel to q axis
             warning('magnet direction is parallel!!!')
@@ -148,7 +211,7 @@ switch geo.RotType
             ymag=zeros(r,c);
             zmag=zeros(r,c);
         end
-        
+
         % barrier block centers
         if isempty(xc)
             BarCenter=[];
@@ -227,12 +290,29 @@ switch geo.RotType
                 % magdir=atan2(ymag,xmag);
                 magdir=atan2(BarCenter(:,7),BarCenter(:,6)); % it means : magdir=atan2(ymag,xmag);
                 % keyboard
+                
+            elseif strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'ISeg')
+                if ~isempty(xair)
+                    xc=[xc';xc']; yc=[yc';-yc'];
+                    xair=[xair';xair']; yair=[yair';-yair'];
+                    xmag=[xmag';xmag']; ymag=[ymag';-ymag']; zmag=[zmag';zmag'];
+                    xmagair=[xmagair';xmagair']; ymagair=[ymagair';-ymagair'];
+                    BarCenter=[xc,yc,codMatBar*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag;
+                        xair,yair,codMatAir*ones(length(xair),1),res*ones(length(xair),1),1*ones(length(xair),1),zeros(length(xair),1),zeros(length(xair),1),zeros(length(xair),1)];
+                    magdir=atan2(ymag,xmag);
+                    magdir=[magdir;atan2(ymagair,xmagair)];
+                    
+                else
+                    xc=[xc';xc']; yc=[yc';-yc'];
+                    xmag=[xmag';xmag']; ymag=[ymag';-ymag']; zmag=[zmag';zmag'];
+                    BarCenter=[xc,yc,codMatBar*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag;];
+                    magdir=atan2(ymag,xmag);
+                end
             else
                 xc=[xc';xc']; yc=[yc';-yc'];
                 xmag=[xmag';xmag']; ymag=[ymag';-ymag']; zmag=[zmag';zmag'];
-                BarCenter=[xc,yc,codMatBar*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag];
+                BarCenter=[xc,yc,codMatBar*ones(length(xc),1),res*ones(length(xc),1),1*ones(length(xc),1),xmag,ymag,zmag;];
                 magdir=atan2(ymag,xmag);
-                
             end
             
         end
@@ -244,6 +324,7 @@ switch geo.RotType
         if not(isempty(BarCenter))
             while kk<=ps-1
                 [xtemp,ytemp]=rot_point(BarCenter(:,1),BarCenter(:,2),kk*180/p*pi/180);
+                magdir=atan2(BarCenter(:,7),BarCenter(:,6));
                 magdir_tmp=magdir+(kk*pi/p-eps)+(cos((kk-1)*pi)+1)/2*pi;
                 Temp=[Temp;xtemp,ytemp,BarCenter(:,3),BarCenter(:,4),BarCenter(:,5),cos(magdir_tmp),sin(magdir_tmp),BarCenter(:,8)];
                 kk=kk+1;

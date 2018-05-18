@@ -16,17 +16,26 @@
 %    Citation: An improved subdomain model for predicting magnetic field of
 %    SPM accounting for tooth-tips,    Z.Q.Zhu,   2011    Trans on Magnetics
 %
-%    Output: Bt: the average flux density enter into most loaded tooth [T]
-%            Bg_avg: the average flux desity in airgap [T]
+%    Output: wt: tooth width [mm]
+%            ly: yoke length [mm]
 %            Bg1: peak fundanmental component of Bgap [T]
 
-function [Bt,Bg_avg,Bg1] = evalBgapSyrmDesign_SPM(geo,mat,lm_g,x)
+function [wt,ly,Bg1] = evalBgapSyrmDesign_SPM(geo,mat,lm_g,x,Bfe)
 
 debug = 0;
 
 p = geo.p;
 q = geo.q;
-ps = geo.ps;
+% ps = geo.ps;
+
+if q > 1
+    %% DW-SPM
+    ps = 1;                                                                 % eval one pole pair
+else
+    %% CW-SPM
+    ps = 2;                                                                 % eval one pole
+end
+
 acs = geo.acs;
 g = geo.g*1e-3;
 R = geo.R*1e-3;
@@ -36,9 +45,11 @@ mur = mat.LayerMag.mu;
 Beta = geo.BarFillFac;
 mu0 = 4*pi*1e-7;
 m = numel(lm_g);
-
-PMdir = geo.PMdir;
-PMdir = 'p';
+if geo.dx == 1
+    PMdir = 'p';
+else
+    PMdir = 'r';
+end
 
 boa = 2*pi/(6*p*q)*acs;                                                     % slot opening angle (mech. rad)
 bsa = 2*pi/(6*p*q)*0.5+0.02;                                                % slot angle (mech. rad), avoid singularity
@@ -47,19 +58,23 @@ r = R * x;
 lmm = lm_g*g;
 lm = mean(lm_g)*g;
 Rsb = 0.8*R;
-Rr = max(r) - lm;
+Rr = mean(r) - lm;
 Rm = Rr + lm*Beta;
-Rs = max(r) + g;
+Rs = mean(r) + g;
 Rt = Rs + ttd;
 Am = geo.phi;
 ap = Am/180;
 
-ho = 200;                                                                   % maximum harmonic order
-nn = 360*ps;                                                                % number of positions along airgap
+ho = 300;                                                                   % maximum harmonic order
+nn = 600*ps;                                                                % number of positions along airgap
 nn_PM = round(nn*ap);                                                       % number of PM positions
 
 pc = 2*pi/(6*p*q*2);                                                        % half slot span
-rr = Rs - 5/6*g;                                                            % Bgap radius for calculation
+tau_s = 2*pi/(6*p*q);                                                       % slot pitch in radians
+tau_PM = ap * pi/p;                                                         % PM span in radians
+PM_gap = (1-ap) * pi/p;
+
+rr = Rs - 1/2*g;                                                            % Bgap radius for calculation
 
 kk = 1:1:ho;
 mk = 1:1:ho;
@@ -136,6 +151,7 @@ th_m = ToothPos(NearTooth);                                                 % ro
 
 %% airgap angular position
 theta = linspace(th_m-pi/(2*p),th_m+(2*ps-1)*pi/(p*2),nn);                  % airgap span to eval
+
 %% only slots in rotor theta span are counted
 th_s = SlotPos(SlotPos+pc*acs>=theta(1)&SlotPos-pc*acs<=theta(end));
 Qs = numel(th_s);                                                           % numbel of slots along theta
@@ -147,13 +163,13 @@ Mack = -Mak.*sin(kk*th_m);                                                  % Eq
 Mask = Mak.*cos(kk*th_m);                                                   % Eq 11
 Y1 = -mu0*((Rr*K*G1 + Rm*Ik)*Mack' - (Rr*G1 + Rm*K)*Mrsk')./(kk.^2-1)';     % Eq 63
 Y2 = -mu0*((Rr*K*G1 + Rm*Ik)*Mask' + (Rr*G1 + Rm*K)*Mrck')./(kk.^2-1)';     % Eq 64
-Y1(1,1) = mu0*Rm*log(Rm)/2 * (Mack(1)-Mrsk(1));                             % Singularity	
+Y1(1,1) = mu0*Rm*log(Rm)/2 * (Mack(1)-Mrsk(1));                             % Singularity
 Y2(1,1) = mu0*Rm*log(Rm)/2 * (Mask(1)+Mrck(1));                             % Singularity
 
 Y3 = -mu0*(K*(Rm*Ik - Rr*G1)*Mack' - (Rm*Ik - Rr*G1)*Mrsk')./(kk.^2-1)';    % Eq 82
 Y4 = -mu0*(K*(Rm*Ik - Rr*G1)*Mask' + (Rm*Ik - Rr*G1)*Mrck')./(kk.^2-1)';    % Eq 83
-Y3(1,1) = mu0/2*(Rm*log(Rm) + Rm) * (Mack(1)-Mrsk(1));                      % Singularity	
-Y4(1,1) = mu0/2*(Rm*log(Rm) + Rm) * (Mask(1)+Mrck(1));                      % Singularity	
+Y3(1,1) = mu0/2*(Rm*log(Rm) + Rm) * (Mack(1)-Mrsk(1));                      % Singularity
+Y4(1,1) = mu0/2*(Rm*log(Rm) + Rm) * (Mask(1)+Mrck(1));                      % Singularity
 
 %% Eq 97
 K97 = cell(Qs);
@@ -257,17 +273,20 @@ Bask = -kk.*(C2'/Rs.*(rr/Rs).^(kk-1) - D2'/Rm.*(rr/Rm).^(-kk-1));
 
 B2r = full(sum(Brck'.*sin(kk'.*theta) + Brsk'.*cos(kk'.*theta)));           % radial component
 B2a = full(sum(Back'.*cos(kk'.*theta) + Bask'.*sin(kk'.*theta)));           % tangential component
- 
+
+
 %% get Bgap over one pole pair
-if ps >1
-    Bgr = B2r(1:round(2/ps*nn));  
-    Bga = B2a(1:round(2/ps*nn)); 
-    theta = theta(1:round(2/ps*nn)); 
-else
-    Bgr = [B2r,-B2r];
-    Bga = [B2a,-B2a];
+if ps == 1
+    %% DW-SPM
+    Bgn = [B2r,-B2r];
+    Bgt = [B2a,-B2a];
     theta = [theta,pi/p+theta];
+else
+    %% CW-SPM
+    Bgn = B2r;
+    Bgt = B2a;
 end
+
 
 %% for shaped PM
 if Beta<1
@@ -280,54 +299,114 @@ if Beta<1
     %% calculate PM length along theta
     Lm = (max(r)-Rc)*cos(csi) + sqrt(Rc^2-(max(r)*sin(csi)-Rc*sin(csi)).^2)-max(r)+lm;
     gg = lm + g - Lm;                                                       % airgap length
-
-    AirPortionShape_1 = Bgr(1:round((nn - nn_PM)/2/ps));
-    AirPortionShape_2 = Bgr(round((nn + nn_PM)/2/ps)+1:round((3*nn - nn_PM)/2/ps));
-    AirPortionShape_3 = Bgr(round((3*nn + nn_PM)/2/ps)+1:end);
-    PMPortionShape_1 = Bgr(round((nn - nn_PM)/2/ps)+1:round((nn + nn_PM)/ps/2));
-    PMPortionShape_2 = Bgr(round((3*nn - nn_PM)/2/ps)+1:round((3*nn + nn_PM)/ps/2));
+    
+    AirPortionShape_1 = Bgn(1:round((nn - nn_PM)/2/ps));
+    AirPortionShape_2 = Bgn(round((nn + nn_PM)/2/ps)+1:round((3*nn - nn_PM)/2/ps));
+    AirPortionShape_3 = Bgn(round((3*nn + nn_PM)/2/ps)+1:end);
+    PMPortionShape_1 = Bgn(round((nn - nn_PM)/2/ps)+1:round((nn + nn_PM)/ps/2));
+    PMPortionShape_2 = Bgn(round((3*nn - nn_PM)/2/ps)+1:round((3*nn + nn_PM)/ps/2));
     
     ratio_shaped = Lm*(Lm(1)+gg(1)*mur)./((Lm+gg*mur)*Lm(1));
     PMPortionShape1 = PMPortionShape_1.*ratio_shaped;
     PMPortionShape2 = PMPortionShape_2.*ratio_shaped;
-    Bgr = [AirPortionShape_1,PMPortionShape1,AirPortionShape_2,PMPortionShape2,AirPortionShape_3];
+    Bgn = [AirPortionShape_1,PMPortionShape1,AirPortionShape_2,PMPortionShape2,AirPortionShape_3];
 end
 
-%% find PM portion and apply to other lm/g
-AirPortion_1 = Bgr(1:round((nn - nn_PM)/ps/2)).*ones(m,1);
-AirPortion_2 = Bgr(round((nn + nn_PM)/ps/2)+1:round((3*nn - nn_PM)/ps/2)).*ones(m,1);
-AirPortion_3 = Bgr(round((3*nn + nn_PM)/ps/2)+1:end).*ones(m,1);
-PMPortion_1 = Bgr(round((nn - nn_PM)/ps/2)+1:round((nn + nn_PM)/ps/2));
-PMPortion_2 = Bgr(round((3*nn - nn_PM)/ps/2)+1:round((3*nn + nn_PM)/ps/2));
+%% find PM portion and apply to other lm/g over one pole pair
+AirPortion_1 = Bgn(1:round((nn - nn_PM)/ps/2)).*ones(m,1);
+AirPortion_2 = Bgn(round((nn + nn_PM)/ps/2)+1:round((3*nn - nn_PM)/ps/2)).*ones(m,1);
+AirPortion_3 = Bgn(round((3*nn + nn_PM)/ps/2)+1:end).*ones(m,1);
+PMPortion_1 = Bgn(round((nn - nn_PM)/ps/2)+1:round((nn + nn_PM)/ps/2));
+% PMPortion_1(PMPortion_1>PMPortion_1(end/2)) = PMPortion_1(end/2);
+PMPortion_2 = Bgn(round((3*nn - nn_PM)/ps/2)+1:round((3*nn + nn_PM)/ps/2));
 ratio = lmm.*(lm+g*mur)./((lmm+g*mur)*lm);
 PMPortion1 = PMPortion_1.*ratio';
 PMPortion2 = PMPortion_2.*ratio';
-Bg_pole = [AirPortion_1,PMPortion1,AirPortion_2,PMPortion2,AirPortion_3];
+%% one pole pair distribution
+Bg_pp = [AirPortion_1,PMPortion1,AirPortion_2,PMPortion2,AirPortion_3];
+%% ps = 1
+% AirPortion_1 = Bgn(1:round((nn - nn_PM)/ps/2)).*ones(m,1);
+% AirPortion_2 = Bgn(round((nn + nn_PM)/ps/2)+1:end).*ones(m,1);
+% PMPortion_1 = Bgn(round((nn - nn_PM)/ps/2)+1:round((nn + nn_PM)/ps/2));
+% ratio = lmm.*(lm+g*mur)./((lmm+g*mur)*lm);
+% PMPortion1 = PMPortion_1.*ratio';
+% Bg_pole = [AirPortion_1,PMPortion1,AirPortion_2];
 %% get average Bgap, only PM portion is counted
 Bg_avg = mean(abs(PMPortion1),2);
 
-%% find most loaded tooth position
-[~,mt] = min(abs(th_s-th_m));                                               
-Bg_tooth= Bg_pole(:,theta>=th_s(mt)&theta<=th_s(mt+1));
-Bt = mean(Bg_tooth,2);
+%% five different cases
+if q > 1 || q == 4/5 || q==4/7
+        %% DW-SPM
+    % find most loaded tooth position
+    [~,mt] = min(abs(th_s-th_m));
+    Bg_tooth= Bg_pp(:,theta>=th_s(mt)&theta<=th_s(mt+1));
+    B_pm = mean(Bg_tooth,2);
+    
+    %% sizing
+    wt = 2*pi*r/(6*p*q).*B_pm / Bfe;
+    ly = pi*r.*Bg_avg*ap/(2*p)/Bfe;  
+else    
+    %% CW-SPM
+    if tau_PM < tau_s
+        
+        if PM_gap <  tau_s * acs/2
+            %% when two opposite PMs are so close, only PM part against tooth is counted
+            tm7 = tau_s*(1-acs)/2+th_m;
+            tm8 = -tau_s*(1-acs)/2+th_m;
+            Bg_tooth= Bg_pp(:,theta>=tm8&theta<=tm7);
+            B_pm = mean(Bg_tooth,2);
+            
+            %% sizing
+            wt = B_pm/Bfe*tau_s*(1-acs)*r;
+        else
+            %% PM area < slot pitch
+            B_pm = Bg_avg;
+            
+            %% sizing
+            wt = B_pm/Bfe*tau_PM*r;
+        end
+%     elseif  tau_PM >= tau_s && tau_PM < tau_s*(1+acs)
+    else
+        %% PM area > one slot span & less than two slots span
+        Bgt_pole = Bgt(1:end/2);
+        Bg_pole = Bg_pp(:,1:end/2);
+        
+        [~,maxBgt_p] = max(Bgt_pole(1:end/2));                              % find max Bgt
+        
+        %% find zero point next to max Bgt point
+        tm5 = sign(Bgt(1:end/2).*[Bgt(2:end/2),Bgt(1)]);
+        [~,tm6] = find (tm5 < 0);
+        tm7 = tm6(sum(tm6-maxBgt_p<0));
+        tm8 = size(Bgt_pole,2) - tm7;
+        Bg_tooth= Bg_pole(:,tm7:tm8+1);
+        Active_PM_ratio = (tm8+1-tm7)/size(Bg_pole,2);
+        B_pm = mean(Bg_tooth,2);
+        Active_PM_pitch = Active_PM_ratio * pi*(r+g)/p;
+        %% sizing
+        wt = B_pm/Bfe*Active_PM_pitch;
+    end
+    %% sizing
+    ly = wt/2;
+end
+
+wt = wt*1e3;
+ly = ly*1e3;
 
 %% calculate Bg1
-LL = size(Bg_pole,2);
+LL = size(Bg_pp,2);
 Bg1 = size(1,m);
 for mm = 1:m
-    Y = fft(Bg_pole(mm,:));
+    Y = fft(Bg_pp(mm,:));
     P2 = abs(Y/LL);
     Bg1(mm) = 2*P2(2);                                                      % get Bg1 from fft of Bg_pole
 end
 
 if (debug)
-    keyboard
-    figure
+    figure(11)
     hold on
     grid on
-    plot(theta,Bgr,'bo');
-%     plot(theta,Bg_pole,'ro')
-%     plot(theta,B2a);
-%     plot(theta,Bg_pole);
-    xlim([theta,theta]);
+    plot(theta,Bgn,'r');
+    plot(theta,Bgt,'b')
+    xlim([theta(1),theta(end)])
+    keyboard
 end

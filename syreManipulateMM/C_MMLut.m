@@ -24,7 +24,7 @@ close all, clear all; addpath mfiles, load LastPath
 load([pathname FILENAME]); %run([pathname 'ReadParameters']);
 save LastPath pathname
 
-[success,message,messageid] = mkdir(pathname,'AOA')
+[success,message,messageid] = mkdir(pathname,'AOA');
 GoAhead = 'Yes';
 % if not(isempty(message))
 %     GoAhead = questdlg('Existing folder: proceed anyway?', ...
@@ -41,16 +41,19 @@ end
 % end
 
 %% winding and stretching
-prompt={'Kr=Ns_new/Ns_old','Kl=l_new/l_old','Lld [H]','Llq [H]'};
+prompt={'Kr=Ns_new/Ns_old','Kl=l_new/l_old','Lld [H]','Llq [H]','Number of 3-phase sets'}; %AS
 name='Input';
 numlines=1;
-defaultanswer={'1','1','0','0'};
+defaultanswer={'1','1','0','0','1'};
 
 setup=inputdlg(prompt,name,numlines,defaultanswer);
 Kr=eval(setup{1});
 Kl=eval(setup{2});
 Lld=eval(setup{3});
 Llq=eval(setup{4});
+n3phase=eval(setup{5});
+
+save(strcat(pathname,'fdfq_idiq_n256.mat'),'n3phase','-append');
 
 if (Kr~=1 || Kl~=1 || Lld~=0 || Llq~=0)
     %FILENAME=[FILENAME(1:end-4) '_Kr' num2str(Kr,2) '_Kl' num2str(Kl,2) '_Lld=' num2str(Lld,4) '_Llq=' num2str(Llq,4) '.mat'];
@@ -61,6 +64,7 @@ if (Kr~=1 || Kl~=1 || Lld~=0 || Llq~=0)
     end
     pathname=[pathname newFolder '\'];
     
+    %p=abs(round(2/3*T(128,128)/(Fd(128,128)*Iq(128,128)-Fq(128,128)*Id(128,128))));
     % change number of turns
     Id=Id/Kr;
     Iq=Iq/Kr;
@@ -75,15 +79,33 @@ if (Kr~=1 || Kl~=1 || Lld~=0 || Llq~=0)
     save([pathname FILENAME],'Id','Iq','Fd','Fq');
     if exist('T')
         T=T*Kl;
-        save([pathname FILENAME],'T','-append')
+        if isoctave()            %AS
+            file_name1= strcat(pathname,FILENAME,'.mat');
+            save('-mat7-binary', file_name1,'T','-append');
+            clear file_name1
+        else
+            save([pathname FILENAME],'T','-append')
+        end
     end
     if exist('dTpp')
         dTpp=dTpp*Kl;
-        save([pathname FILENAME],'dTpp','-append')
+        if isoctave()            %AS
+            file_name1= strcat(pathname,FILENAME,'.mat');
+            save('-mat7-binary', file_name1,'dTpp','-append');
+            clear file_name1
+        else
+            save([pathname FILENAME],'dTpp','-append')
+        end
     end
     if exist('dT')
         dT=dT*Kl;
-        save([pathname FILENAME],'dT','-append')
+        if isoctave()            %AS
+            file_name1= strcat(pathname,FILENAME,'.mat');
+            save('-mat7-binary', file_name1,'dT','-append');
+            clear file_name1
+        else
+            save([pathname FILENAME],'dT','-append')
+        end
     end
 end
 
@@ -135,12 +157,20 @@ StampaVarg(fid,fd',m,n,'FD_LUT','//Fluxd(iq,id)','%6.4f')
 StampaVarg(fid,fq',m,n,'FQ_LUT','//Fluxq(id,iq)','%6.4f')
 fclose(fid);
 
-figure,
+figure
+figSetting()
 plot(idd',fd'), grid on, hold on
 plot(iqq ,fq'),
 plot(idd',fd','kx'),
 plot(iqq ,fq','kx'), hold off
 xlabel('$$i_d$$, $$i_q$$ [A]'), ylabel('$$\lambda_d \lambda_q [Vs]$$'), %title(motor_name)
 
-saveas(gcf,[pathname 'FluxTables'])
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname, 'FluxTables');
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[pathname 'FluxTables'])
+end
 edit([pathname 'FluxTables.txt'])

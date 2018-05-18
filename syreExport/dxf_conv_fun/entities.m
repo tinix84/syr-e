@@ -85,7 +85,7 @@ if ~isempty(rotore)
     TipoLinea = 'Continuous';
     
     for k = 1:righe
-        if rotore(k,7) == 0
+        if ((rotore(k,7) == 0) || abs(rotore(k,7)==eps))
             linea(rotore,layer,color,TipoLinea,k,fid);
         elseif abs(rotore(k,7)) == 1
             arco(rotore,layer,color,TipoLinea,k,fid);

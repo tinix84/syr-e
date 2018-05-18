@@ -72,6 +72,8 @@ if (nargin<1)
     % 'Seg'     : All Seg(mented) barriers
     % 'Fluid'   : barriers shaped according to fluid flow lines
     % 'SPM'     : Surface mounted permanent magnet motor
+    % 'Vtype'   : V-type barriers
+
     geo.RotType = 'Circular';
     
     geo.RemoveTMPfile = 'ON';      % 'ON' of 'OFF' for remuving the motor folders in tmp
@@ -90,6 +92,7 @@ if (nargin<1)
     geo.BarFillFac=1;   % barrier filling factor
     % stator
     geo.q   = 1;        % stator slots per pole per phase
+    geo.n3phase = 1;    %AS stator 3-phase circuits number
     %     geo.slot_layer_pos='over_under';  %     stator slot layer position, two
     %     solution are possible, 'over_under', and 'side_by_side'
     geo.slot_layer_pos='side_by_side';
@@ -106,8 +109,8 @@ if (nargin<1)
     geo.SFR = 1;        % fillet at the back corner of the slot [mm]
     
     % rotor
-    if strcmp(geo.RotType,'SPM')
-        geo.naly = 1;
+    if strcmp(geo.RotType,'SPM') 
+        geo.nlay = 1;
     else
         geo.nlay  = 3;      % number of layers
     end
@@ -121,7 +124,9 @@ if (nargin<1)
     %                 1 1 -3 -3 2 2];
     geo.avv=[1 2 3 ;
         -3 -1 -2];
-    
+    geo.defaultavv=[1 2 3 ;%AS
+        -3 -1 -2];
+    geo.avv_flag=[1 1 1]; %AS
     geo.kracc = 9/9;                                % pitch shortening factor (for end connections length estimation)
     geo.Ns    = 87;                                % turns in series per phase (entire motor, one way, all poles in series)
     geo.ns = geo.q*6;                               % number of slot per pole pair
@@ -161,7 +166,9 @@ if (nargin<1)
     geo.dalpha_pu = [0.45 0.22*ones(1,geo.nlay-1)];
     geo.hc_pu = 0.5*ones(1,geo.nlay);
     if strcmp(geo.RotType,'SPM')
-        geo.dx = 1;
+%         geo.dx = 1;
+%         dataIn.DepthOfBarrier = 1;        %OCT
+
     else
         geo.dx = zeros(1,geo.nlay);
     end
@@ -208,7 +215,8 @@ if (nargin<1)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     yes_vector = ones(geo.nlay,1);
     no_vector = zeros(geo.nlay,1);
-    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'Circular'))
+    % Added case Vtype - rev.Gallo
+    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'Circular') || strcmp(geo.RotType,'Vtype'))
         flag_dx = yes_vector;
     else
         flag_dx = no_vector;
@@ -280,6 +288,9 @@ else
     per.min_exp_torque = dataIn.MinExpTorque;      % minimum expected torque [Nm]
     per.max_exp_ripple = dataIn.MaxRippleTorque;    % maximum expected torque ripple in pu during opimization
     per.max_Cu_mass = dataIn.MaxCuMass;         % maximum expected copper mass [kg]
+    % Penalizzazione volume magnete - rev.Gallo 15/03/2018
+    per.max_PM_mass= dataIn.MaxPMMass;        % massima massa magneti totale [kg]
+    
     if dataIn.LossEvaluationCheck == 1
         per.EvalSpeed = dataIn.EvalSpeed;
     end
@@ -306,6 +317,7 @@ else
     % 'Seg' draws all segmented barriers
     % 'Fluid' draws barriers shaped according to fluid mechanics
     % 'SPM'     : Surface mounted permanent magnet motor
+    % 'Vtype'   : Vtype barriers
     geo.RemoveTMPfile = dataIn.RMVTmp;      % 'ON' of 'OFF' for remuving the motor folders in tmp
     
     geo.RaccBarrier='OFF';
@@ -320,6 +332,7 @@ else
     
     % stator
     geo.q   = dataIn.NumOfSlots;      % stator slots per pole per phase
+    geo.n3phase = dataIn.Num3PhaseCircuit; %AS stator 3-phase circuits number
     if dataIn.SlotLayerPosCheck      % stator slot layer position, two solution are possible, 'over_under', and 'side_by_side'
         geo.slot_layer_pos = 'side_by_side';
     else
@@ -339,8 +352,16 @@ else
     geo.SFR = dataIn.FilletCorner;     % fillet at the back corner of the slot [mm]
     
     % rotor
-    if strcmp(geo.RotType,'SPM')
+    % Parameter for Vtype rotor geometry: slope of semi-barrier - rev.Gallo
+    if strcmp(geo.RotType,'Vtype') 
+        geo.VanglePM=dataIn.SlopeBarrier*pi/180;
+    else
+        geo.VanglePM=NaN;
+    end    
+    
+    if strcmp(geo.RotType,'SPM') 
         geo.nlay = 1;
+        %dataIn.DepthOfBarrier = 1;        %OCT
     else
         geo.nlay  = dataIn.NumOfLayers;    % number of layers
     end
@@ -353,7 +374,8 @@ else
     tmp_avv=dataIn.WinMatr;
     geo.avv=[tmp_avv(:,1),[tmp_avv(2,2:end);tmp_avv(1,2:end)]];
     %     geo.avv = dataIn.WinMatr;
-    
+    geo.defaultavv=dataIn.DefaultWinMatr; %AS
+    geo.avv_flag=dataIn.WinFlag; %AS
     geo.kracc = dataIn.PitchShortFac;       % pitch shortening factor (for end connections length estimation)
     geo.Ns = dataIn.TurnsInSeries;          % turns in series per phase (entire motor, one way, all poles in series)
     geo.ns = geo.q*6;                       % number of slot per pole pair
@@ -391,11 +413,27 @@ else
     geo.x0=[0 0]; % geo.alpha = 0;
     geo.x0 = geo.r/cos(pi/2/geo.p);
     geo.dalpha_pu = dataIn.ALPHApu;
+    % rev.Gallo 
+    geo.dalpha = geo.dalpha_pu*(90/geo.p);   % [mec degrees]
     geo.hc_pu = dataIn.HCpu;
     geo.dx = dataIn.DepthOfBarrier;
     
+    geo.Areaob0 = dataIn.Areaob0; %mod walter
+    geo.Areavert0 = dataIn.Areavert0;
+    geo.Areatot = dataIn.Areatot;
+    geo.Areaob = dataIn.Areaob;
+    geo.Areavert = dataIn.Areavert;
+    geo.dob = dataIn.dob;
+    geo.dvert = dataIn.dvert;
+    
     geo.radial_ribs_eval = dataIn.RadRibCheck;  % if 1, the radial ribs are evaluated, else the radial ribs are setted in the GUI
     geo.pont = dataIn.RadRibEdit;
+    geo.radial_ribs_split = dataIn.RadRibSplit;
+    %geo.radial_ribs_split=0;
+    
+    geo.th_FBS=dataIn.thetaFBS*pi/180;  % th_FBS is the shift angle in mechanical radians
+    %geo.delta_FBS=0;                    % delta_FBS is the pole deformation in mechanical radians. Used to design one deformed pole
+    
     %% bounds: limits of the search space
     % dalpha1 [p.u.]
     bounds_dalpha_1 = [dataIn.Alpha1Bou(1) dataIn.Alpha1Bou(2)];   % first angle [deg]
@@ -406,6 +444,12 @@ else
         bounds_dalpha = ones(geo.nlay-1,1) * [dataIn.DeltaAlphaBou(1) dataIn.DeltaAlphaBou(2)]; % other angles [p.u.]
     end
     
+    % Slope Barrier bounds Vtype rotor geometry - rev.Gallo
+    if strcmp(geo.RotType, 'Vtype')
+        bounds_angleDEG = [dataIn.SlopeBarrBou(1) dataIn.SlopeBarrBou(2)];   %bound slope barrier [deg] 
+    else
+        bounds_angleDEG = [0 0];
+    end
     if strcmp(geo.RotType, 'SPM')
         % thickness of PM
         bounds_hc = geo.lm * [dataIn.hcBou(1) dataIn.hcBou(2)];
@@ -432,6 +476,8 @@ else
     bounds_ttd = [dataIn.ToothTangDepthBou(1) dataIn.ToothTangDepthBou(2)];
     % phase angle of the current vector
     bounds_gamma = [dataIn.PhaseAngleCurrBou(1) dataIn.PhaseAngleCurrBou(2)];
+    % FBS
+    bounds_thFBS = [dataIn.ThetaFBSBou(1) dataIn.ThetaFBSBou(2)];
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% SETTINGS OF MODE
@@ -442,13 +488,13 @@ else
     % bounds: n x 2 vector containing the boundaries of each input
     yes_vector = ones(geo.nlay,1);
     no_vector  = zeros(geo.nlay,1);
-    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'Circular'))
+    % Added case Vtype - rev.Gallo
+    if (strcmp(geo.RotType,'Fluid') || strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'Circular') || strcmp(geo.RotType,'Vtype'))
         flag_dx = yes_vector*dataIn.DxBouCheck;
     else
         flag_dx = no_vector*dataIn.DxBouCheck;
     end
-    
-    
+    % Re-define bounds case nlay=1 - rev.Gallo 
     if geo.nlay == 1
         bounds = [
             bounds_dalpha_1 dataIn.Dalpha1BouCheck
@@ -462,7 +508,10 @@ else
             bounds_lt       dataIn.ToothLengthBouCheck
             bounds_acs      dataIn.StatorSlotOpenBouCheck
             bounds_ttd      dataIn.ToothTangDepthBouCheck
+            bounds_angleDEG dataIn.SlopeBarrBouCheck
+            bounds_thFBS    dataIn.ThetaFBSBouCheck
             bounds_gamma    dataIn.GammaBouCheck];
+
     else
         bounds = [
             bounds_dalpha_1 dataIn.Dalpha1BouCheck
@@ -476,7 +525,10 @@ else
             bounds_lt       dataIn.ToothLengthBouCheck
             bounds_acs      dataIn.StatorSlotOpenBouCheck
             bounds_ttd      dataIn.ToothTangDepthBouCheck
+            bounds_angleDEG dataIn.SlopeBarrBouCheck
+            bounds_thFBS    dataIn.ThetaFBSBouCheck
             bounds_gamma    dataIn.GammaBouCheck];
+
     end
     
     filt_bounds = (bounds(:,3)==1);
@@ -489,7 +541,9 @@ else
     %% OBJECTIVES
     objs = [per.min_exp_torque  dataIn.TorqueOptCheck
         per.max_exp_ripple      dataIn.TorRipOptCheck
-        per.max_Cu_mass         dataIn.MassCuOptCheck];  % copper volume minimization
+        per.max_Cu_mass         dataIn.MassCuOptCheck
+        per.max_PM_mass         dataIn.MassPMOptCheck];
+
     filt_objs = (objs(:,2)==1);
     objs = objs(objs(:,2)==1,:);
     % eliminate unnecessary objs
@@ -528,7 +582,9 @@ RQnames{k+3} = 'wt';      % tooth width
 RQnames{k+4} = 'lt';      % tooth length
 RQnames{k+5} = 'acs';     % stator slot opening [p.u.]
 RQnames{k+6} = 'ttd';     % tooth tang depth [mm]
-RQnames{k+7} = 'gamma';   % idq current phase angle
+RQnames{k+7} = 'VanglePM'; % slope barrier [deg]
+RQnames{k+8} = 'th_FBS'; % flux barrier shift [mech deg]
+RQnames{k+9} = 'gamma';   % idq current phase angle
 
 % eliminate unnecessary RQnames
 RQnames = RQnames(filt_bounds);
@@ -538,6 +594,8 @@ geo.RQnames = RQnames;
 OBJnames{1} = 'Torque';
 OBJnames{2} = 'TorRip';
 OBJnames{3} = 'MassCu';
+OBJnames{4} = 'MassPM';
+
 
 % eliminate unnecessary OBJnames
 OBJnames = OBJnames(filt_objs);
@@ -563,13 +621,13 @@ geo.t = gcd(round(geo.ns*geo.p),geo.p);  % number of periods
 t2=gcd(round(geo.ns*geo.p),2*geo.p);
 QsCalc=Q/t2;
 psCalc=2*geo.p/t2;
-if rem(psCalc,2)==0
+if rem(psCalc,2)==0 %AS
     %periodic machine
-    geo.tempWinTable = geo.avv;
+    geo.tempWinTable = geo.defaultavv;
     geo.periodicity = 4;
 else
     %anti-periodic machine
-    geo.tempWinTable = [geo.avv -geo.avv];
+    geo.tempWinTable = [geo.defaultavv -geo.defaultavv];
     geo.periodicity = 5;
 end
 if isfield(geo,'Qs')  % Qs set in the GUI

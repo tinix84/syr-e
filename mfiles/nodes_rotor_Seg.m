@@ -75,14 +75,22 @@ rpont_x0=sqrt(ypont.^2+(x0-xpont).^2);
 Bx0=x0-(rpont_x0); geo.Bx0=Bx0;
 %% Determination of air thickness and check the feasibility of the geometry
 geo.Bx0=Bx0; % Initialization of central non-moved line of the flux barrier
-geo = calcHcCheckGeoControlwDx(geo);
-B1k=geo.B1k; B2k=geo.B2k;
-
-[xc_temp,yc_temp]=calc_intersezione_cerchi(r,rbeta(nlay),x0);
-dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
-if (dPointEndBar<(Bx0(nlay)-B1k(nlay)))
-    B1k(nlay)=Bx0(nlay)-dPointEndBar+hfe_min/2;
+if geo.delta_FBS==0
+    geo = calcHcCheckGeoControlwDx(geo);
+    B1k=geo.B1k;
+    B2k=geo.B2k;
+else
+    B1k=Bx0-geo.hc/2+geo.dx.*geo.hc/2;
+    B2k=Bx0+geo.hc/2+geo.dx.*geo.hc/2;
+    geo.B1k=B1k;
+    geo.B2k=B2k;
 end
+
+% [xc_temp,yc_temp]=calc_intersezione_cerchi(r,rbeta(nlay),x0);
+% dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
+% if (dPointEndBar<(Bx0(nlay)-B1k(nlay)))
+%     B1k(nlay)=Bx0(nlay)-dPointEndBar+hfe_min/2;
+% end
 
 hc=B2k-B1k;
 
@@ -179,7 +187,7 @@ for ii=1:nlay
         a1=1;
         b1=0;
         c1=-B2k(ii);
-        m2=tan(pi/2/p);
+        m2=tan(pi/2/p+geo.delta_FBS/2);
         a2=m2;
         b2=-1;
         c2=(yTraf2(ii)-m2*xTraf2(ii));
@@ -198,7 +206,7 @@ for ii=1:nlay
         a1=1;
         b1=0;
         c1=-B1k(ii);
-        m2=tan(pi/2/p);
+        m2=tan(pi/2/p+geo.delta_FBS/2);
         a2=m2;
         b2=-1;
         c2=(yTraf1(ii)-m2*xTraf1(ii));
@@ -505,14 +513,6 @@ end
 % determination of different magnet segment, central point and
 % magnetization direction
 MagnetFullFill_Seg;
-
-mat.LayerMag.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
-
-temp.xc=xc;
-temp.yc=yc;
-temp.xmag=xmag;
-temp.ymag=ymag;
-temp.zmag=zmag;
 % Additional division for magnet insertion in flux barrier
 temp.XpMag2B1=XpMag2B1;
 temp.YpMag2B1=YpMag2B1;
@@ -577,6 +577,38 @@ temp.XpontRadBarDx=XpontRadBarDx;
 temp.XpontRadBarSx=XpontRadBarSx;
 temp.YpontRadBarDx=YpontRadBarDx;
 temp.YpontRadBarSx=YpontRadBarSx;
+
+temp.XpontSplitBarSx = XpontSplitBarSx;
+temp.YpontSplitBarSx = YpontSplitBarSx;
+temp.XpontSplitBarDx = XpontSplitBarDx;
+temp.YpontSplitBarDx = YpontSplitBarDx;
+temp.XpontSplitDx    = XpontSplitDx;
+temp.YpontSplitDx    = YpontSplitDx;
+temp.XpontSplitSx    = XpontSplitSx;
+temp.YpontSplitSx    = YpontSplitSx;
+
+%Aree e matrice Mag per posizionamento magneti
+
+[temp,geo]=area_magnet_Seg(temp,geo);
+
+if strcmp(mat.LayerMag.MatName,'Air')
+    temp.Mag=[];
+end
+
+% determination of different magnet segment, central point and magnetization direction
+MagnetFullFill_Seg2;
+
+mat.LayerMag.Br = [Br Br];   % doubles Br pieces (half pole + half pole)
+
+temp.xc=xc;
+temp.yc=yc;
+temp.xair=xair;
+temp.yair=yair;
+temp.xmag=xmag;
+temp.ymag=ymag;
+temp.xmagair=xmagair;
+temp.ymagair=ymagair;
+temp.zmag=zmag;
 
 % add control if the constraction of barrier is too small, so barrier is
 % constructed like diamond

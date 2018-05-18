@@ -1,5 +1,5 @@
 %% VERSIONE 20 11 2011
-function out=spettro(ValoreNelTempo,n,fig)
+function out=spettro_pu(ValoreNelTempo,n,fig)
 
 dime = max(size(ValoreNelTempo));
 % non si possono richiedere più armoniche del numero di campioni-1

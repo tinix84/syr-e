@@ -67,9 +67,31 @@ if not(isempty(geo.RQnames))
         end
     end
     
+    % Debug parametro SlopeBarrier - rev. Gallo
+%     first_index = last_index + 1;
+%     if length(geo.RQnames)>(last_index+1)
+%         if strcmp(geo.RQnames{first_index},'VanglePM')
+%             % angle of Slope semi-barrier (Vtype) [rad]
+%             %last_index = first_index + geo.nlay - 1;
+%             last_index = first_index;
+%             geo.VanglePM = RQ(first_index:last_index)*pi/180;
+%         end
+%     end
+%     
+%     first_index = last_index + 1;
+%     if length(geo.RQnames)>(last_index+1)
+%         if strcmp(geo.RQnames{first_index},'th_FBS')
+%             last_index = first_index;
+%             geo.th_FBS = RQ(first_index:last_index)*pi/180;
+%         end
+%     end
+    
     if length(geo.RQnames)>(last_index)
         for k = last_index+1:length(geo.RQnames)
             eval(['geo.' geo.RQnames{k} ' = ' num2str(RQ(k)) ';'])
+            if strcmp(geo.RQnames{k},'VanglePM')||strcmp(geo.RQnames{k},'th_FBS')
+                eval(['geo.' geo.RQnames{k} ' = ' num2str(RQ(k)) ' *pi/180;']);
+            end
         end
     end
     

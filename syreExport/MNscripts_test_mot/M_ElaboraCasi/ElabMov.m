@@ -33,7 +33,7 @@ if round(360/Cas.sim_angle)>1
     Fq360 = temp360(1:end-1);
     
     %% tensioni
-    Vdq = abc2dq(Tensioni(:,1)',Tensioni(:,2)',Tensioni(:,3)',-theta')
+    Vdq = abc2dq(Tensioni(:,1)',Tensioni(:,2)',Tensioni(:,3)',theta');
     Vd = Vdq(1,:)';Vq = Vdq(2,:)';
     
 %     figure(100)

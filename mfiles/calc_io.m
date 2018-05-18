@@ -35,9 +35,10 @@ Aslots = geo.Aslot*(6*geo.p*geo.q)/1e6; % [m^2]
 N=geo.Ns;
 % rocu = 17.8*(234.5+per.tempcuest)/(234.5+20)*1e-9;
 rocu = 17.8*(234.5+per.tempcu)/(234.5+20)*1e-9;
-
+n3phase=geo.n3phase; %AS
 
 % Calcolo lend avvolgimento
+%avv=geo.defaultavv; %AS
 avv=geo.avv;
 [r,c]=size(avv);
 ini=0;
@@ -60,7 +61,7 @@ end
 
 yq=fin-ini;
 
-if yq==1  %avvolgimento concentrato
+if geo.q<1  %avvolgimento concentrato
     lend=0.5*(geo.wt+pi*(geo.r+geo.g+geo.lt/2)*sin(pi/6/geo.p/geo.q))/1e3;    % [m] from Gamba - A new PMASRM with nonconventional FS pole combination
 else
     alpha=yq*2*pi/(6*geo.p*geo.q);
@@ -70,9 +71,10 @@ end
 
 kj=loss/(2*pi*R*l);
 
-io = (kj*kcu/rocu*l/(l+lend)*2*pi*2*R*Aslots/36/N^2)^0.5;
+io = (kj*kcu/rocu*l/(l+lend)*2*pi*R*2*Aslots/(4*(n3phase*3)^2)/N^2)^0.5; %AS
 
-Rs = loss/(1.5*io^2);
+Rs = loss/(n3phase*3/2*io^2); %AS
+
 
 
 

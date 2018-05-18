@@ -31,8 +31,6 @@ mu0 = 4e-7*pi;                                                              % ai
 % DATA not (yet) included into syre GUI
 Bs = 2.4;                                                                   % saturation flux density in the ribs [T]
 
-% load('mot_01.mat');
-
 Bfe = dataSet.Bfe;                                                          % steel loading (yoke flux density [T])
 kt = dataSet.kt;                                                            % kt = wt/wt_unsat
 
@@ -57,24 +55,28 @@ tta = geo.tta;
 RaccordoFC = geo.SFR;
 nlay = geo.nlay;
 pont0 = geo.pont0;
+pont = geo.pont0;%+min(geo.pont);
 
 Br = mat.LayerMag.Br;
 mur = mat.LayerMag.mu;
 Loss = per.Loss;
-tempcuest = per.tempcuest;
+tempcu = per.tempcu;
 
-%flag for SyR design
+%flags for SyRM design
 flag_kw=1;      % flag_kw=0 --> use Vagati's equations, with kw=pi/(2*sqrt(3))
-% flag_kw=1 --> use the winding factor
+                % flag_kw=1 --> use the winding factor
 
-flag_pb=1;      % flag_pb=0 --> hc         = costant
-% flag_pb=1 --> hc/sk      = costant (reduce harmonics content)
-% flag_pb=2 --> hc/(df*sk) = costant (reduce Lfq)
+flag_pb=1;      % flag_pb=0 --> hc             = costant (useful for adding PMs)
+                % flag_pb=1 --> sk/hc          = costant (reduce harmonics content)
+                % flag_pb=2 --> hc/(df*sk^0.5) = costant (reduce Lfq)
 
 flag_dx=1;      % flag_dx=0 --> dx=0
-% flag_dx=1 --> constant rotor carrier width
-% flag_dx=2 --> rotor carrier width proportional to sine integral
-% flag_dx=3 --> rotor carrier width proportional to flux of d-axis staircase (kt needed)
+                % flag_dx=1 --> constant rotor carrier width
+                % flag_dx=2 --> rotor carrier width proportional to sine integral
+                % flag_dx=3 --> rotor carrier width proportional to flux of d-axis staircase (kt needed)
+
+flag_ks=1;      % flag_ks=0 --> no saturation factor used
+                % flag_ks=1 --> saturation factor enabled
 
 
 
@@ -89,49 +91,50 @@ switch dataSet.TypeOfRotor
         % parametric analysis: design domain (x,b)
         [xx,lm_gp] = meshgrid(x,lm_g);
         
+        beta = geo.BarFillFac;
         r = R * xx;
-        rocu = 17.8*(234.5 + tempcuest)/(234.5+20)*1e-9;                    % resistivity of copper [Ohm m]
+        rocu = 17.8*(234.5 + tempcu)/(234.5+20)*1e-9;                    % resistivity of copper [Ohm m]
         ssp = (r+g) * pi/(3*p*q);                                           % stator slot pitch (x)
         sso = ssp * acs;                                                    % stator slot opening (x)
         Ar = r*(sqrt(2)-1);                                                 % shaft radius (x) [mm]
         [kw, ~] = calcKwTh0(avv,6*p*q,p);                                   % winding factor calculation
         
         % Bg calculation
-        %         lm = lm_gp*g;
-        %         xPMco = r;
-        %         xPMregular = r-lm + beta*lm; yPMregular = 0;
-        %         [xPMo,yPMo] = rot_point(xPMregular,yPMregular,phi/2*pi/180);        % PM edge point
-        %         xArccenter = (xPMco + xPMo - (yPMo.^2./(xPMco-xPMo)))/2;            % find arc center location
-        %         Rc = r - xArccenter;
-        %
-        %         csi = linspace(-phi*pi/180/2,phi*pi/180/2,300);
-        %         air = zeros(size(csi,1),ceil((180*size(csi,2)/phi-size(csi,2))/2)); % the size of no mag zone relates to Am
-        %         for mm = 1:m
-        %             for nn = 1:n
-        %                 Lm{mm,nn} = (r(mm,nn)-Rc(mm,nn))*cos(csi) + sqrt(Rc(mm,nn)^2-(r(mm,nn)*sin(csi)-Rc(mm,nn)*sin(csi)).^2)-r(mm,nn)+lm(mm,nn);
-        %                 G{mm,nn} = lm(mm,nn) +geo.g - Lm{mm,nn};
-        %                 kc{mm,nn} = ssp(mm,nn)./(ssp(mm,nn)-2/pi*G{mm,nn}.*(sso(mm,nn)./G{mm,nn}.*atan(sso(mm,nn)./(2*G{mm,nn}))-log(1+(sso(mm,nn)./(2*G{mm,nn})).^2)));
-        %                 Bg{mm,nn} = Lm{mm,nn}./G{mm,nn}./(Lm{mm,nn}./G{mm,nn}+kc{mm,nn}*mur)*Br;
-        %                 temp{mm,nn} = [air,Bg{mm,nn},air];
-        %                 Bg_avg(mm,nn) = mean(Bg{mm,nn});
-        %                 Bg_pole{mm,nn} = [temp{mm,nn},-temp{mm,nn}];
-        %                 L = length(Bg_pole{mm,nn});
-        %                 Y = fft(Bg_pole{mm,nn});
-        %                 P2 = abs(Y/L);
-        %                 Bg1(mm,nn) = 2*P2(2);                                       % get Bg1 from fft of Bg
-        %             end
-        %         end
-        
+%         lm = lm_gp*g;
+%         xPMco = r;
+%         xPMregular = r-lm + beta*lm; yPMregular = 0;
+%         [xPMo,yPMo] = rot_point(xPMregular,yPMregular,phi/2*pi/180);        % PM edge point
+%         xArccenter = (xPMco + xPMo - (yPMo.^2./(xPMco-xPMo)))/2;            % find arc center location
+%         Rc = r - xArccenter;
+%         
+%         csi = linspace(-phi*pi/180/2,phi*pi/180/2,300);
+%         air = zeros(size(csi,1),ceil((180*size(csi,2)/phi-size(csi,2))/2)); % the size of no mag zone relates to Am
+%         for mm = 1:m
+%             for nn = 1:n
+%                 Lm{mm,nn} = (r(mm,nn)-Rc(mm,nn))*cos(csi) + sqrt(Rc(mm,nn)^2-(r(mm,nn)*sin(csi)-Rc(mm,nn)*sin(csi)).^2)-r(mm,nn)+lm(mm,nn);
+%                 G{mm,nn} = lm(mm,nn) +geo.g - Lm{mm,nn};
+%                 kc{mm,nn} = ssp(mm,nn)./(ssp(mm,nn)-2/pi*G{mm,nn}.*(sso(mm,nn)./G{mm,nn}.*atan(sso(mm,nn)./(2*G{mm,nn}))-log(1+(sso(mm,nn)./(2*G{mm,nn})).^2)));
+%                 Bg{mm,nn} = Lm{mm,nn}./G{mm,nn}./(Lm{mm,nn}./G{mm,nn}+kc{mm,nn}*mur)*Br;
+%                 temp{mm,nn} = [air,Bg{mm,nn},air];
+%                 Bg_avg(mm,nn) = mean(Bg{mm,nn});
+%                 Bg_pole{mm,nn} = [temp{mm,nn},-temp{mm,nn}];
+%                 L = length(Bg_pole{mm,nn});
+%                 Y = fft(Bg_pole{mm,nn});
+%                 P2 = abs(Y/L);
+%                 Bg1(mm,nn) = 2*P2(2);                                       % get Bg1 from fft of Bg
+%             end
+%         end
+%         wt = 2*pi*r.*Bt_max/(6*p*q)/Bfe;
+%         ly = pi*r.*Bg_avg*ap/(2*p)/Bfe;                                     % Bianchi 'Theory and design of fractional-slot pm machines'(7.1)
+
         if Br ==0
             h = errordlg('Please use a real magnet material and define Br in Other Options tab');
             uiwait(h);
             return
         end
                 
-        [Bt_max,Bg_avg,Bg1] = evalBgapSyrmDesign_SPM(geo,mat,lm_g,x);
- 
-        wt = 2*pi*r.*Bt_max/(6*p*q)/Bfe;
-        ly = pi*r.*Bg_avg*ap/(2*p)/Bfe;                                     % Bianchi 'Theory and design of fractional-slot pm machines'(7.1)
+        [wt,ly,Bg1] = evalBgapSyrmDesign_SPM(geo,mat,lm_g,x,Bfe);
+%  
         lt = R - r -g - ly;                                                 % slot length (x,lm) [mm]
         lt(lt<2*ttd)=NaN;
         
@@ -225,21 +228,27 @@ switch dataSet.TypeOfRotor
         Lq = Ld;
         PF = Fmd./sqrt(Fmd.^2 + (0.001*Lq.* iq).^2);
         
-        figure(1)
-        [c, h] = contour(x,lm_g,T); clabel(c,h,'FontSize',12); grid on, hold on
-        [c, h] = contour(x,lm_g,PF,0.7:0.01:1); clabel(c,h,'FontSize',12); grid on,
-        xlabel('x - rotor / stator split'), ylabel('lm/g - magnet / airgap split');
+        hfig=figure();
+        [c, h] = contour(x,lm_g,T,'r'); clabel(c,h,'FontSize',12); grid on, hold on
+        [c, h] = contour(x,lm_g,PF,0.7:0.01:1,'b'); clabel(c,h,'FontSize',12); grid on,
+        xlabel('x'), ylabel('lm/g');
         legend('Torque [Nm]','PF');
         
         button = questdlg('pick up a machine?','SELECT','Yes','No','Yes');
         while isequal(button,'Yes')
-            figure(1)
+            figure(hfig);
             [geo.x,geo.lm_g] = ginput(1);
+            setup=inputdlg({'x','b'},'(x,b) values',1,{num2str(geo.x,3),num2str(geo.b,3)});
+            if ~isempty(setup)
+                geo.x=eval(setup{1});
+                geo.b=eval(setup{2});
+            end
             disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
             disp(['x = ' num2str(geo.x) ';']);
             disp(['lm_g = ' num2str(geo.lm_g) ';']);
             disp(['Torque = ' num2str(interp2(xx,lm_gp,T,geo.x,geo.lm_g)) ' Nm;']);
             disp(['PwrFac = ' num2str(interp2(xx,lm_gp,PF,geo.x,geo.lm_g))]);
+%             disp(['Aslots = ' num2str(interp2(xx,lm_gp,Aslots,geo.x,geo.lm_g))]);
             disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
             
             % Export to Syre GUI
@@ -262,7 +271,7 @@ switch dataSet.TypeOfRotor
             
             if isequal(button,'No')
                 buttonS = questdlg('save the last machine?','SELECT','Yes','No','Yes');
-                figure(1), hold off
+                figure(hfig), hold off
             end
             
         end
@@ -291,12 +300,10 @@ switch dataSet.TypeOfRotor
         % parametric analysis: design domain (x,b)
         [xx,bb] = meshgrid(x,b);
         
-        kt = 1;
-        
         [xGap,yGap,kf1,kfm] = evalBgapSyrmDesign(q,kt);                     % airgap induction shape, first harmonics factor and mean value factor
         
         r = R*xx;
-        rocu = 17.8*(234.5 + tempcuest)/(234.5+20)*1e-9;                    % resistivity of copper [Ohm m]
+        rocu = 17.8*(234.5 + tempcu)/(234.5+20)*1e-9;                    % resistivity of copper [Ohm m]
         ssp = r * pi/(3*p*q);                                               % stator slot pitch (x,b)
         sso = ssp * acs;                                                    % stator slot opening (x,b)
         kc = ssp./(ssp-2/pi*g*(sso/g.*atan(sso/(2*g))-log(1+(sso/(2*g)).^2)));   % Carter coefficient (x,b)
@@ -411,9 +418,26 @@ switch dataSet.TypeOfRotor
                 beta = calc_apertura_cerchio(geo.alpha*pi/180,geo.R*xx(rr,cc),x0(rr,cc));
                 rbeta = (x0(rr,cc) - R*xx(rr,cc) * cosd(geo.alpha))./(cos(beta));
                 [xpont,ypont] = calc_intersezione_cerchi(R*xx(rr,cc)-geo.pont0, rbeta, x0(rr,cc));
-                sk{rr,cc}=rbeta.*beta;
-                lr(rr,cc)=mean(sk{rr,cc}(end-1:end));                       % length of the inner flux carrier (for saturation factor)
-                % hc (flux barrier design)
+                if strcmp(dataSet.TypeOfRotor,'Circular')
+                        sk{rr,cc}=rbeta.*beta;
+                        lr(rr,cc)=mean(sk{rr,cc}(end-1:end)); % length of the inner flux carrier (for saturation factor)
+                        % hc (flux barrier design)
+                elseif strcmp(dataSet.TypeOfRotor,'Seg')|| strcmp(dataSet.TypeOfRotor,'ISeg')
+                        rpont_x0=sqrt(ypont.^2+(x0(rr,cc)-xpont).^2);
+                        [alphapont,rpont] = cart2pol(xpont,ypont);
+                        Bx0=x0(rr,cc)-(rpont_x0); 
+                        mo=1;
+                        y=ypont+mo*(Bx0-xpont);
+                        xBmk=Bx0;
+                        yBmk=y;
+                        skv{rr,cc}=calc_distanza_punti_altern(xBmk,yBmk,Bx0,zeros(size(Bx0)));
+                        sko{rr,cc}=calc_distanza_punti_altern(xpont,ypont,xBmk,yBmk);
+                        lrv(rr,cc)=mean(skv{rr,cc}(end-1:end));
+                        lro(rr,cc)=mean(skv{rr,cc}(end-1:end));
+                        sk{rr,cc}=skv{rr,cc}+sko{rr,cc};
+                        lr(rr,cc)=lrv(rr,cc)+lro(rr,cc);
+                end
+                clear Bx0
                 switch flag_pb
                     case 0 % hc = cost
                         hc{rr,cc}=la(rr,cc)/geo.nlay.*ones(1,geo.nlay);
@@ -422,7 +446,7 @@ switch dataSet.TypeOfRotor
                         hc{rr,cc}=la(rr,cc)/sum(sk{rr,cc}).*sk{rr,cc};
                         %disp('flux barrier design: pbk = hc/sk = cost')
                     case 2 % min Lfq
-                        hc{rr,cc}=la(rr,cc)/sum(dfQ.*sk{rr,cc}).*(dfQ.*sk{rr,cc});
+                        hc{rr,cc}=la(rr,cc)/sum(dfQ.*sk{rr,cc}.^0.5).*(dfQ.*sk{rr,cc}.^0.5);
                         %disp('flux barrier desig: hc/(df*sk) = cost')
                 end
                 rpont_x0=sqrt(ypont.^2+(x0(rr,cc)-xpont).^2);
@@ -494,20 +518,25 @@ switch dataSet.TypeOfRotor
             [kw, ~] = calcKwTh0(avv,6*p*q,p);
         else
             kw = pi/2/sqrt(3);
+            warning('Winding factor not evaluated')
         end
         
         Ht = interp1(mat.Stator.BH(:,1),mat.Stator.BH(:,2),Bfe./kt);
         Hy = interp1(mat.Stator.BH(:,1),mat.Stator.BH(:,2),Bfe);
-        %ks = 1+mu0*(Hy*2*pi/(6*p*q)*(R-ly/2)+Ht*lt+Hy*mean(sk{rr,cc}(end-1:end)))./(bb.*Bfe.*kf1.*kc.*g);
-        ks = 1+mu0*pi/2*(Hy*pi/(6*p*q)*(R-ly/2) + Ht*lt + Hy*lr)./(bb*Bfe*kf1.*kc*g);
+        if flag_ks
+            ks = 1+mu0*pi/2*(Hy*pi/(6*p*q)*(R-ly/2) + Ht*lt + Hy*lr)./(bb*Bfe*kf1.*kc*g);
+        else
+            ks=ones(size(xx));
+            disp('Warning: saturation factor ks not evaluated')
+        end
         
         Fmd = 2*(R*1e-3)*(l*1e-3)*kw*Ns*Bfe.*kf1/p.*xx.*bb;                 % flux linkage [Vs]
         id = pi*Bfe*kc*(g*1e-3)*p.*ks/(mu0*3*kw*Ns).*bb;                    % id [A]
         
         Lmd = Fmd./id;                                                      % d magnetization inductance Lmd [Vs]
         
-        % q axis
-        kdq = 1 - Lcqpu - Lfqpu;                                            % anisotrophy factor
+        Lbase=Lmd.*ks;% base inductance for analytical model (unsaturated)
+        %Lbase=mu0*pi*(R*1e-3)*(l*1e-3)*Ns^2./(2*p^2.*kc*(g*1e-3)).*x;
         
         % stator design
         if q<1
@@ -539,11 +568,15 @@ switch dataSet.TypeOfRotor
         
         % tangential ribs effect
         
-        Lrib = 4/pi*kw*Ns*2*(pont0*1e-3)*(l*1e-3)*Bs./iq;
-        Lrqpu = Lrib./Lmd;
+        Lrib = 4/pi*kw*Ns*2*(pont*1e-3)*(l*1e-3)*Bs./iq;
+        %Lrqpu = Lrib./Lmd;
         
-        kdq = kdq-Lrqpu;
+        % q axis
+        %kdq = 1 - Lcqpu - Lfqpu;                                            % anisotrophy factor
+        Lmq=Lbase.*(Lcqpu+Lfqpu)+Lrib;
         
+        %kdq = kdq-Lrqpu;
+        kdq=1-Lmq./Lmd;
         
         T = 3/2*p*(kdq.*Fmd.*iq);
         
@@ -564,8 +597,9 @@ switch dataSet.TypeOfRotor
         
         Lspu = 4/pi*p*kc*g*sumDf2s.*ps./r;                                  % Ls/Lmd: p.u. leakage inductance
         % power factor
-        Ld = Lmd.*(1 +Lspu);
-        Lq = (Lcqpu + Lfqpu + Lspu + Lrqpu).*Lmd;
+        Ls = Lspu.*Lbase;
+        Ld = Lmd+Ls;
+        Lq = Lmq+Ls;
         
         csi = Ld./Lq;
         gamma = atand(iq./id);                                              % current phase angle [deg]
@@ -575,12 +609,61 @@ switch dataSet.TypeOfRotor
         PFmax = (Ld-Lq)./(Ld+Lq);                                           % PF @ max PF gamma
         % PF2 = (csi-1)./sqrt(csi.^2.*(sind(gamma)).^-2+(cosd(gamma)).^-2);  % alternative formula
         
+        %% FEAfix
+        
+%         prompt={'Number of point for FEA calibration'};
+%         name='FEAfix';
+%         numlines=1;
+%         defaultanswer={'0'};
+%         
+%         setup=inputdlg(prompt,name,numlines,defaultanswer);
+%         %setup={'4'}
+%         setup=eval(setup{1});
+        
+        if dataSet.FEAfixN==0
+            kd=ones(m,n);
+            kq=ones(m,n);
+            xRaw=[];
+            bRaw=[];
+        else
+            map.xx=xx;
+            map.bb=bb;
+            map.id=id;
+            map.iq=iq;
+            map.Ld=Ld;
+            map.Lq=Lq;
+            map.wt=wt;
+            map.lt=lt;
+            map.la=la;
+            map.Ar=Ar;
+            map.hc_pu=hc_pu;
+            map.dx=dx;
+            
+            [FEAfixOut]=FEAfix(dataSet,geo,map,dataSet.FEAfixN);
+            kd = FEAfixOut.kd;
+            kq = FEAfixOut.kq;
+            xRaw = FEAfixOut.xRaw;
+            bRaw = FEAfixOut.bRaw;
+        end
+        
+        
+        Fd=(Ld.*id).*kd;
+        Fq=(Lq.*iq).*kq;
+        T=3/2*geo.p*(Fd.*iq-Fq.*id);
+        PF=sin(atan(iq./id)-atan(Fq./Fd));
+        %%
         hfig=figure();
-        [c, h] = contour(x,b,T,'Color','r'); clabel(c,h); grid on, hold on
-        [c, h] = contour(x,b,PF,0.4:0.02:0.96,'Color','b'); clabel(c,h); grid on,
+        figSetting(15,10)
+        [c, h] = contour(x,b,T,'Color','r','LineWidth',1,'DisplayName','$T$ [Nm]');
+        clabel(c,h);
+        [c, h] = contour(x,b,PF,0.4:0.02:0.96,'Color','b','LineWidth',1,'DisplayName','$cos \varphi$');
+        clabel(c,h);
         % [c, h] = contour(x,b,PFmax,0.7:0.02:0.9); clabel(c, h); grid on,
-        xlabel('x - rotor / stator split'), ylabel('b - p.u. magnetic loading');
-        legend('[Nm]','PF');
+        if ~isempty(xRaw)
+            plot(xRaw,bRaw,'Color',[0 0.5 0],'LineStyle','none','Marker','o','MarkerFaceColor',[0 0.5 0],'DisplayName','FEAfix')
+        end
+        xlabel('$x$ - rotor / stator split'), ylabel('$b$ - p.u. magnetic loading');
+        legend('show','Location','NorthEast')
         title('torque and PF tradeoff')
         % set(gca,'FontSize',24)
         
@@ -591,13 +674,17 @@ switch dataSet.TypeOfRotor
             
             figure(hfig)
             [geo.x,geo.b] = ginput(1);
+            setup=inputdlg({'x','b'},'(x,b) values',1,{num2str(geo.x,3),num2str(geo.b,3)});
+            if ~isempty(setup)
+                geo.x=eval(setup{1});
+                geo.b=eval(setup{2});
+            end
             disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
             disp(['x = ' num2str(geo.x) ';']);
             disp(['b = ' num2str(geo.b) ';']);
             disp(['Torque = ' num2str(interp2(xx,bb,T,geo.x,geo.b)) ' Nm;']);
             disp(['PwrFac = ' num2str(interp2(xx,bb,PF,geo.x,geo.b))]);
             disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-            
             
             % Export to Syre GUI
             geo.r = geo.x*R;                                                % rotor radius [mm]
@@ -607,8 +694,8 @@ switch dataSet.TypeOfRotor
             geo.lt=interp2(x,b,lt,geo.x,geo.b);                             % slot length
             geo.lt=round(geo.lt*100)/100;
             geo.x0=R * geo.x /cos(pi/2/p);
-            geo.Ar=interp2(x,b,Ar,geo.x,geo.b);                             % shaft radius [mm]
-            geo.Ar=round(geo.Ar*100)/100;
+            %geo.Ar=interp2(x,b,Ar,geo.x,geo.b);                             % shaft radius [mm]
+            %geo.Ar=round(geo.Ar*100)/100;
             geo.la=interp2(x,b,la,geo.x,geo.b);                             % total insulation
             
             % hc evaluation - flux barriers design
@@ -617,9 +704,9 @@ switch dataSet.TypeOfRotor
                 case 0 % hc = cost
                     disp('flux barrier design: hc = cost')
                 case 1 % pb = cost
-                    disp('flux barrier design: pbk = hc/sk = cost')
+                    disp('flux barrier design: pbk = sk/hc = cost')
                 case 2 % min Lfq
-                    disp('flux barrier desig: hc/(df*sk) = cost')
+                    disp('flux barrier desig: hc/(df*sk^0.5) = cost')
             end
             
             switch flag_dx

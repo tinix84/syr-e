@@ -120,6 +120,7 @@ dataSet.ToothLeBou = round(geo.lt*[0.8 1.2],2);             % tooth length
 dataSet.PhaseAngleCurrBou = [40 75];                        % gamma
 
 % check
+%% Added bounds SlopeBarrBouCheck - rev.Gallo 
 if isfield(geo,'RQnames')
     dataSet.Dalpha1BouCheck = 0;
     dataSet.DalphaBouCheck = 0;
@@ -133,6 +134,7 @@ if isfield(geo,'RQnames')
     dataSet.ToothTangDepthBouCheck = 0;
     dataSet.ToothLengthBouCheck = 0;
     dataSet.GammaBouCheck = 0;
+    dataSet.SlopeBarrBouCheck=0;
     for ii=1:length(geo.RQnames)
         if isequal(geo.RQnames{ii},'dalpha')
             dataSet.Dalpha1BouCheck = 1;
@@ -157,6 +159,8 @@ if isfield(geo,'RQnames')
             dataSet.ToothTangDepthBouCheck = 1;
         elseif isequal(geo.RQnames{ii},'gamma')
             dataSet.GammaBouCheck = 1;
+        elseif isequal(geo.RQnames{ii},'angleDEG')
+            dataSet.SlopeBarrBouCheck = 1;    
         end
     end
 else
@@ -172,6 +176,7 @@ else
     dataSet.ToothTangDepthBouCheck = 0;
     dataSet.ToothLengthBouCheck = 0;
     dataSet.GammaBouCheck = 0;
+    dataSet.SlopeBarrBouCheck=0;
     disp('Setted all boudary condition in optimization tab')
 end
 

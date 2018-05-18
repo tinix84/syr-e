@@ -36,7 +36,7 @@ function varargout = GUI_Syre(varargin)
 
 % Edit the above text to modify the response to help GUI_Syre
 
-% Last Modified by GUIDE v2.5 01-Aug-2017 16:46:18
+% Last Modified by GUIDE v2.5 14-May-2018 15:38:16
 
 % Begin initialization code - DO NOT EDIT
 % clc
@@ -70,6 +70,13 @@ function GUI_Syre_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to GUI_Syre (see VARARGIN)
 
 addpath('./mfiles');
+
+% Set figure position in the middle of the screen
+set(hObject,'Units','pixel');
+screenPos=get(groot,'ScreenSize');
+figPos=get(hObject,'Position');
+figPos(1:2)=screenPos(3:4)/2-figPos(3:4)/2;
+set(hObject,'Position',figPos);
 
 % Set the colors indicating a selected/unselected tab
 handles.unselectedTabColor = 0.9*[1  1  1];
@@ -110,7 +117,7 @@ set(handles.OptionsPanel,'Visible','off')
 set(handles.MaterialPanel,'Visible','off')
 set(handles.OptimizationPanel,'Visible','off')
 set(handles.PostProcePanel,'Visible','off')
-set(handles.RotorGeometryPanel,'Visible','off')
+set(handles.RotorGeometryPanel,'Visible','off') %rev.Gallo
 
 %% === VISIBLE & ENABLE ===================================================
 % set(handles.text22,'Visible','off');
@@ -121,6 +128,7 @@ set(handles.hcmmEdit,'Enable','off');
 set(handles.EstimatedCoppTemp,'Enable','off');
 set(handles.CalculatedRatedCurrent,'Enable','off');
 set(handles.Rsedit,'Enable','off');
+set(handles.SlopeBarrier,'Enable','off');
 
 %% === FLAG VARI ==========================================================
 handles.MatrixWinFlag = 1;
@@ -147,12 +155,12 @@ dataSet.currentpathname = [cd '\'];
 dataSet.currentfilename = 'mot_01.mat';
 
 %% ========================================================================
-%% update new added parameters of ver. 259 & 260 
+%% update new added parameters of ver. 259 & 260
 % if ~isfield(dataSet,'TorqueOptCheck')
 %     dataSet.TorqueOptCheck = 0;
 %     dataSet.TorRipOptCheck = 0;
 % end
-% 
+%
 % if ~isfield(dataSet,'LossEvaluationCheck')
 %     dataSet.LossEvaluationCheck = 0;
 %     dataSet.HysteresisLossFactor = 0;
@@ -287,7 +295,7 @@ set(handles.StatorMatEdit,'String',dataIn.StatorMaterial);
 set(handles.RotorMatEdit,'String',dataIn.RotorMaterial);
 set(handles.FluxBarMatEdit,'String',dataIn.FluxBarrierMaterial);
 set(handles.ShaftMatEdit,'String',dataIn.ShaftMaterial);
-set(handles.RotorConMatEdit,'String',dataIn.RotorCondMaterial);
+%set(handles.RotorConMatEdit,'String',dataIn.RotorCondMaterial);
 set(handles.SlotFillFacEdit,'String',num2str(dataIn.SlotFillFactor));
 set(handles.PitchWindEdit,'String',num2str(dataIn.PitchShortFac));
 set(handles.TurnsSeriesEdit,'String',num2str(dataIn.TurnsInSeries));
@@ -295,12 +303,110 @@ set(handles.JouleLossesEdit,'String',num2str(dataIn.AdmiJouleLosses));
 set(handles.CopperTempEdit,'String',num2str(dataIn.TargetCopperTemp));
 set(handles.HousingTempEdit,'String',num2str(dataIn.HousingTemp));
 set(handles.EstimatedCoppTemp,'String',num2str(dataIn.EstimatedCopperTemp));
+if  strcmp(dataIn.FluxBarrierMaterial,'Bonded-Magnet')&&((strcmp(dataIn.TypeOfRotor,'Seg') || strcmp(dataIn.TypeOfRotor,'ISeg')))  %mod walter
+    set(handles.PMMaterial,'Enable','on');
+    set(handles.BrPMISegEdit,'Enable','on');
+    set(handles.BrPMISegEdit,'String',mat2str(dataIn.BrDesign));
+    set(handles.ObMag1Edit,'Enable','off');
+    set(handles.ObMag2Edit,'Enable','off');
+    set(handles.ObMag3Edit,'Enable','off');
+    set(handles.ObMag4Edit,'Enable','off');
+    set(handles.VertMag1Edit,'Enable','off');
+    set(handles.VertMag2Edit,'Enable','off');
+    set(handles.VertMag3Edit,'Enable','off');
+    set(handles.VertMag4Edit,'Enable','off');
+    set(handles.TotMag1Edit,'Enable','on');
+    set(handles.TotMag2Edit,'Enable','on');
+    set(handles.TotMag3Edit,'Enable','on');
+    set(handles.TotMag4Edit,'Enable','on');
+    %     set(handles.BrPMISegEdit,'String',mat2str(dataIn.Br));
+    % tmpO=dataIn.Areaob*dataIn.Br;
+    % tmpV=dataIn.Areavert*dataIn.Br;
+    % tmpT=dataIn.Areatot*dataIn.Br;
+    % set(handles.ObMag1Edit,'String',tmpO(1));
+    % set(handles.ObMag2Edit,'String',tmpO(2));
+    % set(handles.ObMag3Edit,'String',tmpO(3));
+    % set(handles.ObMag4Edit,'String',tmpO(4));
+    % set(handles.VertMag1Edit,'String',tmpV(1));
+    % set(handles.VertMag2Edit,'String',tmpV(2));
+    % set(handles.VertMag3Edit,'String',tmpV(3));
+    % set(handles.VertMag4Edit,'String',tmpV(4));
+    % set(handles.TotMag1Edit,'String',tmpT(1));
+    % set(handles.TotMag2Edit,'String',tmpT(2));
+    % set(handles.TotMag3Edit,'String',tmpT(3));
+    % set(handles.TotMag4Edit,'String',tmpT(4));
+elseif ~strcmp(dataIn.FluxBarrierMaterial,'Air')&&(strcmp(dataIn.TypeOfRotor,'Seg')||strcmp(dataIn.TypeOfRotor,'ISeg'))
+    set(handles.PMMaterial,'Enable','on');
+    set(handles.BrPMISegEdit,'Enable','off');
+    set(handles.BrPMISegEdit,'String',mat2str(dataIn.Br));
+    set(handles.ObMag1Edit,'Enable','on');
+    set(handles.ObMag2Edit,'Enable','on');
+    set(handles.ObMag3Edit,'Enable','on');
+    set(handles.ObMag4Edit,'Enable','on');
+    set(handles.VertMag1Edit,'Enable','on');
+    set(handles.VertMag2Edit,'Enable','on');
+    set(handles.VertMag3Edit,'Enable','on');
+    set(handles.VertMag4Edit,'Enable','on');
+    set(handles.TotMag1Edit,'Enable','off');
+    set(handles.TotMag2Edit,'Enable','off');
+    set(handles.TotMag3Edit,'Enable','off');
+    set(handles.TotMag4Edit,'Enable','off');
+else
+    %dataIn.BrPMISeg = 0;
+    %dataIn.Areaob0 =zeros(1,4);
+    %dataIn.Areavert0 =zeros(1,4);
+    %dataIn.Areatot =zeros(1,4);
+    set(handles.PMMaterial,'Enable','off');
+    set(handles.BrPMISegEdit,'Enable','off');
+    set(handles.ObMag1Edit,'Enable','off');
+    set(handles.ObMag2Edit,'Enable','off');
+    set(handles.ObMag3Edit,'Enable','off');
+    set(handles.ObMag4Edit,'Enable','off');
+    set(handles.VertMag1Edit,'Enable','off');
+    set(handles.VertMag2Edit,'Enable','off');
+    set(handles.VertMag3Edit,'Enable','off');
+    set(handles.VertMag4Edit,'Enable','off');
+    set(handles.TotMag1Edit,'Enable','off');
+    set(handles.TotMag2Edit,'Enable','off');
+    set(handles.TotMag3Edit,'Enable','off');
+    set(handles.TotMag4Edit,'Enable','off');
+    set(handles.BrPMISegEdit,'String','0');
+    % set(handles.ObMag1Edit,'String',0);
+    % set(handles.ObMag2Edit,'String',0);
+    % set(handles.ObMag3Edit,'String',0);
+    % set(handles.ObMag4Edit,'String',0);
+    % set(handles.VertMag1Edit,'String',0);
+    % set(handles.VertMag2Edit,'String',0);
+    % set(handles.VertMag3Edit,'String',0);
+    % set(handles.VertMag4Edit,'String',0);
+    % set(handles.TotMag1Edit,'String',0);
+    % set(handles.TotMag2Edit,'String',0);
+    % set(handles.TotMag3Edit,'String',0);
+    % set(handles.TotMag4Edit,'String',0);
+
+end
+tmpO=dataIn.Areaob*dataIn.Br;
+tmpV=dataIn.Areavert*dataIn.Br;
+tmpT=dataIn.Areatot*dataIn.BrDesign;
+set(handles.ObMag1Edit,'String',tmpO(1));
+set(handles.ObMag2Edit,'String',tmpO(2));
+set(handles.ObMag3Edit,'String',tmpO(3));
+set(handles.ObMag4Edit,'String',tmpO(4));
+set(handles.VertMag1Edit,'String',tmpV(1));
+set(handles.VertMag2Edit,'String',tmpV(2));
+set(handles.VertMag3Edit,'String',tmpV(3));
+set(handles.VertMag4Edit,'String',tmpV(4));
+set(handles.TotMag1Edit,'String',tmpT(1));
+set(handles.TotMag2Edit,'String',tmpT(2));
+set(handles.TotMag3Edit,'String',tmpT(3));
+set(handles.TotMag4Edit,'String',tmpT(4));
+
 % set(handles.DCLinkVolEdit,'String',num2str(dataIn.DCVoltage));
 set(handles.CurrentOverLoadEdit,'String',num2str(dataIn.CurrOverLoad));
 set(handles.NumberOfLayersEdit,'String',num2str(dataIn.NumOfLayers));
 set(handles.OverSpeedEdit,'String',num2str(dataIn.OverSpeed));
 set(handles.OverSpeedEdit,'String',num2str(dataIn.OverSpeed));
-set(handles.BrPMEdit,'String',mat2str(dataIn.Br));
+set(handles.BrPMEdit,'String',mat2str(dataIn.BrDesign));
 if strcmp(dataIn.FluxBarrierMaterial,'Bonded-Magnet')
     set(handles.BrPMEdit,'Enable','on');
 else
@@ -309,7 +415,7 @@ end
 set(handles.BrPPEdit,'String',mat2str(dataIn.BrPP));
 set(handles.SlotSimulEdit,'String',num2str(dataIn.Qs));
 
-set(handles.BarFillFacEdit,'String',mat2str(dataIn.BarFillFac));
+set(handles.BetaEdit,'String',mat2str(dataIn.BarFillFac));
 
 set(handles.MaxGenEdit,'String',num2str(dataIn.MaxGen));
 set(handles.XPopEdit,'String',num2str(dataIn.XPop));
@@ -338,6 +444,25 @@ set(handles.ToothLenBouEdit,'String',mat2str(dataIn.ToothLeBou));
 set(handles.StatorSlotOpenBouEdit,'String',mat2str(dataIn.StatorSlotOpenBou));
 set(handles.ToothTangDepthBouEdit,'String',mat2str(dataIn.ToothTangDepthBou));
 set(handles.LossEvaluationCheck,'Value',dataIn.LossEvaluationCheck);
+set(handles.RadRibSplitCheck,'Value',dataIn.RadRibSplit);
+if strcmp(dataIn.TypeOfRotor,'Seg')
+    set(handles.RadRibSplitCheck,'Enable','on');
+else
+    set(handles.RadRibSplitCheck,'Enable','off');
+end
+
+% FBS
+if (strcmp(dataIn.TypeOfRotor,'Circular')||strcmp(dataIn.TypeOfRotor,'Seg'))
+    set(handles.ThetaFBSEdit,'Enable','on')
+    set(handles.ThetaFBSBouEdit,'Enable','on')
+    set(handles.ThetaFBSBouCheck,'Enable','on')
+else
+    set(handles.ThetaFBSEdit,'Enable','off')
+    set(handles.ThetaFBSBouEdit,'Enable','off')
+    set(handles.ThetaFBSBouCheck,'Enable','off')
+end
+set(handles.ThetaFBSEdit,'String',num2str(dataIn.thetaFBS));
+set(handles.ThetaFBSBouEdit,'String',mat2str(dataIn.ThetaFBSBou));
 
 if dataIn.LossEvaluationCheck == 0
     set(handles.HysteresisLossFactorEdit,'Enable','off');
@@ -369,13 +494,13 @@ else
     set(handles.EddyCurLossFactorEdit,'String',mat2str(dataIn.EddyCurLossFactor));
     set(handles.MassDensityEdit,'String',mat2str(dataIn.IronMassDen));
     set(handles.EvaluatedSpeedEdit,'String',mat2str(dataIn.EvalSpeed));
-%     Q = round(dataIn.NumOfSlots*6*dataIn.NumOfPolePairs);
-%     t2 = gcd(Q,2*dataIn.NumOfPolePairs);
-%     QsCalc = Q/t2;
-%     dataIn.AngularSpanPP = max(60,20*QsCalc/dataIn.NumOfSlots);
-%     set(handles.SpanEltPPEdit,'String',mat2str(dataIn.AngularSpanPP));
-%     dataIn.NumOfRotPosPP = ceil(dataIn.AngularSpanPP/60)*6;
-%     set(handles.NumOfRotorPosiPPEdit,'String',mat2str(dataIn.NumOfRotPosPP));
+    %     Q = round(dataIn.NumOfSlots*6*dataIn.NumOfPolePairs);
+    %     t2 = gcd(Q,2*dataIn.NumOfPolePairs);
+    %     QsCalc = Q/t2;
+    %     dataIn.AngularSpanPP = max(60,20*QsCalc/dataIn.NumOfSlots);
+    %     set(handles.SpanEltPPEdit,'String',mat2str(dataIn.AngularSpanPP));
+    %     dataIn.NumOfRotPosPP = ceil(dataIn.AngularSpanPP/60)*6;
+    %     set(handles.NumOfRotorPosiPPEdit,'String',mat2str(dataIn.NumOfRotPosPP));
 end
 
 if isfield(dataIn,'bRange')
@@ -387,6 +512,24 @@ else
 end
 set(handles.BfeEdit,'String',num2str(dataIn.Bfe));
 set(handles.ktEdit,'String',num2str(dataIn.kt));
+switch dataIn.FEAfixN
+    case 1
+        set(handles.FEAfixPopUp,'Value',1);
+    case 4
+        set(handles.FEAfixPopUp,'Value',2);
+    case 5
+        set(handles.FEAfixPopUp,'Value',3);
+    case 1000
+        set(haldles.FEAfixPopUp,'Value',4);
+end
+
+if (strcmp(dataIn.TypeOfRotor,'Circular')||strcmp(dataIn.TypeOfRotor,'Seg')||strcmp(dataIn.TypeOfRotor,'ISeg'))
+    set(handles.FEAfixPopUp,'Enable','on');
+    set(handles.FEAfixPushButt,'Enable','on');
+else
+    set(handles.FEAfixPopUp,'Enable','off');
+    set(handles.FEAfixPushButt,'Enable','off');
+end
 set(handles.CurrLoXBEdit,'String',num2str(dataIn.CurrLoPP));
 set(handles.CurrLoPPEdit,'String',mat2str(dataIn.CurrLoPP));
 
@@ -426,6 +569,8 @@ set(handles.ToothWidthBouCheck,'Value',dataIn.ToothWidthBouCheck);
 set(handles.ToothLengthBouCheck,'Value',dataIn.ToothLengthBouCheck);
 set(handles.StatorSlotOpenBouCheck,'Value',dataIn.StatorSlotOpenBouCheck);
 set(handles.ToothTangDepthBouCheck,'Value',dataIn.ToothTangDepthBouCheck);
+%set(handles.SlopeBarrBouCheck,'Value',dataIn.SlopeBarrBouCheck); %rev.Gallo
+set(handles.ThetaFBSBouCheck,'Value',dataIn.ThetaFBSBouCheck);
 %% ========================================================================
 
 %% CHECK OBJ ==============================================================
@@ -436,6 +581,7 @@ if isfield(dataIn,'MassCuOptCheck')                             % da eliminare c
 else
     set(handles.MassCuOptCheck,'Value',0);
 end
+set(handles.MassPMOptCheck,'Value',dataIn.MassPMOptCheck);
 %% ========================================================================
 
 if strcmp(dataIn.RMVTmp,'OFF')
@@ -475,9 +621,9 @@ if strcmp(dataIn.TypeOfRotor,'SPM')
     set(handles.BrPPEdit,'String',num2str(dataIn.Br));
     dataIn.BrPP = dataIn.Br;
     set(handles.BrPMEdit,'Enable','off');
-%% limit b range by 3<lm/g<8
-%     dataIn.bRange(1)=3;
-%     dataIn.bRange(2)=8;
+    %% limit b range by 3<lm/g<8
+    %     dataIn.bRange(1)=3;
+    %     dataIn.bRange(2)=8;
     dataIn.bRange = round(dataIn.bRange*100)/100;
     set(handles.bRangeEdit,'String',mat2str(dataIn.bRange));
 end
@@ -529,7 +675,7 @@ if strcmp(dataIn.TypeOfRotor,'SPM')
     set(handles.AlphapuEdit,'Enable','off');
     set(handles.DxEdit,'String',mat2str(dataIn.DepthOfBarrier));
     set(handles.DxEdit,'Enable','on');
-
+    
     set(handles.NumberOfLayersEdit,'String',mat2str(dataIn.AngleSpanOfPM));
     set(handles.NumberOfLayersEdit,'Enable','off');
     set(handles.AlphadegreeEdit,'String',mat2str(dataIn.AngleSpanOfPM));
@@ -559,7 +705,7 @@ else
         set(handles.DxBouCheck,'Value',dataIn.DxBouCheck);
         set(handles.DfeBouEdit,'Enable','on');
     end
-    set(handles.NumberOfLayersEdit,'Enable','on');
+%     set(handles.NumberOfLayersEdit,'Enable','on'); %rev.Gallo
     if dataIn.Dalpha1BouCheck
         set(handles.Alpha1BouEdit,'Enable','on');
     end
@@ -575,7 +721,48 @@ else
     else
         set(handles.RadRibEdit,'Enable','off');
     end
+    set(handles.Num3PhaseCircuitEdit,'String',num2str(dataIn.Num3PhaseCircuit)); %AS
 end
+
+%Set Parameters Vtype rotor geometry into the GUI - rev.Gallo
+if strcmp(dataIn.TypeOfRotor,'Vtype')
+  
+    set(handles.SlopeBarrier,'Enable','on');
+    set(handles.SlopeBarrier,'String',num2str(dataIn.SlopeBarrier));
+    
+    set(handles.SlopeBarrBouEdit,'String',mat2str(dataIn.SlopeBarrBou));
+    set(handles.SlopeBarrBouEdit,'Enable','on');
+    set(handles.SlopeBarrBouCheck,'Enable','on','Value',dataIn.SlopeBarrBouCheck);
+    
+    set(handles.syrmDesignPushButt,'Enable','off');
+
+else
+    set(handles.SlopeBarrier,'Enable','off');
+    dataIn.SlopeBarrier=0; %posso solo disabilitarlo e porlo uguale a zero quando non sono nel caso Vtype
+    %(lo pongo uguale a zero qui perchè per le altre macchine il parametro
+    %slope barrier NON ESISTE E NON E' SETTATO A NULLA,per cui lo imposto
+    %qui nel settaggio inziale di default dei parametri
+    set(handles.SlopeBarrier,'String',num2str(dataIn.SlopeBarrier));
+    
+    set(handles.SlopeBarrBouEdit,'String',mat2str(dataIn.SlopeBarrBou));
+    set(handles.SlopeBarrBouEdit,'Enable','off');    
+    set(handles.SlopeBarrBouCheck,'Enable','off','Value',dataIn.SlopeBarrBouCheck);
+    
+    set(handles.syrmDesignPushButt,'Enable','on');
+    
+%     set(handles.MassPMEdit,'String',num2str(dataIn.MaxPMMass));
+%     set(handles.MassPMOptCheck,'Enable','on','Value',dataIn.MassPMOptCheck);
+end
+
+set(handles.MassPMEdit,'String',num2str(dataIn.MaxPMMass));
+% if dataIn.BarFillFac ==0
+%     set(handles.MassPMOptCheck,'Enable','off','Value',dataIn.MassPMOptCheck);
+%     set(handles.MassPMEdit,'Enable','off');
+% else
+set(handles.MassPMOptCheck,'Enable','on','Value',dataIn.MassPMOptCheck);
+set(handles.MassPMEdit,'Enable','on');
+% end
+
 
 function GapThiEdit_Callback(hObject, eventdata, handles)
 % Airgap Thickness[mm](geo.g)
@@ -587,8 +774,8 @@ function GapThiEdit_Callback(hObject, eventdata, handles)
 dataSet = handles.dataSet;
 dataSet.AirGapThickness = str2double(get(hObject,'String'));
 if strcmp(dataSet.TypeOfRotor,'SPM')
-%     dataSet.bRange(1)=3;
-%     dataSet.bRange(2)=8;
+    %     dataSet.bRange(1)=3;
+    %     dataSet.bRange(2)=8;
     dataSet.bRange = round(dataSet.bRange*100)/100;
     set(handles.bRangeEdit,'String',mat2str(dataSet.bRange));
 end
@@ -715,7 +902,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-% --- Executes on selection change in TypeOfRotorList.
+% --- Executes on selection change in .
 function TypeOfRotorList_Callback(hObject, eventdata, handles)
 % Type of rotor (geo.RotType)
 % hObject    handle to TypeOfRotorList (see GCBO)
@@ -727,6 +914,87 @@ contents = get(hObject,'String');
 s = contents{get(hObject,'Value')};
 dataSet = handles.dataSet;
 dataSet.TypeOfRotor = s;
+if  strcmp(dataSet.TypeOfRotor,'Seg') || strcmp(dataSet.TypeOfRotor,'ISeg')
+    dataSet.Areavert=zeros(1,4);
+    dataSet.Areaob=zeros(1,4);
+    dataSet.Areavert0 =zeros(1,4);
+    dataSet.Areaob0 =zeros(1,4);
+    dataSet.Areatot =zeros(1,4);
+    dataSet.dob =ones(1,4);
+    dataSet.dvert =ones(1,4);
+    dataSet.BarFillFac =1;
+    
+    set(handles.BetaEdit,'Enable','off');
+    set(handles.BrPMEdit,'Enable','on');
+    set(handles.BetaEdit,'String',dataSet.BarFillFac);
+    set(handles.SlopeBarrier,'Enable','off'); %rev.Gallo
+    
+else
+    set(handles.PMMaterial,'Enable','off');
+    set(handles.BrPMISegEdit,'Enable','off');
+    set(handles.BetaEdit,'Enable','on');
+    set(handles.BrPMEdit,'Enable','on');
+    set(handles.BrPMISegEdit,'String',mat2str(dataSet.Br));
+    set(handles.BrPMEdit,'String',mat2str(dataSet.Br));
+    set(handles.SlopeBarrier,'Enable','off'); %rev.Gallo
+end
+
+if strcmp(dataSet.TypeOfRotor,'Seg')
+    set(handles.RadRibSplitCheck,'Enable','on');
+else
+    set(handles.RadRibSplitCheck,'Enable','off');
+end
+
+if (strcmp(dataSet.TypeOfRotor,'Circular')||strcmp(dataSet.TypeOfRotor,'Seg')||strcmp(dataSet.TypeOfRotor,'ISeg'))
+    set(handles.FEAfixPopUp,'Enable','on');
+else
+    set(handles.FEAfixPopUp,'Enable','off');
+end
+
+%FBS
+if (strcmp(dataSet.TypeOfRotor,'Circular')||strcmp(dataSet.TypeOfRotor,'Seg'))
+    set(handles.ThetaFBSEdit,'Enable','on')
+	set(handles.ThetaFBSBouEdit,'Enable','on')
+    set(handles.ThetaFBSBouCheck,'Enable','on')
+else
+    dataSet.thetaFBS=0;
+    dataSet.ThetaFBSBouCheck=0;
+    set(handles.ThetaFBSEdit,'Enable','off')
+	set(handles.ThetaFBSBouEdit,'Enable','off')
+    set(handles.ThetaFBSBouCheck,'Enable','off')
+end
+
+
+%Set initial value Vtype parameters - rev.Gallo
+if strcmp(dataSet.TypeOfRotor,'Vtype')
+    if dataSet.NumOfLayers~=1
+        dataSet.NumOfLayers = 1;   
+        dataSet.ALPHApu = 0.67;
+        dataSet.HCpu = 0.5;
+        dataSet.DepthOfBarrier = 0;
+    end
+    dataSet.BarFillFac = 1;
+    
+    set(handles.SlopeBarrBouEdit,'Enable','on');
+    set(handles.SlopeBarrBouCheck,'Enable','on');   
+    dataSet.SlopeBarrBou=[10 89];
+    dataSet.SlopeBarrBouCheck=0;
+    
+    set(handles.SlopeBarrBouCheck,'Value',dataSet.SlopeBarrBouCheck);
+    set(handles.SlopeBarrBouEdit,'String',mat2str(dataSet.SlopeBarrBou));
+    set(handles.SlopeBarrier,'Enable','on');
+    set(handles.SlopeBarrier,'String',num2str(dataSet.SlopeBarrier));
+    %dataSet.FluxBarrierMaterial = 'BMN-38EH'; %imposto materiale magnete commerciale
+    %set(handles.FluxBarMatEdit,'String',dataSet.FluxBarrierMaterial);
+else
+
+    set(handles.SlopeBarrier,'String',num2str(dataSet.SlopeBarrier));
+  
+    set(handles.SlopeBarrBouEdit,'String',mat2str(dataSet.SlopeBarrBou));
+    set(handles.SlopeBarrBouEdit,'Enable','off');
+    set(handles.SlopeBarrBouCheck,'Enable','off','Value',dataSet.SlopeBarrBouCheck);
+end
+
 if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg') || strcmp(dataSet.TypeOfRotor,'Circular'))
     dataSet.DxBouCheck = 0;
     set(handles.DxBouCheck,'Value',dataSet.DxBouCheck);
@@ -749,9 +1017,9 @@ if strcmp(dataSet.TypeOfRotor,'SPM')
     %set(handles.NumberOfLayersEdit,'Enable','off');
     %set(handles.AlphadegreeEdit,'String',mat2str(dataSet.AngleSpanOfPM));
     %set(handles.hcmmEdit,'String',mat2str(dataSet.ThicknessOfPM));
-    %set(handles.DxEdit,'Enable','on');
+    %set(handles.DxEdit,'Enable','on'); %rev.Gallo
     dataSet.DepthOfBarrier = 1;
-    %set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier)); 
+    %set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
     %set(handles.Alpha1BouEdit,'Enable','off');
     %set(handles.DeltaAlphaBouEdit,'Enable','off');
     dataSet.Dalpha1BouCheck =0;
@@ -768,14 +1036,14 @@ if strcmp(dataSet.TypeOfRotor,'SPM')
     %set(handles.RadRibCheck,'Value',0);
     %set(handles.RadRibEdit,'Enable','off');
     %   3<lm/g<8
-%     dataSet.bRange(1)=3;
-%     dataSet.bRange(2)=8;
+    %     dataSet.bRange(1)=3;
+    %     dataSet.bRange(2)=8;
     dataSet.bRange = [4 6];
     dataSet.bRange = round(dataSet.bRange*100)/100;
     set(handles.bRangeEdit,'String',mat2str(dataSet.bRange));
-%     [bounds, objs, geo, per] = data0(dataSet);
+    %     [bounds, objs, geo, per] = data0(dataSet);
 else
-    %set(handles.AlphadegreeEdit,'Enable','off');        
+    %set(handles.AlphadegreeEdit,'Enable','off');
     %set(handles.hcmmEdit,'Enable','off');
     %set(handles.hcpuEdit,'Enable','on');
     set(handles.hcpuEdit,'String',mat2str(dataSet.HCpu));
@@ -783,6 +1051,17 @@ else
     set(handles.AlphapuEdit,'String',mat2str(dataSet.ALPHApu));
     set(handles.NumberOfLayersEdit,'Enable','on');
     set(handles.NumberOfLayersEdit,'String',mat2str(dataSet.NumOfLayers));
+    
+    if strcmp(dataSet.TypeOfRotor,'Vtype') %rev.Gallo
+        set(handles.NumberOfLayersEdit,'Enable','off');
+        dataSet.FluxBarrierMaterial = 'BMN-38EH'; %imposto materiale magnete commerciale caso Vtype
+
+    else
+        dataSet.FluxBarrierMaterial = 'Air';
+%        set(handles.NumberOfLayersEdit,'Enable','on');
+%        set(handles.NumberOfLayersEdit,'String',mat2str(dataSet.NumOfLayers));
+    end    
+    
     set(handles.Alpha1BouEdit,'Enable','on');
     set(handles.DeltaAlphaBouEdit,'Enable','on');
     if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg') || strcmp(dataSet.TypeOfRotor,'Circular'))
@@ -792,7 +1071,7 @@ else
         set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
     end
     
-    dataSet.FluxBarrierMaterial = 'Air';
+%    dataSet.FluxBarrierMaterial = 'Air'; %rev.Gallo
     [bounds, objs, geo, per, mat] = data0(dataSet);
     data = buildDefaultRQ(bounds);
     dataSet.RQ = data;
@@ -807,9 +1086,9 @@ else
     
     
     
-%     if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg'))
-%         set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
-%     end
+    %     if (strcmp(dataSet.TypeOfRotor,'Fluid') || strcmp(dataSet.TypeOfRotor,'Seg'))
+    %         set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
+    %     end
     [truefalse, index] = ismember('dx', geo.RQnames);
     if truefalse
         dataSet.DfeBou = bounds(index,:);            % barrier offset [p.u.]
@@ -823,6 +1102,16 @@ else
     set(handles.DfeBouEdit,'String',mat2str(dataSet.DfeBou));
     set(handles.bRangeEdit,'String',mat2str(dataSet.bRange));
 end
+
+% %Abilitare funzione obiettivo MassPM solo se BarFillFac ~=0
+% if dataSet.BarFillFac ==0
+%     set(handles.MassPMOptCheck,'Enable','off','Value',dataSet.MassPMOptCheck);
+%     set(handles.MassPMEdit,'Enable','off');
+% else
+%     set(handles.MassPMOptCheck,'Enable','on','Value',dataSet.MassPMOptCheck);
+%     set(handles.MassPMEdit,'Enable','on');
+% end
+
 handles.dataSet = dataSet;
 SetParameters(handles,dataSet);
 handles = DrawPush_Callback(hObject, eventdata, handles);
@@ -1292,11 +1581,32 @@ else
 end
 dataSet.HCpu = round(dataSet.HCpu,2);
 dataSet.DepthOfBarrier = zeros(1,dataSet.NumOfLayers);
+if  strcmp(dataSet.TypeOfRotor,'Seg')||strcmp(dataSet.TypeOfRotor,'ISeg')  %mod walter
+    dataSet.Areavert0=zeros(1,4);
+    dataSet.Areaob0=zeros(1,4);
+    dataSet.Areatot=zeros(1,4);
+    dataSet.dob=ones(1,4);
+    dataSet.dvert=ones(1,4);
+end
 set(handles.AlphapuEdit,'String',mat2str(dataSet.ALPHApu));
 set(handles.hcpuEdit,'String',mat2str(dataSet.HCpu));
 set(handles.DxEdit,'String',mat2str(dataSet.DepthOfBarrier));
 handles.dataSet = dataSet;
 handles = DrawPush_Callback(hObject, eventdata, handles);
+if  strcmp(dataSet.TypeOfRotor,'Seg')||strcmp(dataSet.TypeOfRotor,'ISeg')
+    
+    TotMag1 = dataSet.Areatot(1)*0.5;
+    TotMag2 = dataSet.Areatot(2)*0.5;
+    TotMag3 = dataSet.Areatot(3)*0.5;
+    TotMag4 = dataSet.Areatot(4)*0.5;
+    
+    
+    set(handles.TotMag1Edit,'String',num2str(TotMag1));
+    set(handles.TotMag2Edit,'String',num2str(TotMag2));
+    set(handles.TotMag3Edit,'String',num2str(TotMag3));
+    set(handles.TotMag4Edit,'String',num2str(TotMag4));
+    
+end
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -1360,6 +1670,18 @@ set(handles.BrBouCheck,'Value',dataSet.BrBouCheck);
 % SetParameters(handles,dataSet);
 handles.dataSet = dataSet;
 handles = DrawPush_Callback(hObject, eventdata, handles);
+if strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet')  %mod walter
+    if strcmp(dataSet.TypeOfRotor,'Seg')||strcmp(dataSet.TypeOfRotor,'ISeg')
+        TotMag1 = dataSet.Areatot(1)*dataSet.Br;
+        TotMag2 = dataSet.Areatot(2)*dataSet.Br;
+        TotMag3 = dataSet.Areatot(3)*dataSet.Br;
+        TotMag4 = dataSet.Areatot(4)*dataSet.Br;
+        set(handles.TotMag1Edit,'String',num2str(TotMag1));
+        set(handles.TotMag2Edit,'String',num2str(TotMag2));
+        set(handles.TotMag3Edit,'String',num2str(TotMag3));
+        set(handles.TotMag4Edit,'String',num2str(TotMag4));
+    end
+end
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -1605,15 +1927,47 @@ mat = material_properties_layer(dataSet.FluxBarrierMaterial);
 dataSet.Br = mat.Br;
 dataSet.BrPP = dataSet.Br;
 if strcmp(dataSet.TypeOfRotor,'SPM')
-%% limit b range by 3<lm/g<8
-%     dataSet.bRange(1)=3;
-%     dataSet.bRange(2)=8;
+    %% limit b range by 3<lm/g<8
+    %     dataSet.bRange(1)=3;
+    %     dataSet.bRange(2)=8;
     dataSet.bRange = round(dataSet.bRange*100)/100;
     set(handles.bRangeEdit,'String',mat2str(dataSet.bRange));
 end
 
 handles.dataSet = dataSet;
-SetParameters(handles,dataSet);
+
+if strcmp(dataSet.TypeOfRotor,'Seg')|| strcmp(dataSet.TypeOfRotor,'ISeg')
+    if  strcmp(dataSet.FluxBarrierMaterial,'Air')%mod walter
+        set(handles.PMMaterial,'Enable','off');
+        set(handles.ObMag1Edit,'Enable','off');
+        set(handles.ObMag2Edit,'Enable','off');
+        set(handles.ObMag3Edit,'Enable','off');
+        set(handles.ObMag4Edit,'Enable','off');
+        set(handles.VertMag1Edit,'Enable','off');
+        set(handles.VertMag2Edit,'Enable','off');
+        set(handles.VertMag3Edit,'Enable','off');
+        set(handles.VertMag4Edit,'Enable','off');
+    end
+        
+    if strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet')%mod walter
+        set(handles.BrPMEdit,'Enable','on');
+        dataSet.dob       = ones(1,4);
+        dataSet.dvert     = ones(1,4);
+        dataSet.Areaob0   = zeros(1,4);
+        dataSet.Areavert0 = zeros(1,4);
+        dataSet.Areatot   = zeros(1,4);
+        dataSet.Areavert  = zeros(1,4);
+        dataSet.Areaob    = zeros(1,4);
+        set(handles.TotMag1Edit,'Enable','on');
+        set(handles.TotMag2Edit,'Enable','on');
+        set(handles.TotMag3Edit,'Enable','on');
+        set(handles.TotMag4Edit,'Enable','on');
+    end
+    
+end
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+%SetParameters(handles,dataSet);
 guidata(hObject,handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -1719,7 +2073,7 @@ end
 %         material = strjoin([material,name]);
 %     end
 % end
-% 
+%
 % set(handles.MaterialText,'Style','Edit');
 % set(handles.MaterialText,'Max',m);
 % set(handles.MaterialText,'String',material);
@@ -1736,6 +2090,7 @@ dataSet = handles.dataSet;
 save('dataSet','dataSet');
 figure()
 [bounds, objs, geo, per, mat] = data0(dataSet);
+filemot=([dataSet.currentpathname dataSet.currentfilename]);
 dat.geo0 = geo;
 per.objs = objs;
 dat.per = per;
@@ -1743,7 +2098,7 @@ dat.mat = mat;
 %%%%%%%%%% FEMM fitness handle %%%%%%%%%%%%%%%%%%%%%%%%%%
 eval_type = 'MO_OA';
 if strcmp(dataSet.XFEMMOpt,'Y')
-    FitnessFunction = @(x)FEMMfitnessX(x,geo,per,eval_type);
+    FitnessFunction = @(x)FEMMfitnessX(x,geo,per,eval_type,filemot);
 else
     FitnessFunction = @(x)FEMMfitness(x,geo,per,mat,eval_type);
 end
@@ -1849,7 +2204,7 @@ dataSet.currentfilename = FileName;
 %     dataSet.TorqueOptCheck = 0;
 %     dataSet.TorRipOptCheck = 0;
 % end
-% 
+%
 % if ~isfield(dataSet,'LossEvaluationCheck')
 %     dataSet.LossEvaluationCheck = 0;
 %     dataSet.HysteresisLossFactor = 0;
@@ -2050,10 +2405,13 @@ function SaveConfPush_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 data = get(handles.WinTable,'data');
 dataSet = handles.dataSet;
+[~, ~, geo, ~, ~] = data0(dataSet);
+avv=geo.defaultavv;  %AS
+n3phase=geo.n3phase; %AS
 [m,n] = size(data);
 for i = 1 : m
     for k = 1 : n
-        if abs(data(i,k)) > 3 || isnan(data(i,k)) || data(i,k) == 0
+        if isnan(data(i,k)) %|| abs(data(i,k)) > 3 || data(i,k) == 0
             dataSet = handles.dataSet;
             if exist([cd,'\tmp\flag.mat']) > 0
                 flag = 0;
@@ -2061,7 +2419,7 @@ for i = 1 : m
                 flag = 1;
                 save([cd,'\tmp\flag.mat'],'flag');
             else
-                [~, ~, ~, geo, ~, ~] = data0();
+                [~, ~, geo, ~, ~] = data0();
             end
             data = geo.avv;
             msgbox('You must insert valid values','!!Warning!!');
@@ -2070,12 +2428,43 @@ for i = 1 : m
         end
     end
 end
+% Create avv_flag (size = # of phases) for fault case
+for i = 1 : m
+    for k = 1 : n %create avv_flag (size = # of phases)
+        if ~isequal(data(i,k),avv(i,k)) && data(i,k)==0
+            avv_flag(abs(avv(i,k)))=0;  %se avv è 0 non funziona
+        else
+            avv_flag(abs(avv(i,k)))=1;
+        end
+    end
+end
+
+% Correct avv_flag disabling all the phases of a single 3-phase circuit
+for ik=0:(n3phase-1)
+    if avv_flag((3*ik)+1)==0 || avv_flag((3*ik)+2)==0 || avv_flag((3*ik)+3)==0
+        avv_flag((3*ik)+1)=0;
+        avv_flag((3*ik)+2)=0;
+        avv_flag((3*ik)+3)=0;
+    end
+end
+% Correct the winding matix
+for ih=1:(3*n3phase)
+    for i = 1 : m %rows
+      for k = 1 : n %columns
+          if avv_flag(ih)==0 && abs(data(i,k))==ih
+              data(i,k)=0;
+          end
+      end
+    end
+end
 if m == 1
     data(2,:) = data(1,:);
 end
-dataSet.WinMatr = data;
+dataSet.WinMatr = data; %save winding in dataSet
+dataSet.WinFlag=avv_flag;
 msgbox('Matrix of windings saved');
 handles.dataSet = dataSet;
+set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(geo.Qs)));
 guidata(hObject,handles)
 
 % --- Executes on key press with focus on WinTable and none of its controls.
@@ -2129,12 +2518,131 @@ if ~strcmp (geo.RotType, 'SPM')
     set(handles.AlphadegreeEdit,'String',mat2str(temp(1:dataSet.NumOfLayers)));
     set(handles.hcmmEdit,'String',mat2str(temp((dataSet.NumOfLayers+1):end)));
 end
+
+if strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet')
+    dataSet.BrDesign=dataSet.Br;
+elseif strcmp(dataSet.FluxBarrierMaterial,'Air')
+    dataSet.BrDesign=0;
+end
+
+if  strcmp(geo.RotType,'Seg')|| strcmp(geo.RotType,'ISeg') %mod walter
+    NumOfLayers = dataSet.NumOfLayers;
+    for ii= 1:4
+%         if ii <= NumOfLayers
+%             dataSet.Areaob0(ii) = geo.Areaob0(ii);
+%             dataSet.Areavert0(ii) = geo.Areavert0(ii);
+%             dataSet.Areaob(ii) = geo.Areaob(ii);
+%             dataSet.Areavert(ii) = geo.Areavert(ii);
+%             dataSet.Areatot(ii) = geo.Areatot(ii);
+%         else
+%             dataSet.Areaob0(ii) = 0;
+%             dataSet.Areavert0(ii) = 0;
+%             dataSet.Areaob(ii) = 0;
+%             dataSet.Areavert(ii) = 0;
+%             dataSet.Areatot(ii) = 0;
+%         end
+        dataSet.Areaob0   = geo.Areaob0;
+        dataSet.Areavert0 = geo.Areavert0;
+        dataSet.Areaob    = geo.Areaob;
+        dataSet.Areavert  = geo.Areavert;
+        dataSet.Areatot   = geo.Areatot;
+    end
+    
+    if strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet')  % green case (Br')
+
+        set(handles.PMMaterial,'Enable','on');
+        set(handles.BrPMISegEdit,'Enable','off');
+        set(handles.BrPMISegEdit,'String',0);
+        
+        set(handles.ObMag1Edit,'Enable','off');
+        set(handles.ObMag2Edit,'Enable','off');
+        set(handles.ObMag3Edit,'Enable','off');
+        set(handles.ObMag4Edit,'Enable','off');
+        set(handles.VertMag1Edit,'Enable','off');
+        set(handles.VertMag2Edit,'Enable','off');
+        set(handles.VertMag3Edit,'Enable','off');
+        set(handles.VertMag4Edit,'Enable','off');
+        set(handles.TotMag1Edit,'Enable','on');
+        set(handles.TotMag2Edit,'Enable','on');
+        set(handles.TotMag3Edit,'Enable','on');
+        set(handles.TotMag4Edit,'Enable','on');
+        
+        TotMag1 = dataSet.Areatot(1)*dataSet.Br;
+        TotMag2 = dataSet.Areatot(2)*dataSet.Br;
+        TotMag3 = dataSet.Areatot(3)*dataSet.Br;
+        TotMag4 = dataSet.Areatot(4)*dataSet.Br;
+        
+        set(handles.TotMag1Edit,'String',num2str(TotMag1));
+        set(handles.TotMag2Edit,'String',num2str(TotMag2));
+        set(handles.TotMag3Edit,'String',num2str(TotMag3));
+        set(handles.TotMag4Edit,'String',num2str(TotMag4));
+        
+    elseif strcmp(dataSet.FluxBarrierMaterial,'Air')    % air case (SyR, no PM)
+        
+        set(handles.PMMaterial,'Enable','off');
+        set(handles.BrPMISegEdit,'Enable','off');
+        set(handles.BrPMISegEdit,'String',0);
+    
+        set(handles.ObMag1Edit,'Enable','off');
+        set(handles.ObMag2Edit,'Enable','off');
+        set(handles.ObMag3Edit,'Enable','off');
+        set(handles.ObMag4Edit,'Enable','off');
+        set(handles.VertMag1Edit,'Enable','off');
+        set(handles.VertMag2Edit,'Enable','off');
+        set(handles.VertMag3Edit,'Enable','off');
+        set(handles.VertMag4Edit,'Enable','off');
+        set(handles.TotMag1Edit,'Enable','off');
+        set(handles.TotMag2Edit,'Enable','off');
+        set(handles.TotMag3Edit,'Enable','off');
+        set(handles.TotMag4Edit,'Enable','off');
+        
+    else % (PM with Br and commercial name - red case)
+        
+        set(handles.PMMaterial,'Enable','on');
+        set(handles.BrPMISegEdit,'Enable','on');
+        set(handles.BrPMISegEdit,'String',mat2str(dataSet.Br));
+        
+        set(handles.ObMag1Edit,'Enable','on');
+        set(handles.ObMag2Edit,'Enable','on');
+        set(handles.ObMag3Edit,'Enable','on');
+        set(handles.ObMag4Edit,'Enable','on');
+        set(handles.VertMag1Edit,'Enable','on');
+        set(handles.VertMag2Edit,'Enable','on');
+        set(handles.VertMag3Edit,'Enable','on');
+        set(handles.VertMag4Edit,'Enable','on');
+        set(handles.TotMag1Edit,'Enable','off');
+        set(handles.TotMag2Edit,'Enable','off');
+        set(handles.TotMag3Edit,'Enable','off');
+        set(handles.TotMag4Edit,'Enable','off');
+        
+        ObMag1  = dataSet.Areaob(1)*mat.LayerMag.Br;
+        ObMag2  = dataSet.Areaob(2)*mat.LayerMag.Br;
+        ObMag3  = dataSet.Areaob(3)*mat.LayerMag.Br;
+        ObMag4  = dataSet.Areaob(4)*mat.LayerMag.Br;
+        VertMag1= dataSet.Areavert(1)*mat.LayerMag.Br;
+        VertMag2= dataSet.Areavert(2)*mat.LayerMag.Br;
+        VertMag3= dataSet.Areavert(3)*mat.LayerMag.Br;
+        VertMag4= dataSet.Areavert(4)*mat.LayerMag.Br;
+        
+        set(handles.ObMag1Edit,'String',num2str(round(ObMag1,2)));
+        set(handles.ObMag2Edit,'String',num2str(round(ObMag2,2)));
+        set(handles.ObMag3Edit,'String',num2str(round(ObMag3,2)));
+        set(handles.ObMag4Edit,'String',num2str(round(ObMag4,2)));
+        set(handles.VertMag1Edit,'String',num2str(round(VertMag1,2)));
+        set(handles.VertMag2Edit,'String',num2str(round(VertMag2,2)));
+        set(handles.VertMag3Edit,'String',num2str(round(VertMag3,2)));
+        set(handles.VertMag4Edit,'String',num2str(round(VertMag4,2)));
+        
+    end
+    
+end
 tmp = round(geo.pont*100)/100;
 set(handles.RadRibEdit,'String',mat2str(tmp));
 dataSet.RadRibEdit = tmp;
 dataSet.FilletCorner = geo.SFR;
 set(handles.FillCorSlotEdit,'String',mat2str(round(100*geo.SFR)/100));
 handles.dataSet = dataSet;
+SetParameters(handles,dataSet);
 guidata(hObject,handles)
 
 function MeshEdit_Callback(hObject, eventdata, handles)
@@ -2477,12 +2985,13 @@ function RemTMPRadio_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of RemTMPRadio
 dataSet = handles.dataSet;
 a = get(hObject,'Value');
-if a > 1
+if a == 1
     dataSet.RMVTmp = 'ON';
 else
     dataSet.RMVTmp = 'OFF';
 end
 handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
@@ -2899,12 +3408,38 @@ if sum(ALPHApu)>(1-0.05) % 0.05 is the angular space guaranteed for the spider
     ALPHApu(2:end)=ALPHApu(2:end)/sum(ALPHApu(2:end))*(1-0.05-ALPHApu(1));
     disp('Correct value of alpha_pu')
 end
+
+%Limitazione escursione minima di ALPHApu caso Vtype - rev.Gallo
+[~,~,geo,~,~] = data0(dataSet);
+if strcmp(geo.RotType,'Vtype')
+    if ALPHApu < 0.25 %escursione minima ammessa caso multibarriera
+        disp ('Value not allowed of alpha_pu')
+        ALPHApu=0.25;
+        disp('Minimum value of alpha_pu is set') 
+    end    
+end
+
 dataSet.ALPHApu=round(ALPHApu,3);
 set(hObject,'String',mat2str(dataSet.ALPHApu));
 dataSet.Dalpha1BouCheck = 0;
 dataSet.DalphaBouCheck = 0;
 set(handles.Dalpha1BouCheck,'Value',dataSet.Dalpha1BouCheck);
 set(handles.DalphaBouCheck,'Value',dataSet.DalphaBouCheck);
+
+%Aggiornamento automatico valore di angle su GUI quando modifico alphapu - rev.Gallo
+[~,~,geo,~,mat] = data0(dataSet);
+if strcmp(geo.RotType,'Vtype')
+    [geo,~,~]=nodes_rotor_Vtype(geo,mat);
+    angle_temp=round(geo.VanglePM*180/pi,2);
+    slope_barrier=round(dataSet.SlopeBarrier,2);
+    if angle_temp ~= slope_barrier
+%       dataSet.SlopeBarrier=round(geo.VanglePM*180/pi,2);
+%       set(handles.SlopeBarrier,'String',num2str(dataSet.SlopeBarrier));
+        set(handles.SlopeBarrier,'String',num2str(angle_temp));
+        disp('Value of slope barrier corrected in function of alpha_pu')
+    end        
+end
+
 [bounds, objs, geo, per, mat] = data0(dataSet);
 dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
@@ -2962,6 +3497,20 @@ dataSet = handles.dataSet;
 dataSet.HCpu = str2num(get(hObject,'String'));
 dataSet.hcBouCheck = 0;
 set(handles.hcBouCheck,'Value',dataSet.hcBouCheck);
+
+%Aggiornamento valori di angle su GUI quando modifico hcpu - rev.Gallo
+[~,~,geo,~,mat] = data0(dataSet);
+if strcmp(geo.RotType,'Vtype')
+    [geo,~,~]=nodes_rotor_Vtype(geo,mat);
+    angle_temp=round(geo.VanglePM*180/pi,2);
+    slope_barrier=round(dataSet.SlopeBarrier,2);
+    if angle_temp ~= slope_barrier 
+ %       dataSet.SlopeBarrier=round(geo.VanglePM*180/pi,2);
+ %       set(handles.SlopeBarrier,'String',num2str(dataSet.SlopeBarrier));
+        set(handles.SlopeBarrier,'String',num2str(angle_temp));
+        disp('Value of slope barrier is corrected in function of hc_pu')
+    end
+end
 [bounds, objs, geo, per, mat] = data0(dataSet);
 dataSet.RQ = buildDefaultRQ(bounds);
 handles.dataSet = dataSet;
@@ -3565,7 +4114,10 @@ function syrmDesignPushButt_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 dataSet = handles.dataSet;
+FEAfixTmp = dataSet.FEAfixN;
+dataSet.FEAfixN = 0;
 [dataSet,flagS] = syrmDesign(dataSet);
+dataSet.FEAfixN = FEAfixTmp;
 handles.dataSet = dataSet;
 if flagS
     dataSet = DrawPushMachine(handles,dataSet.currentfilename,dataSet.currentpathname);
@@ -3575,6 +4127,12 @@ handles = DrawPush_Callback(hObject, eventdata, handles);
 %flag_plot = 'Y';
 %h = handles.axes5;
 SetParameters(handles,dataSet)
+% if  strcmp(dataSet.TypeOfRotor,'Seg') || strcmp(dataSet.TypeOfRotor,'ISeg')  %mod walter
+%     dataSet.Areaob0 =zeros(1,4);
+%     dataSet.Areavert0 =zeros(1,4);
+%     dataSet.Areatot =zeros(1,4);
+% end
+handles.dataSet = dataSet;
 guidata(hObject,handles)
 % [~,~,~] = data0(dataSet);
 %[~,~,~] = Plot_Machine(h,dataSet,flag_plot);
@@ -3661,13 +4219,13 @@ end
 
 
 
-function BarFillFacEdit_Callback(hObject, eventdata, handles)
-% hObject    handle to BarFillFacEdit (see GCBO)
+function BetaEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to BetaEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of BarFillFacEdit as text
-%        str2double(get(hObject,'String')) returns contents of BarFillFacEdit as a double
+% Hints: get(hObject,'String') returns contents of BetaEdit as text
+%        str2double(get(hObject,'String')) returns contents of BetaEdit as a double
 dataSet = handles.dataSet;
 % dataSet.BarFillFac = str2double(get(hObject,'String'));
 dataSet.BarFillFac = str2num(get(hObject,'String'));
@@ -3678,15 +4236,35 @@ if ~strcmp(dataSet.TypeOfRotor,'SPM')
         dataSet.BarFillFac=0;
     end
 end
+
+%Definizione materiale della barriera - rev.Gallo
+if strcmp(dataSet.TypeOfRotor,'Vtype')
+     if dataSet.BarFillFac ==0
+        dataSet.FluxBarrierMaterial = 'Air';
+     else
+        dataSet.FluxBarrierMaterial = 'BMN-38EH'; %imposto materiale magnete commerciale caso Vtype
+     end
+end    
+
+% %Abilitare funzione obiettivo MassPM solo con magnete inserito (BarFillFac ~=0)
+% if dataSet.BarFillFac ==0
+%     set(handles.MassPMOptCheck,'Enable','off','Value',dataSet.MassPMOptCheck);
+%     set(handles.MassPMEdit,'Enable','off');
+% else
+%     set(handles.MassPMOptCheck,'Enable','on','Value',dataSet.MassPMOptCheck);
+%     set(handles.MassPMEdit,'Enable','on');
+% end
+
 set(hObject,'String',mat2str(dataSet.BarFillFac));
+set(handles.FluxBarMatEdit,'String',dataSet.FluxBarrierMaterial); %rev.Gallo
 handles.dataSet = dataSet;
 handles = DrawPush_Callback(hObject, eventdata, handles);
 guidata(hObject,handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function BarFillFacEdit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to BarFillFacEdit (see GCBO)
+function BetaEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BetaEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -3811,10 +4389,18 @@ if not((ps-floor(ps))==0)
     Qs=QsCalc;
     set(handles.SlotSimulEdit,'String',int2str(Qs));
 end
+
+if dataSet.thetaFBS~=0
+    ps=2;
+    Qs=Q*ps/(2*p);
+    disp('FBS enabled, full machine not supported')
+end
+
 ps = round(ps);
 dataSet.Qs = Qs;
 %dataSet.ps = ps;
 dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
+dataSet.DefaultWinMatr = Windings(:,1:floor(Qs)); %AS
 columnName = cell(1,floor(Qs));
 for i = 1 : floor(Qs)
     columnName{i} = ['Slot n° ',num2str(i)];
@@ -3877,13 +4463,13 @@ else
     set(handles.HysteresisFluxDenEdit,'String',mat2str(dataSet.HysteresisFluxDenFactor));
     set(handles.EddyCurLossFactorEdit,'String',mat2str(dataSet.EddyCurLossFactorEdit));
     set(handles.MassDensityEdit,'String',mat2str(dataSet.IronMassDen));
-%     Q = round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs);
-%     t2 = gcd(Q,2*dataSet.NumOfPolePairs);
-%     QsCalc = Q/t2;
-%     dataSet.AngularSpanPP = max(60,20*QsCalc/dataSet.NumOfSlots);
-%     set(handles.SpanEltPPEdit,'String',mat2str(dataSet.AngularSpanPP));
-%     dataSet.NumOfRotPosPP = ceil(dataSet.AngularSpanPP/60)*6;
-%     set(handles.NumOfRotorPosiPPEdit,'String',mat2str(dataSet.NumOfRotPosPP));
+    %     Q = round(dataSet.NumOfSlots*6*dataSet.NumOfPolePairs);
+    %     t2 = gcd(Q,2*dataSet.NumOfPolePairs);
+    %     QsCalc = Q/t2;
+    %     dataSet.AngularSpanPP = max(60,20*QsCalc/dataSet.NumOfSlots);
+    %     set(handles.SpanEltPPEdit,'String',mat2str(dataSet.AngularSpanPP));
+    %     dataSet.NumOfRotPosPP = ceil(dataSet.AngularSpanPP/60)*6;
+    %     set(handles.NumOfRotorPosiPPEdit,'String',mat2str(dataSet.NumOfRotPosPP));
     handles.dataSet = dataSet;
     dataSet = DrawPushMachine(handles,dataSet.currentfilename,dataSet.currentpathname);
 end
@@ -4306,4 +4892,921 @@ function Rsedit_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+
+function BrPMISegEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to BrPMISegEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of BrPMISegEdit as text
+%        str2double(get(hObject,'String')) returns contents of BrPMISegEdit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function BrPMISegEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to BrPMISegEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in PMMaterial.
+function PMMaterial_Callback(hObject, eventdata, handles)
+% hObject    handle to PMMaterial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns PMMaterial contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from PMMaterial
+contents = cellstr(get(hObject,'String'));
+s = contents{get(hObject,'Value')};
+dataSet = handles.dataSet;
+dataSet.FluxBarrierMaterial = s;
+if strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet')
+    dataSet.BrDesign=dataSet.Br;
+end
+mat = material_properties_layer(dataSet.FluxBarrierMaterial);
+dataSet.Br = mat.Br;
+dataSet.BrPP = mat.Br;
+if ~strcmp(dataSet.FluxBarrierMaterial,'Bonded-Magnet')
+    set(handles.BrPMEdit,'Enable','off');
+end
+% dataSet.dob=ones(1,4);
+% dataSet.dvert=ones(1,4);
+% dataSet.Areaob0 =zeros(1,4);
+% dataSet.Areavert0 =zeros(1,4);
+% dataSet.Areatot =zeros(1,4);
+
+set(handles.BrPMISegEdit,'String',num2str(dataSet.Br));
+set(handles.FluxBarMatEdit,'String',dataSet.FluxBarrierMaterial);
+set(handles.BrPPEdit,'String',dataSet.BrPP);
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function PMMaterial_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to PMMaterial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function TotMag1Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to TotMag1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of TotMag1Edit as text
+%        str2double(get(hObject,'String')) returns contents of TotMag1Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function TotMag1Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TotMag1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function TotMag2Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to TotMag2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of TotMag2Edit as text
+%        str2double(get(hObject,'String')) returns contents of TotMag2Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function TotMag2Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TotMag2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function TotMag3Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to TotMag3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of TotMag3Edit as text
+%        str2double(get(hObject,'String')) returns contents of TotMag3Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function TotMag3Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TotMag3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function TotMag4Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to TotMag4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of TotMag4Edit as text
+%        str2double(get(hObject,'String')) returns contents of TotMag4Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function TotMag4Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to TotMag4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function VertMag1Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to VertMag1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of VertMag1Edit as text
+%        str2double(get(hObject,'String')) returns contents of VertMag1Edit as a double
+dataSet = handles.dataSet;
+VertMag1 = str2num(get(hObject,'String'));
+dataSet.Areavert(1) = VertMag1/dataSet.Br;
+VertMag1max = dataSet.Areavert0(1)*dataSet.Br;
+if VertMag1 > VertMag1max
+    VertMag1 = VertMag1max;
+end
+dataSet.dvert(1)= VertMag1/VertMag1max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function VertMag1Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VertMag1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function VertMag2Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to VertMag2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of VertMag2Edit as text
+%        str2double(get(hObject,'String')) returns contents of VertMag2Edit as a double
+dataSet = handles.dataSet;
+VertMag2 = str2num(get(hObject,'String'));
+dataSet.Areavert(2) = VertMag2/dataSet.Br;
+VertMag2max = dataSet.Areavert0(2)*dataSet.Br;
+if VertMag2 > VertMag2max
+    VertMag2 = VertMag2max;
+end
+dataSet.dvert(2)= VertMag2/VertMag2max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function VertMag2Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VertMag2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function VertMag3Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to VertMag3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of VertMag3Edit as text
+%        str2double(get(hObject,'String')) returns contents of VertMag3Edit as a double
+dataSet = handles.dataSet;
+VertMag3 = str2num(get(hObject,'String'));
+dataSet.Areavert(3) = VertMag3/dataSet.Br;
+VertMag3max = dataSet.Areavert0(3)*dataSet.Br;
+if VertMag3 > VertMag3max
+    VertMag3 = VertMag3max;
+end
+dataSet.dvert(3)= VertMag3/VertMag3max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function VertMag3Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VertMag3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function VertMag4Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to VertMag4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of VertMag4Edit as text
+%        str2double(get(hObject,'String')) returns contents of VertMag4Edit as a double
+dataSet = handles.dataSet;
+VertMag4 = str2num(get(hObject,'String'));
+dataSet.Areavert(4) = VertMag4/dataSet.Br;
+VertMag4max = dataSet.Areavert0(4)*dataSet.Br;
+if VertMag4 > VertMag4max
+    VertMag4 = VertMag4max;
+end
+dataSet.dvert(4)= VertMag4/VertMag4max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+
+% --- Executes during object creation, after setting all properties.
+function VertMag4Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to VertMag4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ObMag1Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to ObMag1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ObMag1Edit as text
+%        str2double(get(hObject,'String')) returns contents of ObMag1Edit as a double
+dataSet = handles.dataSet;
+ObMag1 = str2num(get(hObject,'String'));
+dataSet.Areaob(1) = ObMag1/dataSet.Br;
+ObMag1max = dataSet.Areaob0(1)*dataSet.Br;
+if ObMag1 > ObMag1max
+    ObMag1 = ObMag1max;
+end
+dataSet.dob(1)= ObMag1/ObMag1max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function ObMag1Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ObMag1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ObMag2Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to ObMag2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ObMag2Edit as text
+%        str2double(get(hObject,'String')) returns contents of ObMag2Edit as a double
+dataSet = handles.dataSet;
+ObMag2 = str2num(get(hObject,'String'));
+dataSet.Areaob(2) = ObMag2/dataSet.Br;
+ObMag2max = dataSet.Areaob0(2)*dataSet.Br;
+if ObMag2 > ObMag2max
+    ObMag2 = ObMag2max;
+end
+dataSet.dob(2)= ObMag2/ObMag2max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+
+% --- Executes during object creation, after setting all properties.
+function ObMag2Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ObMag2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ObMag3Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to ObMag3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ObMag3Edit as text
+%        str2double(get(hObject,'String')) returns contents of ObMag3Edit as a double
+dataSet = handles.dataSet;
+ObMag3 = str2num(get(hObject,'String'));
+dataSet.Areaob(3) = ObMag3/dataSet.Br;
+ObMag3max = dataSet.Areaob0(3)*dataSet.Br;
+if ObMag3 > ObMag3max
+    ObMag3 = ObMag3max;
+end
+dataSet.dob(3)= ObMag3/ObMag3max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function ObMag3Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ObMag3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function ObMag4Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to ObMag4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ObMag4Edit as text
+%        str2double(get(hObject,'String')) returns contents of ObMag4Edit as a double
+dataSet = handles.dataSet;
+ObMag4 = str2num(get(hObject,'String'));
+dataSet.Areaob(4) = ObMag4/dataSet.Br;
+ObMag4max = dataSet.Areaob0(4)*dataSet.Br;
+if ObMag4 > ObMag4max
+    ObMag4 = ObMag4max;
+end
+dataSet.dob(4)= ObMag4/ObMag4max;
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function ObMag4Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ObMag4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function Num3PhaseCircuitEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to Num3PhaseCircuitEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+dataSet = handles.dataSet;
+n3phase = str2double(get(hObject,'String'));
+dataSet.WinFlag=ones(1,(n3phase*3));
+dataSet.Num3PhaseCircuit=n3phase;
+handles.dataSet=dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+% Hints: get(hObject,'String') returns contents of Num3PhaseCircuitEdit as text
+%        str2double(get(hObject,'String')) returns contents of Num3PhaseCircuitEdit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function Num3PhaseCircuitEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Num3PhaseCircuitEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in SetDefaultWinding.
+function SetDefaultWinding_Callback(hObject, eventdata, handles)
+% hObject    handle to SetDefaultWinding (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+dataSet = handles.dataSet;
+[~, ~, geo, ~, ~] = data0(dataSet);
+set(handles.WinTable,'data',dataSet.DefaultWinMatr(:,1:floor(geo.Qs)));
+
+
+
+% Added callback buttons and Check - rev.Gallo 23/04/2018
+function SlopeBarrier_Callback(hObject, eventdata, handles)
+% Slope barrier case Vtype [deg]
+% hObject    handle to SlopeBarrier (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SlopeBarrier as text
+%        str2double(get(hObject,'String')) returns contents of SlopeBarrier as a double
+dataSet = handles.dataSet;
+%dataSet.SlopeBarrier = str2double(get(hObject,'String'));
+angleDEG=str2double(get(hObject,'String'));
+dataSet.SlopeBarrBouCheck=0;
+set(handles.SlopeBarrBouCheck,'Value',dataSet.SlopeBarrBouCheck);
+%Correzione valore di angle sulla GUI nel caso di limite massimo di inclinazione (barriera esterna)
+if angleDEG > 89 %quando supero il limite di 89° il valore sulla GUI di angle viene corretto;
+    angleDEG=89; %fisso valore massimo inclinazione barriere ad 89 gradi
+    disp('Correct value of max slope barrier is fixed')
+end
+
+%Correzione valore di angle sulla GUI nel caso di limite minimo di inclinazione (barriera interna "sbatte" contro albero
+dataSet.SlopeBarrier = angleDEG; %aggiorno valore di angle in data0
+[~,~,geo,~,mat] = data0(dataSet); 
+[geo,~,~]=nodes_rotor_Vtype(geo,mat);
+angle_new=round(geo.VanglePM*180/pi,2);
+if angleDEG ~= angle_new
+    disp('Correct value of min slope is fixed') %messaggio che il valore di angle è stato corretto in GUI
+end
+
+angleDEG=geo.VanglePM*180/pi;
+dataSet.SlopeBarrier=angleDEG;
+%[~,~,geo,~,mat] = data0(dataSet); 
+set(hObject,'String',num2str(round(dataSet.SlopeBarrier,2)));
+handles.dataSet = dataSet;
+%SetParameters(handles,dataSet)
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function SlopeBarrier_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SlopeBarrier (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function SlopeBarrBouEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to SlopeBarrBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SlopeBarrBouEdit as text
+%        str2double(get(hObject,'String')) returns contents of SlopeBarrBouEdit as a double
+dataSet = handles.dataSet;
+dataSet.SlopeBarrBou = str2num(get(hObject,'String'));
+[m,n] = size(dataSet.SlopeBarrBou);
+if m*n > 2 || m*n == 1
+    disp('Must be vector 2x1')
+    return
+end
+[bounds, objs, geo, per, ~] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function SlopeBarrBouEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to SlopeBarrBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in SlopeBarrBouCheck.
+function SlopeBarrBouCheck_Callback(hObject, eventdata, handles)
+% hObject    handle to SlopeBarrBouCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SlopeBarrBouCheck
+dataSet = handles.dataSet;
+dataSet.SlopeBarrBouCheck = get(hObject,'Value');
+%dataSet.SlopeBarrBouCheck = 0;
+[bounds, objs, geo, per, mat] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+function MassPMEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to MassPMEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of MassPMEdit as text
+%        str2double(get(hObject,'String')) returns contents of MassPMEdit as a double
+dataSet = handles.dataSet;
+dataSet.MaxPMMass = str2double(get(hObject,'String'));
+handles.dataSet = dataSet;
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function MassPMEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to MassPMEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in MassPMOptCheck.
+function MassPMOptCheck_Callback(hObject, eventdata, handles)
+% hObject    handle to MassPMOptCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of MassPMOptCheck
+dataSet = handles.dataSet;
+dataSet.MassPMOptCheck = get(hObject,'Value');
+% [bounds, objs, geo, per, mat] = data0(dataSet);
+% dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+% handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+function ThetaFBSEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to ThetaFBSEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ThetaFBSEdit as text
+%        str2double(get(hObject,'String')) returns contents of ThetaFBSEdit as a double
+dataSet = handles.dataSet;
+dataSet.thetaFBS = eval(get(hObject,'String'));
+p=dataSet.NumOfPolePairs;
+Q=round(6*p*dataSet.NumOfSlots);
+ps=2;
+Qs=Q*ps/(2*p);
+% check if Qs and ps is feasible (if ps is integer)
+t2 = gcd(Q,2*p);
+QsCalc = Q/t2;
+psCalc = 2*p/t2;
+
+if rem(Qs,2)>0
+    disp('Error in the geometry reconstrunction. FBS not applied')
+    Qs=QsCalc;
+    dataSet.thetsFBS=0;
+    set(handles.ThetaFBSEdit,'String','0');
+else
+    dataSet.Qs=Qs;
+    set(handles.SlotSimulEdit,'String',num2str(dataSet.Qs));
+    yq = dataSet.PitchShortFac*dataSet.NumOfSlots*3;
+    path = pwd;
+    cd(fullfile (path,'koil'));
+    system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
+    cd(path);
+    Windings = MatrixWin();
+    dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
+    dataSet.DefaultWinMatr = Windings(:,1:floor(Qs)); %AS
+    columnName = cell(1,floor(Qs));
+    for i = 1 : floor(Qs)
+        columnName{i} = ['Slot n° ',num2str(i)];
+    end
+    rowName{1} = 'Layer 1';
+    rowName{2} = 'Layer 2';
+    set(handles.WinTable,'rowname',rowName);
+    set(handles.WinTable,'columnname',columnName);
+    set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
+end
+
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject,eventdata,handles);
+SetParameters(handles,dataSet)
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function ThetaFBSEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ThetaFBSEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in RadRibSplitCheck.
+function RadRibSplitCheck_Callback(hObject, eventdata, handles)
+% hObject    handle to RadRibSplitCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of RadRibSplitCheck
+dataSet = handles.dataSet;
+dataSet.RadRibSplit = (get(hObject,'Value'));
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject,eventdata,handles);
+SetParameters(handles,dataSet)
+guidata(hObject,handles)
+
+
+% --- Executes on selection change in FEAfixPopUp.
+function FEAfixPopUp_Callback(hObject, eventdata, handles)
+% hObject    handle to FEAfixPopUp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns FEAfixPopUp contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from FEAfixPopUp
+dataSet = handles.dataSet;
+ind = get(hObject,'Value');
+str = get(hObject,'String');
+dataSet.FEAfixN = eval(str{ind});
+% if tmp==1
+%     dataSet.FEAfixN=1;
+% elseif tmp==2
+%     dataSet.FEAfixN=4;
+% elseif tmp==3
+%     dataSet.FEAfixN=5;
+% elseif tmp==4
+%     dataSet.FEAfixN=1000;
+% else
+%     error('Wrong value of FEAfix')
+% end
+handles.dataSet = dataSet;
+guidata(hObject,handles)
+
+% --- Executes during object creation, after setting all properties.
+function FEAfixPopUp_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to FEAfixPopUp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in FEAfixPushButt.
+function FEAfixPushButt_Callback(hObject, eventdata, handles)
+% hObject    handle to FEAfixPushButt (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+dataSet = handles.dataSet;
+[dataSet,flagS] = syrmDesign(dataSet);
+handles.dataSet = dataSet;
+if flagS
+    dataSet = DrawPushMachine(handles,dataSet.currentfilename,dataSet.currentpathname);
+end
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+%flag_plot = 'Y';
+%h = handles.axes5;
+SetParameters(handles,dataSet)
+% if  strcmp(dataSet.TypeOfRotor,'Seg') || strcmp(dataSet.TypeOfRotor,'ISeg')  %mod walter
+%     dataSet.Areaob0 =zeros(1,4);
+%     dataSet.Areavert0 =zeros(1,4);
+%     dataSet.Areatot =zeros(1,4);
+% end
+handles.dataSet = dataSet;
+guidata(hObject,handles)
+% [~,~,~] = data0(dataSet);
+%[~,~,~] = Plot_Machine(h,dataSet,flag_plot);
+
+
+
+function ThetaFBSBouEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to ThetaFBSBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ThetaFBSBouEdit as text
+%        str2double(get(hObject,'String')) returns contents of ThetaFBSBouEdit as a double
+dataSet = handles.dataSet;
+dataSet.ThetaFBSBou = str2num(get(hObject,'String'));
+[m,n] = size(dataSet.DfeBou);
+if m*n > 2 || m*n == 1
+    disp('Must be vector 2x1')
+    return
+end
+[bounds, objs, geo, per, ~] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function ThetaFBSBouEdit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ThetaFBSBouEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in ThetaFBSBouCheck.
+function ThetaFBSBouCheck_Callback(hObject, eventdata, handles)
+% hObject    handle to ThetaFBSBouCheck (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ThetaFBSBouCheck
+dataSet = handles.dataSet;
+dataSet.ThetaFBSBouCheck = get(hObject,'Value');
+[bounds, objs, geo, per, mat] = data0(dataSet);
+dataSet.RQ = buildDefaultRQ(bounds);
+p=dataSet.NumOfPolePairs;
+Q=round(6*p*dataSet.NumOfSlots);
+ps=2;
+Qs=Q*ps/(2*p);
+% check if Qs and ps is feasible (if ps is integer)
+t2 = gcd(Q,2*p);
+QsCalc = Q/t2;
+psCalc = 2*p/t2;
+
+if rem(Qs,2)>0
+    disp('Error in the geometry reconstrunction. FBS not applied')
+    Qs=QsCalc;
+    dataSet.thetsFBS=0;
+    set(handles.ThetaFBSEdit,'String','0');
+else
+    dataSet.Qs=Qs;
+    set(handles.SlotSimulEdit,'String',num2str(dataSet.Qs));
+    yq = dataSet.PitchShortFac*dataSet.NumOfSlots*3;
+    path = pwd;
+    cd(fullfile (path,'koil'));
+    system(['koil_syre.exe',' ',num2str(Q),' ',num2str(p),' ',num2str(yq)]);
+    cd(path);
+    Windings = MatrixWin();
+    dataSet.WinMatr = Windings(:,1:floor(Qs)); % winding matrix, only Qs columns
+    dataSet.DefaultWinMatr = Windings(:,1:floor(Qs)); %AS
+    columnName = cell(1,floor(Qs));
+    for i = 1 : floor(Qs)
+        columnName{i} = ['Slot n° ',num2str(i)];
+    end
+    rowName{1} = 'Layer 1';
+    rowName{2} = 'Layer 2';
+    set(handles.WinTable,'rowname',rowName);
+    set(handles.WinTable,'columnname',columnName);
+    set(handles.WinTable,'data',dataSet.WinMatr(:,1:floor(Qs)));
+end
+handles.dataSet = dataSet;
+handles = DrawPush_Callback(hObject, eventdata, handles);
+guidata(hObject,handles)
+
+
+% --- Executes on button press in AddIronPush.
+function AddIronPush_Callback(hObject, eventdata, handles)
+% hObject    handle to AddIronPush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+answer = inputdlg('New Material Name','Iron Material',1,{'New Iron'});
+MatName = char(answer);
+mat=material_properties_iron('');
+MatList=mat.MatList;
+flag=1;
+for ii=1:length(MatList)
+    if strcmp(MatName,MatList{ii})
+        flag=0;
+    end
+end
+if flag
+    add_material_iron(MatName);
+else
+    disp('Material already present in the library')
+end
+
+
+% --- Executes on button press in AddConductorPush.
+function AddConductorPush_Callback(hObject, eventdata, handles)
+% hObject    handle to AddConductorPush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+answer = inputdlg('New Material Name','Conductor Material',1,{'New Conductor'});
+MatName = char(answer);
+mat=material_properties_conductor('');
+MatList=mat.MatList;
+flag=1;
+for ii=1:length(MatList)
+    if strcmp(MatName,MatList{ii})
+        flag=0;
+    end
+end
+if flag
+    add_material_conductor(MatName);
+else
+    disp('Material already present in the library')
+end
+
+% --- Executes on button press in AddMagnetPush.
+function AddMagnetPush_Callback(hObject, eventdata, handles)
+% hObject    handle to AddMagnetPush (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+answer = inputdlg('New Material Name','Magnet Material',1,{'New Magnet'});
+MatName = char(answer);
+mat=material_properties_layer('');
+MatList=mat.MatList;
+flag=1;
+for ii=1:length(MatList)
+    if strcmp(MatName,MatList{ii})
+        flag=0;
+    end
+end
+if flag
+    add_material_layer(MatName);
+else
+    disp('Material already present in the library')
 end

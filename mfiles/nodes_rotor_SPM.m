@@ -128,6 +128,7 @@ if geo.BarFillFac ~= 2
     temp.yArccenter = yArccenter;
     temp.x6 = x6;
     temp.y6 = y6;
+    geo.hybrid = 0;
 else
     temp.xFeo = xFeo;
     temp.xFei = xFei;
@@ -135,7 +136,6 @@ else
     temp.yFei = yFei;
     geo.PM_angle = PM_angle;
     geo.Fe_angle = Fe_angle;
-    geo.hybrid = 1;
 end
 geo.hc = hc;
 

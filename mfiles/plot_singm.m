@@ -84,44 +84,88 @@ Fq=Fq*kturns;
 % Fd = Fd + Lld * Id;
 % Fq = Fq + Llq * Iq;
 
-save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Fd','Fq','Id','Iq');
-save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'T','-append');
-if isfield(F_map,'dT')
-    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dT','-append');
+if isoctave()  %OCT
+    name_file = strcat(NewDir, 'fdfq_idiq_n',num2str(n2),'.mat');
+    save ('-mat7-binary', name_file,'Fd','Fq','Id','Iq');
+    save ('-mat7-binary', name_file,'T','-append');
+    if isfield(F_map,'dT')
+        save ('-mat7-binary', name_file,'T','-append');
+    end
+    if isfield(F_map,'dTpp')
+        save ('-mat7-binary', name_file,'dTpp','-append');
+    end
+    if isfield(F_map,'Pfe')
+        save ('-mat7-binary', name_file,'Pfe','-append');
+    end
+    if isfield(F_map,'Pfes_h')
+        save ('-mat7-binary', name_file,'Pfes_h','Pfes_c','Pfer_h','Pfer_c','-append');
+    end
+    if isfield(F_map,'Ppm')
+        save ('-mat7-binary', name_file,'Ppm','-append');
+    end
+    clear name_file
+else
+    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Fd','Fq','Id','Iq');
+    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'T','-append');
+    if isfield(F_map,'dT')
+        save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dT','-append');
+    end
+    if isfield(F_map,'dTpp')
+        save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dTpp','-append');
+    end
+    if isfield(F_map,'Pfe')
+        save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Pfe','-append');
+    end
+    if isfield(F_map,'Pfes_h')
+        save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Pfes_h','Pfes_c','Pfer_h','Pfer_c','-append');
+    end
+    if isfield(F_map,'Ppm')
+        save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Ppm','-append');
+    end
 end
-if isfield(F_map,'dTpp')
-    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'dTpp','-append');
-end
-if isfield(F_map,'Pfe')
-    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Pfe','-append');
-end
-if isfield(F_map,'Pfes_h')
-    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Pfes_h','Pfes_c','Pfer_h','Pfer_c','-append');
-end
-if isfield(F_map,'Ppm')
-    save ([NewDir 'fdfq_idiq_n' num2str(n2) '.mat'],'Ppm','-append');
-end
+
 
 % flux maps
 figure
 plot(Id(1,:),Fd([1 end],:),F_map.Id(1,:),F_map.Fd([1 end],:),'kx'), grid on, hold on
 plot(Iq(:,1),Fq(:,[1 end]),F_map.Iq(:,1),F_map.Fq(:,[1 end]),'kx'),
 xlabel('id,iq [A]'), ylabel('\lambda_d, \lambda_q [Vs]'), %zlabel('\lambda_d')
-saveas(gcf,[NewDir 'Curves_' strrep(filemot,'.mat','.fig')])
+h=gcf(); %OCT
+    if isoctave()
+        fig_name=strcat(NewDir, 'Curves_', strrep(filemot,'.mat',''));
+        hgsave(h,[fig_name]);
+        clear fig_name
+    else
+        saveas(gcf,[NewDir 'Curves_' strrep(filemot,'.mat','.fig')])
+    end
 
 figure
 surfc(Id,Iq,Fd), grid on, xlabel('id'), ylabel('iq'), zlabel('\lambda_d')
 if not(kturns == 1)
     title(['Rewind factor = ' num2str(kturns)])
 end
-saveas(gcf,[NewDir 'Fdsurf_' strrep(filemot,'.mat','.fig')])
+h=gcf(); %OCT
+if isoctave()
+    fig_name=strcat(NewDir, '\Fdsurf_', strrep(filemot,'.mat',''));
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[NewDir 'Fdsurf_' strrep(filemot,'.mat','.fig')])
+end
 
 figure
 surfc(Id,Iq,Fq), grid on, xlabel('id'), ylabel('iq'), zlabel('\lambda_q')
 if not(kturns == 1)
     title(['Rewind factor = ' num2str(kturns)])
 end
-saveas(gcf,[NewDir 'Fqsurf_' strrep(filemot,'.mat','.fig')])
+h=gcf(); %OCT
+if isoctave()
+    fig_name=strcat(NewDir, 'Fqsurf_', strrep(filemot,'.mat',''));
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[NewDir 'Fqsurf_' strrep(filemot,'.mat','.fig')])
+end
 
 
 %% TORQUE MAP
@@ -130,7 +174,14 @@ surf(Id,Iq,abs(T)), grid on, xlabel('id [A]'), ylabel('iq [A]'), zlabel('Torque 
 if not(kturns == 1)
     title(['Rewind factor = ' num2str(kturns)])
 end
-saveas(gcf,[NewDir 'Tsurf_' strrep(filemot,'.mat','.fig')])
+h=gcf(); %OCT
+if isoctave()
+    fig_name=strcat(NewDir, 'Tsurf_', strrep(filemot,'.mat',''));
+    hgsave(h,[fig_name]);
+    clear fig_name
+else
+    saveas(gcf,[NewDir 'Tsurf_' strrep(filemot,'.mat','.fig')])
+end
 
 if isfield(F_map,'dT')
     figure
@@ -138,7 +189,14 @@ if isfield(F_map,'dT')
     if not(kturns == 1)
         title(['Rewind factor = ' num2str(kturns)])
     end
-    saveas(gcf,[NewDir 'dTsurf_' strrep(filemot,'.mat','.fig')])
+    h=gcf(); %OCT
+    if isoctave()
+        fig_name=strcat(NewDir, 'dTsurf_', strrep(filemot,'.mat',''));
+        hgsave(h,[fig_name]);
+        clear fig_name
+    else
+        saveas(gcf,[NewDir 'dTsurf_' strrep(filemot,'.mat','.fig')])
+    end 
 end
 if isfield(F_map,'dTpp')
     figure
@@ -146,7 +204,15 @@ if isfield(F_map,'dTpp')
     if not(kturns == 1)
         title(['Rewind factor = ' num2str(kturns)])
     end
-    saveas(gcf,[NewDir 'dTppsurf_' strrep(filemot,'.mat','.fig')])
+    h=gcf(); %OCT
+    if isoctave()
+        fig_name=strcat(NewDir, 'dTppsurf_', strrep(filemot,'.mat',''));
+        hgsave(h,[fig_name]);
+        clear fig_name
+    else
+        saveas(gcf,[NewDir 'dTppsurf_' strrep(filemot,'.mat','.fig')])
+    end 
+    
 end
 
 if isfield(F_map,'Pfe')
@@ -154,5 +220,13 @@ if isfield(F_map,'Pfe')
     if not(kturns == 1)
         title(['Rewind factor = ' num2str(kturns)])
     end
-    saveas(gcf,[NewDir 'Pfe' strrep(filemot,'.mat','.fig')])
+    h=gcf(); %OCT
+    if isoctave()
+        fig_name=strcat(NewDir, 'Pfe_', strrep(filemot,'.mat',''));
+        hgsave(h,[fig_name]);
+        clear fig_name
+    else
+        saveas(gcf,[NewDir 'Pfe' strrep(filemot,'.mat','.fig')])
+    end 
+    
 end

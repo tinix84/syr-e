@@ -1,4 +1,4 @@
-function OUT=restartOptimization()
+function OUT=restartOptimization(flag)
 % 
 % OUT=restartOptimization()
 % 
@@ -10,8 +10,13 @@ clc
 
 
 %% Load partial save of the optimization
-
-[FILENAME, pathname, FILTERINDEX] = uigetfile('.mat', 'Load the last generation of partial save');
+if flag
+    pathname=[cd '\partial_optimization\'];
+    tmp=dir(pathname);
+    FILENAME=tmp(end).name;
+else
+    [FILENAME, pathname, FILTERINDEX] = uigetfile('.mat', 'Load the last generation of partial save');
+end
 
 load([pathname FILENAME]);
 
@@ -135,7 +140,7 @@ for n=startGen:generations
     
     [OUT, options]=PrinterDisplay(OUT,options); % To print results on screen
     
-    save(['partial_optimization\generation_' int2str(n)],'OUT');
+    save(['partial_optimization\generation_' int2str(n)]);
     
     if functionEvaluations>options.MAXFUNEVALS || n>options.MAXGEN
         disp('Termination criteria reached.')
@@ -169,7 +174,7 @@ if strcmp(options.SaveResults,'yes')
     geo0=options.geo0;
     per=options.per;
     mat=options.mat;
-    thisfilepath = fileparts(which('data0.m'));
+    thisfilepath = fileparts(which('GUI_Syre.m'));
     filename=fullfile(thisfilepath,'results',['OUT_' datestr(now,30)]);
     save(filename,'OUT','per','geo0','dataSet','mat'); %Results are saved
     clear geo0 per
@@ -213,6 +218,7 @@ disp(['Generation: ' num2str(Dat.CounterGEN)]);
 disp(['FEs: ' num2str(Dat.CounterFES)]);
 disp(['Pareto Front Size: ' mat2str(size(OUT.PFront,1))]);
 disp(['Evaluation Time: ' int2str(Dat.EvalTime(4)) ' h ' num2str(Dat.EvalTime(5)) ' min ' num2str(round(Dat.EvalTime(6))) ' sec']);
+disp(['Actual time             : ' datestr(now())]);
 disp(['End of evolution process: ' datestr(Dat.EndTime)]);
 disp('------------------------------------------------')
 

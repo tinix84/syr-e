@@ -76,11 +76,19 @@ end
 
 rpont_x0=sqrt(ypont.^2+(x0-xpont).^2);
 [alphapont,rpont] = cart2pol(xpont,ypont);
-Bx0=x0-(rpont_x0); geo.Bx0=Bx0;
+Bx0=x0-(rpont_x0);
 %% Determination of air thickness and check the feasibility of the geometry
 geo.Bx0=Bx0; % Initialization of central non-moved line of the flux barrier
-geo = calcHcCheckGeoControlwDx(geo);
-B1k=geo.B1k; B2k=geo.B2k;
+if geo.delta_FBS==0
+    geo = calcHcCheckGeoControlwDx(geo);
+    B1k=geo.B1k;
+    B2k=geo.B2k;
+else
+    B1k=Bx0-geo.hc/2+geo.dx.*geo.hc/2;
+    B2k=Bx0+geo.hc/2+geo.dx.*geo.hc/2;
+    geo.B1k=B1k;
+    geo.B2k=B2k;
+end
 
 % [xc_temp,yc_temp]=calc_intersezione_cerchi(r,rbeta(nlay),x0);
 % dPointEndBar=calc_distanza_punti([xc_temp,yc_temp],[r*cos(pi/2/p), r*sin(pi/2/p)]);
@@ -203,7 +211,7 @@ Y5=sind(mag_angel).*R1;
 X6=x0-(cosd(mag_angel).*R2);
 Y6=sind(mag_angel).*R2;
 
-%%%%%%%%%%% Division of the PM in 2 part (to have a best approximation of
+%%%%%%%%%%% Division of the PM in 2 part (to have a better approximation of
 %%%%%%%%%%% the magnetization direction
 
 half_angle = mag_angel/2;

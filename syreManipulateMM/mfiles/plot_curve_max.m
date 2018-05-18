@@ -20,7 +20,13 @@ title('AOA - current','FontSize',[14],'FontWeight','bold');
 axis equal
 % xlim([0 Imax]); ylim([0 Imax]);
 % xlim([0 1000]); ylim([0 Imax]);
-saveas(gcf,[pathname1 'AOA-i'])
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname1, 'AOA-i');
+    hgsave(h,[fig_name]);
+else
+    saveas(gcf,[pathname1 'AOA-i'])
+end
 
 % AOA - flux frame
 fig1 = figure; hold on;
@@ -38,7 +44,13 @@ axis equal
 set(gca,'PlotBoxAspectRatio',[2 1 1])
 % set(gca,'YTick',[-0.1 -0.05 0 0.05])
 % legend('Nm/A','Nm/Vs','PF/Nm')
-saveas(gcf,[pathname1 'AOA-f'])
+h=gcf(); %AS
+if isoctave()
+    fig_name=strcat(pathname1, 'AOA-f');
+    hgsave(h,[fig_name]);
+else
+    saveas(gcf,[pathname1 'AOA-f'])
+end
 
 % print -dpsc2 AOA_Flux
 

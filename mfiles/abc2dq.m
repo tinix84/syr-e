@@ -12,16 +12,25 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-% trasformazione abc -> dq
-% i1,i2,i3 vettori riga
+% abc -> dq general transformation for multi 3-phase machines
+% same results as dq2abc.m for the case n3phase=1
 
-function idq = abc2dq(i1,i2,i3,theta)
-% matrice di trasformazione (3 -> 2)    
-T32 = 2/3 * [	1 	-0.5 		-0.5
-                0    sqrt(3)/2    -sqrt(3)/2];
+function idq = abc2dq(i1,i2,i3,theta,n3phase,index)
+
+% index vary between 0 to (n3phase-1)
+% n3phase = number of 3-phase circuits
+
+delta = pi/3;                   %sextant amplitude
+theta_i = delta*index/n3phase;  %angular difference between alpha-axis and first phase of the n3phase-th 3-phase circuit
+
+% matrice di trasformazione (3 -> 2)
+T32 = 2/3 * [cos(theta_i)     cos(theta_i+2*pi/3)    cos(theta_i-2*pi/3)
+             sin(theta_i)     sin(theta_i+2*pi/3)    sin(theta_i-2*pi/3)];
+
 % 123 -> alpha beta
 iab = T32 * [i1;i2;i3];
 % dq -> alpha beta
 temp = (iab(1,:) + j * iab(2,:)) .* exp(-j*theta);
 
 idq = [real(temp);imag(temp)];
+

@@ -16,17 +16,17 @@ function plot_singt(out,klength,kturns,delta_sim_singt,newDir,filemot)
 % single working point has been simulated
 
 % th60 = out.SOL(:,1);
-t60 = out.SOL(:,6)* klength;
+t60 = out.SOL.T'* klength;
 t60 = [t60;t60(1)];
-t = -repeat_n(t60',360/delta_sim_singt);
+t = repeat_n(t60',360/delta_sim_singt);
 
-f_d = out.SOL(:,4)*klength*kturns;
+f_d = out.SOL.fd'*klength*kturns;
 fd60=[f_d;f_d(1)];
 fd=repeat_n(fd60',360/delta_sim_singt);
-f_q = out.SOL(:,5)*klength*kturns;
+f_q = out.SOL.fq'*klength*kturns;
 fq60=[f_q;f_q(1)];
 fq=repeat_n(fq60',360/delta_sim_singt);
-gamma = mean(atan2(-out.SOL(:,2),out.SOL(:,3))) * 180/pi;
+gamma = mean(atan2(-out.SOL.id',out.SOL.iq')) * 180/pi;
 
 
 delta = atan2(fq,fd) * 180/pi;
@@ -40,7 +40,7 @@ th = linspace(0,360,length(t));
 FontSize = 12;
 FontName = 'TimesNewRoman';
 
-figure(1)
+figure()
 subplot(2,1,1)
 pl = plot(th,abs(t)); grid on
 title(['Mean Torque = ' num2str(mean(t))]);
@@ -52,7 +52,7 @@ xl = xlabel('\theta - degrees'); set(xl,'Rotation',[0],'Fontsize',FontSize);
 yl = ylabel('Nm');
 set(yl,'Rotation',[90],'FontName',FontName,'Fontsize',FontSize);
 
-figure(1);
+%figure();
 subplot(2,1,2)
 pl = plot(th,IPF);
 title(['Mean IPF = ' num2str(mean(IPF))]);
@@ -66,7 +66,13 @@ set(gca,'FontName',FontName,'FontSize',FontSize);
 ti = 0:60:360;
 set(gca,'XTick',ti);
 
-saveas(gcf,[newDir filemot(1:end-4) '_T_gamma'])
+h=gcf();       %OCT
+if isoctave() 
+    fig_name=strcat(newDir, filemot(1:end-4), '_T_gamma');
+    hgsave(h,[fig_name]);
+else
+    saveas(h,[newDir filemot(1:end-4) '_T_gamma']);
+end
 
 ymin = round(( min(min(f_d),min(f_q)))*1000)/1000;
 ymax = round(( max(max(f_d),max(f_q)))*1000)/1000;
@@ -79,7 +85,7 @@ else
     ymin=0.8*ymax;
 end
 
-hdq=figure(2);
+hdq=figure();
 subplot(2,1,1);
 hd1=plot(th,fd);
 title(['Mean \lambda_d = ' num2str(mean(fd))]);
@@ -108,7 +114,12 @@ set(gca,'FontSize',FontSize); %,'FontWeight','Bold');
 ti = 0:60:360;
 set(gca,'XTick',ti);
 
-saveas(hdq,[newDir filemot(1:end-4) '_plot_Flux']);
+if isoctave() %OCT
+    fig_name=strcat(newDir, filemot(1:end-4), '_plot_Flux');
+    hgsave(hdq,[fig_name]);
+else
+    saveas(hdq,[newDir filemot(1:end-4) '_plot_Flux']);
+end
 %     saveas(gcf,[newDir filemot(1:end-4) '_T_gamma'])
 
 %% Torque Spectrum:

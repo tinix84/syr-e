@@ -21,7 +21,7 @@ MatLib{ind}=mat;
 button = questdlg('Save?','SELECT','Yes','No','Yes');
 if isequal(button,'Yes')
     save('materialLibrary\conductor_material.mat','MatList','MatLib');
-    disp('material saved')
+    disp('Material added to Material Library')
 else
     disp('material not saved')
 end
