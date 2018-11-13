@@ -20,7 +20,7 @@ p = geo.p;          % Paia poli
 nlay = geo.nlay;    % N° layers
 
 dalpha = geo.dalpha;     % Angoli dalpha
-pont=geo.pont;           % Spessore ponticello radiale 
+pontR=geo.pontR;           % Spessore ponticello radiale 
 hc_pu = geo.hc_pu;
 dx=geo.dx;
 
@@ -85,7 +85,7 @@ rbeta = (x0 - r * cos(alpha*pi/180))./(cos(beta*pi/180));
 angle_limit=89*pi/180; %definizione angolo limite di inclinazione barriera [rad]
 angle_FEMM=85*pi/180; %angolo massimo inclinazione barriera per definire regione triangolare d'aria sottostante e permettere mesh in FEMM 
 if angle > angle_limit %caso limite barriera verticale, setto angolo ad 89° come inclinazione massima limite
-    angle=89*pi/180; %setto angolo limite a 89°
+    angle=angle_limit; %setto angolo limite a 89°
     disp('#1 Case not allowed, max_angle set at 89°')
 end
 %Escursione minima inclinazione barriera
@@ -127,18 +127,18 @@ b2=1;
 c2=-ypont;
 [xBSpider,yBSpider]=intersezione_tra_rette(a1,b1,c1,a2,b2,c2);
 %Distanza a disposizione rispetto a limit_spider
-dSpider=calc_distanza_punti_altern(xpont,ypont,xBSpider,yBSpider);
+dSpider=calc_distanza_punti([xpont,ypont],[xBSpider,yBSpider]);
 
 %Distanza a disposizione rispetto a limit_shaft
-dShaft=calc_distanza_punti_altern(Bsh,0,Bx0,0);
+dShaft=calc_distanza_punti([Bsh,0],[Bx0,0]);
 
 xBRot=Brot; %coordinate punto su vincolo limit_rotor avente stessa ordinata del punto estremo
 yBRot=ypont;
 %Distanza a disposizione rispetto al limite estremo raggio rotore ("lunetta")
-dRotor=calc_distanza_punti_altern(xpont,ypont,xBRot,yBRot);
+dRotor=calc_distanza_punti([xpont,ypont],[xBRot,yBRot]);
 
-hc_half_max1=min(dSpider,dShaft);
-hc_half_max=min(hc_half_max1,dRotor); %altezza massima barriera (minima distanza su asse d consentita)
+hc_half_max=min([dSpider,dShaft,dRotor]); %altezza massima barriera (minima distanza su asse d consentita)
+%hc_half_max=la/4;
 if hc_half_max < hc_half_min %per casi estremi occorre limitare il valore a quello minimo
     hc_half_max=hc_half_min;
     disp('#2 hc is set to minimum value') 
@@ -174,21 +174,21 @@ a3=m_polebound; %a3*x+b3*y+c3=0 retta che delimita confine regione polo (polebou
 b3=-1;
 c3=0;
 [x_temp2,y_temp2]=intersezione_tra_rette(a2,b2,c2,a3,b3,c3);
-d=calc_distanza_punti_altern(x_temp1,y_temp1,x_temp2,y_temp2); %check spider minimo presente è eseguita 
+d=calc_distanza_punti([x_temp1,y_temp1],[x_temp2,y_temp2]); %check spider minimo presente è eseguita 
 % su perpendicolare all'asse della barriera stessa 
 
 %Controllo che lato interno della barriera non esca dal confine del polo (alpha molto grandi)
 [m1,q1]=retta_abc2mq(a3,b3,c3); 
 y_check=m1*x_temp1+q1; %criterio di verifica basato sulla differenza delle ordinate 
 if y_check < y_temp1
-    disp ('Layer exit to polebound')
+    disp ('Layer exit to pole bound')
     B1k=B1k+d+limit_spider; %spostamento lato interno barriera verso dx
     hc=(Bx0-B1k)*2; %calcolo del nuovo spessore barriera 
     hc_min=2*hc_half_min;
     if hc < hc_min
-        disp('#3 hc is less than hc_min to respect minimum spider')
+        disp('#3 spider is too thin')
     end
-else if d < limit_spider
+elseif d < limit_spider
         
         %Caso in cui lato interno barriera è all'interno della zona di spider minimo
         B1k=B1k+(limit_spider-d); %correzione posizione di B1k su asse d
@@ -198,7 +198,6 @@ else if d < limit_spider
         if hc < hc_min
             disp('#3 hc is less than hc_min to respect minimum spider')
         end
-    end
 end
 
 %% CHECK#2: garantire minimo spessore ferro su raggio del rotore (limit_rotor)
@@ -255,7 +254,7 @@ if dx<0 % avoid the exit of the barrier from the pole with dx
     
     if y_temp1 > y_check %controllo su ordinata rispetto alla retta limite distante hfe_min/2 da polebound
         [x_temp2,y_temp2]=intersezione_tra_rette(a3,b3,c3,a2,b2,c2); %punto su perpendicolare asse barriera ma appartenente a retta limite barriera interna
-        d=calc_distanza_punti_altern(x_temp1,y_temp1,x_temp2,y_temp2);
+        d=calc_distanza_punti([x_temp1,y_temp1],[x_temp2,y_temp2]);
          
         dx1=d*2/hc;
         dx2=abs(dx_old)-dx1;
@@ -315,9 +314,15 @@ B2k = B2k+dx.*hc/2;
 m2=tan(angle);
 q2=-m2.*B2k;
 q1=-m2.*B1k;
-[xTraf2,yTraf2] = intersezione_retta_circonferenza(0,0,r-pont0,m2,q2);
-[xTraf1,yTraf1] = intersezione_retta_circonferenza(0,0,r-pont0,m2,q1);
-
+if angle~=pi/2
+    [xTraf2,yTraf2] = intersezione_retta_circonferenza(0,0,r-pont0,m2,q2);
+    [xTraf1,yTraf1] = intersezione_retta_circonferenza(0,0,r-pont0,m2,q1);
+else
+    xTraf1 = B1k;
+    yTraf1 = ((r-pont0)^2-xTraf1^2)^0.5;
+    xTraf2 = B2k;
+    yTraf2 = ((r-pont0)^2-xTraf2^2)^0.5;
+end
 %Calcolo punti archi di raccordo barriera verso ponticelli tangenziali
 %Arco di raccordo sinistro (non soggetto a controlli)
 [xt,yt,xc,yc,rc]=tg_cir(B1k,0,xTraf1,yTraf1,xpont,ypont);
@@ -383,13 +388,13 @@ M_PM=A_PM*rhoPM*1e-9*2*l; % massa magnete appesa al ponticello
 F_centrifuga = (M_Fe+M_PM) .* rG/1000 *  (nmax * pi/30)^2;
         
 if geo.radial_ribs_eval == 0
-    pont = F_centrifuga/(sigma_max * l);    % mm
+    pontR = F_centrifuga/(sigma_max * l);    % mm
 else
-    pont = geo.pont;
+    pontR = geo.pont;
 end
 
-if (pont < pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione per gli altri tipi di rotore
-    pont=0;
+if (pontR < pont0) % non disegno i ponticelli radiali il cui spessore è minore della tolleranza di lavorazione per gli altri tipi di rotore
+    pontR=0;
 end
 % %% Calcolo dei punti caratteristici archi di raccordo barriera verso ponticelli tangenziali
 % % Intersezione circonferenza limite-rette che compongono le barriere 
@@ -413,10 +418,10 @@ end
 
 %CHECK#7:ponticello radiale inserito e yt>0 ancora positivo, barriera esterna composta da solo parte raccordata
 %Caso yt>0 risulta ancora positivo ma è al di sotto dello spessore del ponticello radiale
-if pont ~= 0 %check#1: caso con ponticello radiale e ordinata punto di tangenza si trova 
+if pontR ~= 0 %check#1: caso con ponticello radiale e ordinata punto di tangenza si trova 
              %al di sotto dello spessore del ponticello pont/2 (alpha<<),
              %MA COMUNQUE yt>0 risulta ancora positivo
-    y00=pont/2;
+    y00=pontR/2;
     if yt<y00 %correzione ordinata punto di tangenza al valori di y00
         [xt,yt] = intersezione_retta_circonferenza(xc,yc,rc,0,y00);
     end         
@@ -466,8 +471,8 @@ if yyD1k <= yyD2k %devo capire quale punto è più basso per tracciare la retta pe
     %casi critici (yyD2k molto simile a yyD1k operando con il dx),devo fare un ulteriore 
     %check al criterio precedente 
     %Check definizione lato magnete superiore
-    d_check=calc_distanza_punti_altern(B2k,0,xxD2k,yyD2k);
-    d=calc_distanza_punti_altern(B2k,0,X6,Y6);
+    d_check=calc_distanza_punti([B2k,0],[xxD2k,yyD2k]);
+    d=calc_distanza_punti([B2k,0],[X6,Y6]);
     if d>d_check
          X6=xxD2k;
          Y6=yyD2k;
@@ -476,7 +481,7 @@ if yyD1k <= yyD2k %devo capire quale punto è più basso per tracciare la retta pe
          c1=-m_orto*X6+Y6;
          a2=m;
          b2=-1;
-         c2=-m*B1k(k);
+         c2=-m*B1k;
          [X5,Y5]=intersezione_tra_rette(a1,b1,c1,a2,b2,c2);
     end
 
@@ -493,10 +498,10 @@ else
     c2=-m*B1k;
     [X5,Y5]=intersezione_tra_rette(a1,b1,c1,a2,b2,c2);
     %casi critici (yyD1k molto simile a yyD2k operando con il dx),devo
-    %fare un ulteriore check al criterio precedente (correzione errore GALLOerr.mat)
+    %fare un ulteriore check al criterio precedente
     %Check definizione lato magnete superiore
-    d_check=calc_distanza_punti_altern(B1k,0,xxD1k,yyD1k);
-    d=calc_distanza_punti_altern(B1k,0,X5,Y5);
+    d_check=calc_distanza_punti([B1k,0],[xxD1k,yyD1k]);
+    d=calc_distanza_punti([B1k,0],[X5,Y5]);
     if d>d_check
         X5=xxD1k;
         Y5=yyD1k;
@@ -525,7 +530,7 @@ YMag6=Y6;
 %Per la geometria "Vtype" non prevedo alcuna divisione del PM in due parti (vedi caso Circular),
 %considero un pezzo unico sfruttando la massima area rettangolare possibile
 %all'interno della barriera
-if (pont==0)
+if (pontR==0)
     X8=XpontRadBarDx; %punto su barriera lato esterno
     Y8=YpontRadBarDx;
     m=tan(angle);
@@ -621,7 +626,7 @@ b=sqrt((XMagpontRadSx-XMagpontRadDx)^2+(YMagpontRadSx-YMagpontRadDx)^2); %base a
 l=sqrt((XMag6-XMagpontRadDx)^2+(YMag6-YMagpontRadDx)); %altezza area magnete (da lato esterno);
 Area_PM=b*l; %area del magnete
 
-if (angle > angle_FEMM && pont==0) %porzione di aria triangolare non definibile, area magnete non sarà rettangolare
+if (angle > angle_FEMM && pontR==0) %porzione di aria triangolare non definibile, area magnete non sarà rettangolare
     
     if Area_PM > 0 %calcolo punto medio solo se Area_PM rettangolare è definibile 
         XmiddleMag_sx=(XMag5+XpontRadBarSx)/2; %punto(su lato sx)retta passante per centro magnete
@@ -707,7 +712,7 @@ else
     xmedBar2=(xpont+XMag5+XMag6)/3; %definizione punto medio porzione estrema barriera (parte raccordata superiore verso ponticello tangenziale)
     ymedBar2=(ypont+YMag5+YMag6)/3;
         
-    if pont==0 %distinzione tra caso con e senza ponticelli radiali per inviduare le regioni
+    if pontR==0 %distinzione tra caso con e senza ponticelli radiali per inviduare le regioni
                 %da assegnare i labels                
         if angle > angle_FEMM %porzione di aria sotto il magnete non è definibile, per cui non la disegno
             
@@ -801,7 +806,7 @@ temp.xmagair= xmagair;
 temp.ymagair= ymagair;
 
 %% Salvataggio dei dati finali:
-geo.pont = pont;
+geo.pont = pontR;
 geo.hc=hc;
 geo.VanglePM=angle;
 geo.B1k=B1k;

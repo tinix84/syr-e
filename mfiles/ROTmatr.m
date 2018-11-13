@@ -27,7 +27,7 @@ p = geo.p;
 lm = geo.lm;
 geo.delta_FBS=0; % no pole deformation
 flagCirc=0; % if 1, use the old circular geometry, without dx
-fem = dimMesh(geo,'singt');
+flagVtype=1; % if 0, use Marco Gallo Vtype version, else use Simone Ferrari version (ready for syrmDesign)
 matFBS=mat;
 geoFBS=geo;
 if ~strcmp(geo.RotType,'SPM')
@@ -57,7 +57,12 @@ switch geo.RotType
         [geo,mat,temp] = nodes_rotor_SPM(geo,mat);
     case 'Vtype'
         % build nodes, lines and arcs for half a pole
-        [geo,mat,temp] = nodes_rotor_Vtype(geo,mat);
+        if flagVtype
+            [geo,mat,temp] = nodes_rotor_Vtype_v2(geo,mat);
+            %warning('Vtype geometry v2 under development!!!')
+        else
+            [geo,mat,temp] = nodes_rotor_Vtype(geo,mat);
+        end
 end
 
 %% 2) if no FBS, build rotor matrix, find BLKLABELS and BarNames
@@ -81,7 +86,23 @@ if geo.th_FBS==0
             rotor=build_matrix_Vtype(temp,geo);
     end
     % replicate the half pole
-    rotor = finishRotorMatrix(rotor,geo);
+    %     if isempty(temp.Mag)
+    if not(isfield(temp,'Mag'))||isempty(temp.Mag)
+        [rotor] = finishRotorMatrix(rotor,geo);
+    else
+        [rotor,temp] = finishRotorMatrix(rotor,geo,temp);
+        % Rotate ONLY MAGNETS in zero position (rotor is rotated later)
+        [nrig,ncol] = size(temp.Mag);
+        rotor2=[];
+        for ii=1:2:ncol-2
+            [xtemp,ytemp]=rot_point(temp.Mag(:,ii),temp.Mag(:,ii+1),90/p*pi/180);
+            rotor2=[rotor2,xtemp,ytemp];
+        end
+        rotor2=[rotor2,temp.Mag(:,ncol)];
+        temp.Mag = rotor2;
+        geo.Mag = temp.Mag; % save Magnet coordinates 
+    end
+    
     % find the centers of all blocks
     BarCenter = defineBlockCenters(temp,fem,geo);
 else
@@ -133,7 +154,8 @@ else
     end
 end
 % Assign label names
-BarName = defineBlockNames(temp,geo,mat);
+%BarName = defineBlockNames(temp,geo,mat);
+BarName = defineBlockNames(BarCenter,geo);
 
 
 % BOUNDARY CONDITIONS
@@ -177,7 +199,9 @@ if geo.th_FBS==0
     ytemp=sin(atan2(BarCenter(:,7),BarCenter(:,6))+(pi/2/p-eps));
     BarCenter(:,6)=xtemp;
     BarCenter(:,7)=ytemp;
-    clear xtemp ytemp;
+    %     clear xtemp ytemp;
+    
+    
 end
 %%% Block centers %%%
 BLKLABELSrot.xy     =   BarCenter;
@@ -188,8 +212,7 @@ BLKLABELSrot.BarName =   BarName';
 % clear xtemp ytemp;
 
 
-
-%%% Boundaries %%%
+% Boundaries %%%
 BLKLABELSrot.boundary = [xShaftBound1,yShaftBound1,codBound_periodic;
     xShaftBound2,yShaftBound2,codBound_periodic;
     xRotBound1,yRotBound1,codBound_periodic;
@@ -197,5 +220,5 @@ BLKLABELSrot.boundary = [xShaftBound1,yShaftBound1,codBound_periodic;
 % Rotate boundary selection points
 [xtemp,ytemp]=rot_point(BLKLABELSrot.boundary(:,1),BLKLABELSrot.boundary(:,2),90/p*pi/180);
 BLKLABELSrot.boundary=[xtemp,ytemp,BLKLABELSrot.boundary(:,3:end)];
-%%
+%
 

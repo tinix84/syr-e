@@ -39,15 +39,15 @@ Materiali.Albero.Cth=1;
 % densità aria
 Materiali.Isolante.d=1.2;
 %
-ManTherm.R1     = 0.0328; 
-ManTherm.hc     = 1*10^3;
+% ManTherm.R1     = 0.0328; 
+ManTherm.hc     = 1*10^3; % frame-core contact coefficient (1991-Mellor-LPTM...)
+%ManTherm.hc     = 300;
 
-R1 = ManTherm.R1; 
+% R1 = ManTherm.R1; 
 hc = ManTherm.hc;
 
 %% Data Initialization
 Pjs=per.Loss;
-% Pjs=500;
 tetaFrame = per.temphous;
 % max speed or rated speed
 omega=geo.nmax;     %rpm
@@ -64,13 +64,13 @@ wt=geo.wt*10^-3;
 lt=geo.lt*10^-3;
 ly=geo.ly*10^-3;
 x=geo.r/geo.R;
-ro=0.017241*10^-6;
-Bfe=1.5;
-ps=2*pi*x*R/(6*p*q);
+ps=2*pi*x*R/(6*p*q);    % slot pitch (m)
+
 % Thermal properties
 LambdaFE=Materiali.FerroSta.Rth;
 lamdaEQ=0.3;
 LambdaNomex=0.14;
+
 %% %%%%%%%%%%%%%%%%%
 %%  End winding Calc
 %% %%%%%%%%%%%%%%%%%
@@ -105,7 +105,12 @@ lN=0.0002;
 ws=ps-wt;
 Rse=x*R+lt;
 % Aslot=(pi*R^2*(1-b*x/p).*(1+x-2*b*kt*x))/(6*p*q)
-Aslot=pi*lt.*(2*R-lt-ly)./(6*p*q)-wt.*lt;
+if isfield(geo,'Aslot')
+    Aslot=geo.Aslot*1e-6;%/(6*pi*q);
+else
+    %Aslot=pi*lt.*(2*R-lt-ly)./(6*p*q)-wt.*lt; % Eq corretta il 5/7/2018: c'è un 2 di troppo prima di R
+    Aslot=2*pi/(6*p*q)*lt*(R-lt/2-ly)-wt*lt;
+end
 Acu=Aslot*Kcu;
 Rsa=x*R+g;
 Rsb=Rsa+lt;
@@ -192,12 +197,12 @@ if (0)
 else
     Nut = 2.0;
 end
+
 %% calcolo del numero di Nusselt per le connessionni frontali
 % numero di Reynolds e di Rayleigh TODO
 % Nre = 1;
 % Nra = 1;
 % NuEw = 0.83*(Nre*Nra)^0.2;
-
 
 hag = Nut*lambdaAIR/g;
 Rsag=1./(Aist.*hag);

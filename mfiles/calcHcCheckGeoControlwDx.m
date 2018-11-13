@@ -218,7 +218,7 @@ hc=B2k-B1k;
     hcmin=1;
 
 for k=1:nlay  
-   if  (hc(k)/2*(1-abs(dx(k)))<=pont0);
+   if  (hc(k)/2*(1-abs(dx(k)))<=pont0)
    disp('#1Dx dx modified');
    dx1=1-2*mean(pont0)/hc(k);
 %    error_code=1;

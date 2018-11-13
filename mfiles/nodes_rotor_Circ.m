@@ -256,7 +256,7 @@ r_fe = r_fe(2:end);
 hf = r_fe(2:2:end) - r_fe(1:2:end);
 
 % Output variables
-geo.pont = pont;
+geo.pontR = pont;
 geo.hf = zeros(1,nlay);
 geo.hf = hf;
 

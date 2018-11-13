@@ -20,7 +20,8 @@ Ar=geo.Ar;
 rshaft=geo.Ar;
 l = geo.l;                      % Lunghezza pacco
 g = geo.g;                      % Traferro
-pont0 = geo.pont0;              % Ponticelli al traferro (i ponticelli al traferro hanno lo spessore di un arco lungo pont0)
+pont0 = geo.pont0;              % minimum mechanical tolerance
+pontT = geo.pontT;              % Airgap ribs [mm]
 
 p = geo.p;                      % Paia poli
 nlay = geo.nlay;                % N° layers
@@ -72,17 +73,18 @@ pont_bound_conflict1=find(r_all(1:2:2*nlay)>=rbeta);
 % 2013/07/06 MG punto banana su asse q serve per i successivi export in DXF
 
 % hcc=(r_all(2:2:end))-(r_all(1:2:end));
-[xpont,ypont] = calc_intersezione_cerchi((r-pont0), rbeta, x0);    % valore non del tutto corretto ricalcolato in seguito, tuttavia serve per il disegno della curva centro bar...
-[xcbar,ycbar] = calc_intersezione_cerchi((r-pont0-hc/2), rbeta, x0);
+[xpont,ypont] = calc_intersezione_cerchi((r-pontT), rbeta, x0);    % valore non del tutto corretto ricalcolato in seguito, tuttavia serve per il disegno della curva centro bar...
+[xcbar,ycbar] = calc_intersezione_cerchi((r-pontT-hc/2), rbeta, x0);
 % 2014/02/26 MG Problem of immaginary number for higher nlay value
 for ii=1:nlay
     if (not(isreal(xpont(ii)))||not(isreal(ypont(ii))))
-        xpont(ii)=r-pont0; ypont(ii)=0;
+        xpont(ii)=r-pontT(ii); ypont(ii)=0;
         error_mex(ii)=1;
     end
     
     if (not(isreal(xcbar(ii)))||not(isreal(ycbar(ii))))
-        xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
+        xcbar(ii)=r-pontT(ii)-hc(ii)/2;
+        ycbar(ii)=0;
         error_mex(ii)=1;
     end
 end
@@ -99,7 +101,7 @@ for ii=1:nlay
     if (a==0 && c==0)
         % xpont and ypont are just evaluated
     else
-        A=1+b^2/a^2; B=2*b*c/a; C=(c^2/a^2-(r-pont0)^2);
+        A=1+b^2/a^2; B=2*b*c/a; C=(c^2/a^2-(r-pontT(ii))^2);
         ytemp=roots([A,B,C]); ypont(ii)=ytemp(find(ytemp>=0));
         xpont(ii)=-(b*ypont(ii)+c)/a;
     end
@@ -118,12 +120,12 @@ for ii=1:nlay
 end
 
 %% Intersezione circonferenze punti al traferro:
-[xTraf2,yTraf2] = calc_intersezione_cerchi(r-pont0, r_all(1:2:end), x0);
-[xTraf1,yTraf1] = calc_intersezione_cerchi(r-pont0, r_all(2:2:end), x0);
+[xTraf2,yTraf2] = calc_intersezione_cerchi(r-pontT, r_all(1:2:end), x0);
+[xTraf1,yTraf1] = calc_intersezione_cerchi(r-pontT, r_all(2:2:end), x0);
 
 for ii=1:nlay
     if (not(isreal(yTraf2(ii))))
-        xcbar(ii)=r-pont0-hc(ii)/2; ycbar(ii)=0;
+        xcbar(ii)=r-pontT(ii)-hc(ii)/2; ycbar(ii)=0;
         error_mex(ii)=1;
     end
 end
@@ -132,7 +134,7 @@ end
 % della barriera sia interna alla ipotetica curva centrale di barriera...
 for ii=2:nlay
     if (xTraf2(ii)<=xpont(ii) || yTraf2(ii)>=ypont(ii))
-        [xpont_temp,ypont_temp] = calc_intersezione_cerchi((r-pont0), rbeta(ii), x0);
+        [xpont_temp,ypont_temp] = calc_intersezione_cerchi((r-pontT(ii)), rbeta(ii), x0);
         xpont(ii)=xpont_temp;
         ypont(ii)=ypont_temp;
         clear xpont_temp ypont_temp;
@@ -421,7 +423,7 @@ temp.zmag=zmag;
 hf=[r,B1k]-[B2k,Ar]; % calcolo dei Delta di ferro di rotore
 geo.hf = hf;
 % geo.beta_f = beta_f;
-geo.pont=pont;
+geo.pontR=pont;
 
 % barrier transverse dimension (for permeance evaluation)
 temp1_sk = calc_distanza_punti([mean([xxD1k' xxD2k'],2) mean([yyD1k' yyD2k'],2)],[mean([XpBar1' XpBar2'],2) mean([YpBar1' YpBar2'],2)]);

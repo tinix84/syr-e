@@ -376,6 +376,43 @@ if ~isfield(dataSet,'BrDesign')
     flag=1;
 end
 
+%% Thermal Loading kj
+if ~isfield(dataSet,'ThermalLoadKj')
+    kj=dataSet.AdmiJouleLosses/(2*pi*dataSet.StatorOuterRadius/1000*dataSet.StackLength/1000);
+    dataSet.ThermalLoadKj=round(kj,0);
+    if Dflag
+        disp('rev334 - added thermal loading factor kj')
+    end
+    flag=1;
+end
+
+%% Parallel slot
+if ~isfield(dataSet,'ParallelSlotCheck')
+    dataSet.ParallelSlotCheck=0;
+    if Dflag
+        disp('rev337 - added parallel slot')
+    end
+    flag=1;
+end
+
+%% Post-processing temperature
+if ~isfield(dataSet,'tempPP')
+    dataSet.tempPP = 20;
+    if Dflag
+        disp('rev337 - added PMs temperature for post-processing')
+    end
+    flag=1;
+end
+
+%% Tangential ribs edit
+if ~isfield(dataSet,'TanRibEdit')
+    dataSet.TanRibEdit = dataSet.MinMechTol*ones(1,geo.nlay);
+    if Dflag
+        disp('rev343 - added variables tangential ribs')
+    end
+    flag=1;
+end
+
 %% rewriting geo, per and mat (and check if mat exist)
 % if ~exist('mat')
 %     flag_mat=1;

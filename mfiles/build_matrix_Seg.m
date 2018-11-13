@@ -37,7 +37,6 @@ YcRibTraf1=temp.YcRibTraf1;
 XcRibTraf2=temp.XcRibTraf2;
 YcRibTraf2=temp.YcRibTraf2;
 
-
 XpBar1=temp.XpBar1;
 YpBar1=temp.YpBar1;
 XpBar2=temp.XpBar2;
@@ -84,16 +83,14 @@ XpontSplitDx    = temp.XpontSplitDx;
 YpontSplitDx    = temp.YpontSplitDx;
 XpontSplitSx    = temp.XpontSplitSx;
 YpontSplitSx    = temp.YpontSplitSx;
-%% Additional point for magnet
-% if (geo.Br~=0)
+% Additional point for magnet
 XpMag2B1=temp.XpMag2B1;
 YpMag2B1=temp.YpMag2B1;
 XpMag1B1=temp.XpMag1B1;
 YpMag1B1=temp.YpMag1B1;
-% end
-%%
+%
 LowDimBarrier=temp.LowDimBarrier;
-%% elementi per completamento punti
+% elementi per completamento punti
 Mag=temp.Mag;
 
 xob1pt1=temp.xob1pt1;
@@ -107,99 +104,89 @@ yob2pt2=temp.yob2pt2;
 
 rotore=[];
 
-
 for ii=1:geo.nlay
     
     if (YpontRadSx(ii)~=0)
-%         if (ii==1 && LowDimBarrier(ii)==1)
-            %             rotore=[rotore;(B1k(ii)+B2k(ii))/2,0,B1k(ii),0,B2k(ii),0,1;
-            %                 (B1k(ii)+B2k(ii))/2,0,B2k(ii),0,B1k(ii),0,1];
-%         else
-            rotore=[rotore;XpontRadSx(ii),YpontRadSx(ii),XpontRadDx(ii),YpontRadDx(ii),NaN,NaN,0;...
-                XpontRadSx(ii),YpontRadSx(ii),XpontRadBarSx(ii) YpontRadBarSx(ii),NaN,NaN,0;...
-                XpontRadDx(ii),YpontRadDx(ii),XpontRadBarDx(ii) YpontRadBarDx(ii),NaN,NaN,0];
+        rotore=[rotore;XpontRadSx(ii),YpontRadSx(ii),XpontRadDx(ii),YpontRadDx(ii),NaN,NaN,0;...
+            XpontRadSx(ii),YpontRadSx(ii),XpontRadBarSx(ii) YpontRadBarSx(ii),NaN,NaN,0;...
+            XpontRadDx(ii),YpontRadDx(ii),XpontRadBarDx(ii) YpontRadBarDx(ii),NaN,NaN,0];
+        
+        if (R_RaccB1(ii)<=0.5)
+            rotore=[rotore;
+                XpontRadBarSx(ii) YpontRadBarSx(ii) XpBar1(ii) YpBar1(ii) NaN NaN 0;
+                XpBar1(ii) YpBar1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
+        else
+            rotore=[rotore;
+                XcRacc_B1(ii) YcRacc_B1(ii) xRaccR2_B1(ii) yRaccR2_B1(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) 1;
+                XpontRadBarSx(ii) YpontRadBarSx(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) NaN NaN 0;
+                xRaccR2_B1(ii) yRaccR2_B1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
+        end
+        
+        if (R_RaccB2(ii)<=0.5)
+            rotore=[rotore;
+                XpontRadBarDx(ii) YpontRadBarDx(ii) XpBar2(ii) YpBar2(ii) NaN NaN 0;
+                XpBar2(ii) YpBar2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
+        else
+            rotore=[rotore;
+                XcRacc_B2(ii) YcRacc_B2(ii) xRaccR2_B2(ii) yRaccR2_B2(ii) xRaccR1_B2(ii) yRaccR1_B2(ii) 1;
+                XpontRadBarDx(ii) YpontRadBarDx(ii) xRaccR1_B2(ii) yRaccR1_B2(ii) NaN NaN 0;
+                xRaccR2_B2(ii) yRaccR2_B2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
             
-            if (R_RaccB1(ii)<=0.5)
+        end
+        rotore=[ rotore;
+            XcRibTraf1(ii) YcRibTraf1(ii) xpont(ii) ypont(ii) xxD1k(ii) yyD1k(ii) 1];
+        rotore=[rotore;
+            XcRibTraf2(ii) YcRibTraf2(ii) xxD2k(ii) yyD2k(ii) xpont(ii) ypont(ii) 1];
+        
+        %         end
+    else
+        
+        if (R_RaccB1(ii)<=0.5)
+            if isnan(YpontSplitDx(1,ii))
                 rotore=[rotore;
-                    XpontRadBarSx(ii) YpontRadBarSx(ii) XpBar1(ii) YpBar1(ii) NaN NaN 0;
+                    B1k(ii) 0 XpBar1(ii) YpBar1(ii) NaN NaN 0;
                     XpBar1(ii) YpBar1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
             else
                 rotore=[rotore;
-                    XcRacc_B1(ii) YcRacc_B1(ii) xRaccR2_B1(ii) yRaccR2_B1(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) 1;
-                    XpontRadBarSx(ii) YpontRadBarSx(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) NaN NaN 0;
-                    xRaccR2_B1(ii) yRaccR2_B1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
-            end
-            
-            if (R_RaccB2(ii)<=0.5)
-                rotore=[rotore;
-                    XpontRadBarDx(ii) YpontRadBarDx(ii) XpBar2(ii) YpBar2(ii) NaN NaN 0;
+                    B1k(ii) 0 XpontSplitBarSx(2,ii) YpontSplitBarSx(2,ii) NaN NaN 0;
+                    XpontSplitBarSx(2,ii) YpontSplitBarSx(2,ii) XpontSplitSx(2,ii) YpontSplitSx(2,ii) NaN NaN 0;
+                    XpontSplitSx(2,ii) YpontSplitSx(2,ii) XpontSplitDx(2,ii) YpontSplitDx(2,ii) NaN NaN 0;
+                    XpontSplitDx(2,ii) YpontSplitDx(2,ii) XpontSplitBarDx(2,ii) YpontSplitBarDx(2,ii) NaN NaN 0;
+                    XpBar1(ii) YpBar1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0;
+                    B2k(ii) 0 XpontSplitBarDx(2,ii) YpontSplitBarDx(2,ii) NaN NaN 0;
+                    XpBar1(ii) YpBar1(ii) XpontSplitBarSx(1,ii) YpontSplitBarSx(1,ii) NaN NaN 0;
+                    XpontSplitBarSx(1,ii) YpontSplitBarSx(1,ii) XpontSplitSx(1,ii) YpontSplitSx(1,ii) NaN NaN 0;
+                    XpontSplitSx(1,ii) YpontSplitSx(1,ii) XpontSplitDx(1,ii) YpontSplitDx(1,ii) NaN NaN 0;
+                    XpontSplitDx(1,ii) YpontSplitDx(1,ii) XpontSplitBarDx(1,ii) YpontSplitBarDx(1,ii) NaN NaN 0;
                     XpBar2(ii) YpBar2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
-            else
-                rotore=[rotore;
-                    XcRacc_B2(ii) YcRacc_B2(ii) xRaccR2_B2(ii) yRaccR2_B2(ii) xRaccR1_B2(ii) yRaccR1_B2(ii) 1;
-                    XpontRadBarDx(ii) YpontRadBarDx(ii) xRaccR1_B2(ii) yRaccR1_B2(ii) NaN NaN 0;
-                    xRaccR2_B2(ii) yRaccR2_B2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
-                
             end
-            rotore=[ rotore;
-                XcRibTraf1(ii) YcRibTraf1(ii) xpont(ii) ypont(ii) xxD1k(ii) yyD1k(ii) 1];
+        else
             rotore=[rotore;
-                XcRibTraf2(ii) YcRibTraf2(ii) xxD2k(ii) yyD2k(ii) xpont(ii) ypont(ii) 1];
-            
-%         end
-    else
-%         if (ii==1 && LowDimBarrier(ii)==1)
-            %             rotore=[rotore;B1k(ii),0,(B1k(ii)+B2k(ii))/2,ypont(1),NaN,NaN,0;
-            %                 (B1k(ii)+B2k(ii))/2,ypont(1),B2k(ii),0,NaN,NaN,0];
-%         else
-            
-            if (R_RaccB1(ii)<=0.5)
-                if isnan(YpontSplitDx(1,ii))
-                    rotore=[rotore;
-                        B1k(ii) 0 XpBar1(ii) YpBar1(ii) NaN NaN 0;
-                        XpBar1(ii) YpBar1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
-                else
-                    rotore=[rotore;
-                        B1k(ii) 0 XpontSplitBarSx(2,ii) YpontSplitBarSx(2,ii) NaN NaN 0;
-                        XpontSplitBarSx(2,ii) YpontSplitBarSx(2,ii) XpontSplitSx(2,ii) YpontSplitSx(2,ii) NaN NaN 0;
-                        XpontSplitSx(2,ii) YpontSplitSx(2,ii) XpontSplitDx(2,ii) YpontSplitDx(2,ii) NaN NaN 0;
-                        XpontSplitDx(2,ii) YpontSplitDx(2,ii) XpontSplitBarDx(2,ii) YpontSplitBarDx(2,ii) NaN NaN 0;
-                        XpBar1(ii) YpBar1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0;
-                        B2k(ii) 0 XpontSplitBarDx(2,ii) YpontSplitBarDx(2,ii) NaN NaN 0;
-                        XpBar1(ii) YpBar1(ii) XpontSplitBarSx(1,ii) YpontSplitBarSx(1,ii) NaN NaN 0;
-                        XpontSplitBarSx(1,ii) YpontSplitBarSx(1,ii) XpontSplitSx(1,ii) YpontSplitSx(1,ii) NaN NaN 0;
-                        XpontSplitSx(1,ii) YpontSplitSx(1,ii) XpontSplitDx(1,ii) YpontSplitDx(1,ii) NaN NaN 0;
-                        XpontSplitDx(1,ii) YpontSplitDx(1,ii) XpontSplitBarDx(1,ii) YpontSplitBarDx(1,ii) NaN NaN 0;
-                        XpBar2(ii) YpBar2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
-                end
-            else
+                XcRacc_B1(ii) YcRacc_B1(ii) xRaccR2_B1(ii) yRaccR2_B1(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) 1;
+                B1k(ii) 0 xRaccR1_B1(ii) yRaccR1_B1(ii) NaN NaN 0;
+                xRaccR2_B1(ii) yRaccR2_B1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
+        end
+        
+        if (R_RaccB2(ii)<=0.5)
+            if isnan(YpontSplitDx(1,ii))
                 rotore=[rotore;
-                    XcRacc_B1(ii) YcRacc_B1(ii) xRaccR2_B1(ii) yRaccR2_B1(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) 1;
-                    B1k(ii) 0 xRaccR1_B1(ii) yRaccR1_B1(ii) NaN NaN 0;
-                    xRaccR2_B1(ii) yRaccR2_B1(ii) xxD1k(ii) yyD1k(ii) NaN NaN 0];
+                    B2k(ii) 0 XpBar2(ii) YpBar2(ii) NaN NaN 0;
+                    XpBar2(ii) YpBar2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
             end
-            
-            if (R_RaccB2(ii)<=0.5)
-                if isnan(YpontSplitDx(1,ii))
-                    rotore=[rotore;
-                        B2k(ii) 0 XpBar2(ii) YpBar2(ii) NaN NaN 0;
-                        XpBar2(ii) YpBar2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
-                end
-            else
-                rotore=[rotore;
-                    XcRacc_B2(ii) YcRacc_B2(ii) xRaccR2_B2(ii) yRaccR2_B2(ii) xRaccR1_B2(ii) yRaccR1_B2(ii) 1;
-                    B2k(ii) 0 xRaccR1_B2(ii) yRaccR1_B2(ii) NaN NaN 0;
-                    xRaccR2_B2(ii) yRaccR2_B2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
-                
-            end
-            rotore=[ rotore;
-                XcRibTraf1(ii) YcRibTraf1(ii) xpont(ii) ypont(ii) xxD1k(ii) yyD1k(ii) 1];
+        else
             rotore=[rotore;
-                XcRibTraf2(ii) YcRibTraf2(ii) xxD2k(ii) yyD2k(ii) xpont(ii) ypont(ii) 1];
-%         end
+                XcRacc_B2(ii) YcRacc_B2(ii) xRaccR2_B2(ii) yRaccR2_B2(ii) xRaccR1_B2(ii) yRaccR1_B2(ii) 1;
+                B2k(ii) 0 xRaccR1_B2(ii) yRaccR1_B2(ii) NaN NaN 0;
+                xRaccR2_B2(ii) yRaccR2_B2(ii) xxD2k(ii) yyD2k(ii) NaN NaN 0];
+            
+        end
+        rotore=[ rotore;
+            XcRibTraf1(ii) YcRibTraf1(ii) xpont(ii) ypont(ii) xxD1k(ii) yyD1k(ii) 1];
+        rotore=[rotore;
+            XcRibTraf2(ii) YcRibTraf2(ii) xxD2k(ii) yyD2k(ii) xpont(ii) ypont(ii) 1];
+        %         end
     end
     
-    %     if (geo.Br(ii)~=0)
     if (YpontRadSx(ii)==0)
         rotore=[rotore;
             B1k(ii),0,B2k(ii),0,NaN,NaN,0];
@@ -219,21 +206,10 @@ for ii=1:geo.nlay
         rotore=[rotore;
             xRaccR2_B2(ii) yRaccR2_B2(ii) xRaccR2_B1(ii) yRaccR2_B1(ii) NaN NaN 0;
             xRaccR1_B2(ii) yRaccR1_B2(ii) xRaccR1_B1(ii) yRaccR1_B1(ii) NaN NaN 0];
-        
-%    else
-        %  segment for the barrier
-%         if ii == 1
-%             rotore=[rotore;
-%                 XpBar1(ii)  YpBar1(ii) XpMag1B1(ii) YpMag1B1(ii) NaN NaN 0];
-%         else
-%            rotore=[rotore;
-%                XpBar2(ii)  YpBar2(ii) XpMag1B1(ii) YpMag1B1(ii) NaN NaN 0];
-%         end
     end
 end
-%% Inserimento matrice Mag
-
+% Inserimento matrice Mag
 rotore=[rotore;Mag];
-end
+
 
 

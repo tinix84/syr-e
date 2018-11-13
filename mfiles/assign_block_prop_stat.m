@@ -65,7 +65,7 @@ for kk=1:length(BLKLABELSstat.xy(:,1))
     elseif BLKLABELSstat.xy(kk,3)==4 %Iron stator
         mi_addblocklabel(BLKLABELSstat.xy(kk,1),BLKLABELSstat.xy(kk,2));
         mi_selectlabel(BLKLABELSstat.xy(kk,1),BLKLABELSstat.xy(kk,2));
-        mi_setblockprop(BLKLABELS.materials{BLKLABELSstat.xy(kk,3)}, 0, fem.res,'None', 0, group, 0);
+        mi_setblockprop(BLKLABELS.materials{BLKLABELSstat.xy(kk,3)}, 0, fem.res,'None', 0, 12, 0);
         %mi_setblockprop('Air', 0, fem.res,'None', 0, group, 0);
         mi_clearselected;
     end

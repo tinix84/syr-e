@@ -117,8 +117,8 @@ opendocument([pathname,'\mot0.fem']);
 for jj = 1:nsim
     
     th_m = (th(jj) - th0)/p;
-%     openfemm
-%     opendocument([pathname,'\mot0.fem']);
+    %     openfemm
+    %     opendocument([pathname,'\mot0.fem']);
     
     % assign the phase current values to the FEMM circuits
     i1 = i1_tmp(jj);
@@ -164,19 +164,23 @@ for jj = 1:nsim
     mi_saveas([pathname,'\mot_temp.fem']);
     mi_analyze(1);
     mi_loadsolution;
-    post_proc_IronLoss;
-%     mo_close, mi_close
-%     closefemm
     
-    SOL.th(jj) = th(jj);
-    SOL.id(jj) = id;
-    SOL.iq(jj) = iq;
-    SOL.fd(jj) = fdq(1);
-    SOL.fq(jj) = fdq(2);
-    SOL.T(jj)  = Tblock;
-    %SOL.Tb(jj) = Tblock;
+    post_proc_IronLoss;
     
 end
+
+%     mo_close, mi_close
+%     closefemm
+
+SOL.th(jj) = th(jj);
+SOL.id(jj) = id;
+SOL.iq(jj) = iq;
+SOL.fd(jj) = fdq(1);
+SOL.fq(jj) = fdq(2);
+SOL.T(jj)  = Tblock;
+%SOL.Tb(jj) = Tblock;
+
+
 mo_close, mi_close
 closefemm
 
@@ -335,8 +339,8 @@ else
         PeddyRot(:,ii) = PeddyRotpu(:,ii) * areaIronRot(ii) * l * MassDensity_r*1e-9;                           % [W]
     end
     
-    Pfer_h = sum(sum(PhystRot))* 2*p/ps;        % whole rotor hysteresis loss
-    Pfer_c = sum(sum(PeddyRot))* 2*p/ps;        % whole rotor eddy current loss
+    Pfer_h = sum(sum(PhystRot))*2*p/ps;        % whole rotor hysteresis loss
+    Pfer_c = sum(sum(PeddyRot))*2*p/ps;        % whole rotor eddy current loss
     
     %% save losses data
     %temp = zeros(nsim-4,1);
@@ -345,6 +349,7 @@ else
     SOL.Pfes_c = Pfes_c;
     SOL.Pfer_h = Pfer_h;
     SOL.Pfer_c = Pfer_c;
+    
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

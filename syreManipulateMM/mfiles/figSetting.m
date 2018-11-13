@@ -16,7 +16,7 @@ set(gcf,'defaultTextInterpreter','Latex');
 set(gcf,'defaultLegendInterpreter','Latex');
 set(gcf,'defaultAxesTickLabelInterpreter','Latex');
 
-% set(gcf,'defaultFigureRenderer','painters');
+%set(gcf,'defaultFigureRenderer','painters');
 
 set(gcf,'defaultAxesLineWidth',1);
 set(gcf,'defaultLineLineWidth',1.5);
@@ -29,12 +29,21 @@ set(gcf,'defaultAxesXColor',0*[1 1 1]);
 set(gcf,'defaultAxesYColor',0*[1 1 1]);
 set(gcf,'defaultAxesZColor',0*[1 1 1]);
 
+%set(gcf,'defaultAxesGridAlpha',1);
+
+%set(gcf,'defaultAxesLayer','top');
+
 set(gcf,'defaultAxesBox','on');
 
 set(gcf,'defaultAxesNextPlot','add');
 
 set(gcf,'defaultAxesFontSize',12);
 set(gcf,'defaultTextFontSize',12);
+set(gcf,'defaultAxesFontSizeMode','manual');
+set(gcf,'defaultTextFontSizeMode','manual');
+set(gcf,'defaultAxesLabelFontSizeMultiplier',1);
+set(gcf,'defaultAxesTitleFontSizeMultiplier',1);
+%set(gcf,'defaultLegendFontSize',12);
 
 set(gcf,'defaultAxesFontName','Times');
 set(gcf,'defaultTextFontName','Times');

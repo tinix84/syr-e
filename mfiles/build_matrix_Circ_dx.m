@@ -16,28 +16,6 @@ function rotore = build_matrix_Circ_dx(temp,geo)
 
 x0=geo.x0;
 
-% XBan1dx=temp.XBanqdx;
-% XBan1sx=temp.XBanqsx;
-% xc=temp.xc;
-% yc=temp.yc;
-% XBan3dx=temp.X3;
-% YBan3dx=temp.Y3;
-% XBan3sx=temp.X4;
-% YBan3sx=temp.Y4;
-% 
-% XpontRadDx=temp.XpontRadDx;
-% YpontRadDx=temp.YpontRadDx;
-% XpontRadSx=temp.XpontRadSx;
-% YpontRadSx=temp.YpontRadSx;
-% XpontRadBarDx=temp.XpontRadBarDx;
-% YpontRadBarDx=temp.YpontRadBarDx;
-% XpontRadBarSx=temp.XpontRadBarSx;
-% YpontRadBarSx=temp.YpontRadBarSx;
-% 
-% YBan1dx=temp.YpontRadBarDx;
-% YBan1sx=temp.YpontRadBarSx;
-% error_mex=temp.error_mex;
-
 B1k=temp.B1k;
 B2k=temp.B2k;
 xpont=temp.xpont;

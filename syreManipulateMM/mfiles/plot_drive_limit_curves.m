@@ -79,7 +79,8 @@ grid on, axis([0 Nmax 0 1.25*Pmax])
 yy = ylabel('Shaft Power [W]'); xx = xlabel('rpm');
 legend(num2str(Imax_vect))
 % title('Shaft power')
-%adapt_figure_fonts('Times New Roman',12,10)h=gcf();
+%adapt_figure_fonts('Times New Roman',12,10)
+h=gcf();
 if isoctave()   %AS
     fig_name=strcat(pathname1, 'PF');
     hgsave(h,[fig_name]);

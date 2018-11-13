@@ -420,7 +420,7 @@ calc_Iron_area_fluid;
 %%
 % Determinazione dei punti caratteristici per il calcolo delle perdite nel
 % ferro:
-calcolo_posizioni_Pfe;
+% calcolo_posizioni_Pfe;
 
 %% Assigment of central flux barrier coordinate for label
 % xcbar=(xxD1k+xxD2k)/2;
@@ -521,10 +521,10 @@ temp.xxB1k_mean3=xxB1k_mean3;
 temp.yyB1k_mean3=yyB1k_mean3;
 temp.arcLayer3=arcLayer3;
 % temp.error_code=error_code;
-temp.r_fe=rfe;
-temp.x_fe=xFe;
-temp.y_fe=yFe;
+% temp.r_fe=rfe;
+% temp.x_fe=xFe;
+% temp.y_fe=yFe;
 temp.LastBarCurvatura=LastBarCurvatura;
-geo.pont=pont;
+geo.pontR=pont;
 
 

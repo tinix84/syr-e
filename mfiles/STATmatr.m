@@ -83,7 +83,13 @@ qtta=y2-mtta*x2;
 % end of the slot
 x6=RSI+lt;
 y6=0;
-% LT2 position at the tooth 
+% LT2 position at the tooth
+% q2 = y3;
+% m2 = 0;
+if geo.parallel_slot
+    q2 = y3;
+    m2 = 0;
+end
 [xLT2,yLT2]=intersezione_retta_circonferenza(0,0,(RSI+lt),m2,q2);
 % bottom slot radius
 [xRacSlot,yRacSlot,x5,y5,x4,y4]=cir_tg_2rette(x6,y6,xLT2,yLT2,xLT2,yLT2,x3,y3,RaccordoFC);
@@ -137,17 +143,9 @@ xA2=x2; yA2=0;
 xE1=RSE; yE1=0;
 xE2=RSE*cos(alpha_slot/2); yE2=RSE*sin(alpha_slot/2);
 %% slot area evaluation
-% xv=[xA2,x2,x3,x4,x5,x6,x6,xA2];
-% yv=[yA2,y2,y3,y4,y5,y6,y6,yA2];
-% xArea=[x3,x3,x4,x5,x6,x3];
-% yArea=[ 0,y3,y4,y5,y6, 0];
 xArea=[xA2,x2,x3,xLT2,x6,xA2];
 yArea=[yA2,y2,y3,yLT2,y6,yA2];
 geo.Aslot = 2*(polyarea(xArea,yArea)-area_corner);
-% figure;area(xv,yv);
-% xv=[x1,x2,x3,x5,x4,x6];
-% yv=[y1,y2,y3,y5,y4,y6];
-% figure(1);plot(xv,yv,'-s');
 
 % Matrix describing lines and arches of half slot
 CavaMat=[0 0 x1 y1 x0 y0 1;

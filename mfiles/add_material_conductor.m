@@ -2,7 +2,7 @@ function add_material_conductor(MatName)
 
 prompt={'Conductivity [S/m]',...
         'Density [kg*m^-3]'};
-name='New iron material';
+name='New conductor material';
 numlines=1;
 defaultanswer={'580000000','8900'};
 

@@ -57,50 +57,75 @@ if sum(Id(:,1)) < 0
 end
 
 if axes_type == 'PM'
-    id = ILevel * -sind(gamma);
-    iq = ILevel * cosd(gamma);
+    id = ILevel' * -sind(gamma);
+    iq = ILevel' * cosd(gamma);
 end
     
 t = interp2(ID,IQ,TI,id,iq);
 fd = interp2(ID,IQ,Fd,id,iq);
 fq = interp2(ID,IQ,Fq,id,iq);
-PF = sind(atand(iq./id) - atand(fq./fd));
+PF = abs(sin(atan2(iq,id) - atan2(fq,fd)));
+
+%% Output
+
+% result folder
+resFolder='plotVSgamma\';
+mkdir(pathname,resFolder);
+
 
 % torque
-figure
-plot(gamma,abs(t),'-x'), grid on
-xlabel('current phase angle [deg]')
-ylabel('Torque [Nm]')
-legend([num2str(ILevel,3) ' A'])
-%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
-xlim([0 90]), saveas(gcf,[pathname 'coppia_su_gamma'])
+figure()
+figSetting
+hl=plot(gamma,abs(t),'-x');
+xlabel('$\gamma$ [$^\circ$]')
+ylabel('$T$ [Nm]')
+for ii=1:length(ILevel)
+    set(hl(ii),'DisplayName',[num2str(ILevel(ii),3) ' A'])
+end
+legend('show','Location','NorthWest')
+set(gca,'XLim',[0 90],'XTick',0:15:90)
+saveas(gcf,[pathname resFolder 'torqueVSgamma.fig']);
 
 % power factor
-figure
-plot(gamma,PF,'-x'), grid on
-xlabel('current phase angle [deg]')
-ylabel('Power Factor')
-legend([num2str(ILevel,3) ' A'])
-%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
-xlim([0 90]), saveas(gcf,[pathname 'PF_su_gamma'])
+figure()
+figSetting
+hl=plot(gamma,PF,'-x');
+xlabel('$\gamma$ [$^\circ$]')
+ylabel('$cos \varphi$')
+for ii=1:length(ILevel)
+    set(hl(ii),'DisplayName',[num2str(ILevel(ii),3) ' A'])
+end
+legend('show','Location','NorthWest')
+set(gca,'XLim',[0 90],'XTick',0:15:90)
+saveas(gcf,[pathname resFolder 'pfVSgamma.fig']);
 
 % flux linkage
-figure
-plot(gamma,abs(fd+j*fq),'-x'), grid on
-xlabel('current phase angle [deg]')
-ylabel('Flux Linkage [Vs]')
-legend([num2str(ILevel,3)])
-%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
-xlim([0 90]), saveas(gcf,[pathname 'flux_su_gamma'])
+figure()
+figSetting
+hl=plot(gamma,abs(fd+j*fq),'-x');
+xlabel('$\gamma$ [$^\circ$]')
+ylabel('$\lambda$ [Vs]')
+for ii=1:length(ILevel)
+    set(hl(ii),'DisplayName',[num2str(ILevel(ii),3) ' A'])
+end
+legend('show','Location','SouthWest')
+set(gca,'XLim',[0 90],'XTick',0:15:90)
+saveas(gcf,[pathname resFolder 'fluxVSgamma.fig']);
+
 
 % delta angle
-figure
-plot(gamma,angle(fd+j*fq)*180/pi,'-x'), grid on
-xlabel('current phase angle [deg]')
-ylabel('\delta [deg]')
-legend([num2str(ILevel,3)])
-%adapt_figure(0.4), adapt_figure_fonts('Times New Roman',12,10)
-xlim([0 90]), saveas(gcf,[pathname 'coppia_su_delta'])
+figure()
+figSetting
+hl=plot(gamma,angle(fd+j*fq)*180/pi,'-x');
+xlabel('$\gamma$ [$^\circ$]')
+ylabel('$\delta$ [$^\circ$]')
+for ii=1:length(ILevel)
+    set(hl(ii),'DisplayName',[num2str(ILevel(ii),3) ' A'])
+end
+legend('show','Location','NorthWest')
+set(gca,'XLim',[0 90],'XTick',0:15:90)
+%set(gca,'YLim',[0 90],'YTick',0:15:90)
+saveas(gcf,[pathname resFolder 'deltaVSgamma.fig']);
 
 % gamma1 = 55;
 % f1 = interp1(gamma,abs(fd(1,:)+j*fq(1,:)),gamma1)
