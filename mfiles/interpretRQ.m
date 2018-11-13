@@ -37,7 +37,7 @@ if not(isempty(geo.RQnames))
     end
     
     first_index = last_index + 1;
-    if length(geo.RQnames)>(last_index+1)
+    if (length(geo.RQnames)>(last_index+1)||last_index==0)
         if strcmp(geo.RQnames{first_index},'hc')
             % hc per unit
             last_index = first_index + geo.nlay - 1;
@@ -50,7 +50,7 @@ if not(isempty(geo.RQnames))
     end
     
     first_index = last_index + 1;
-    if length(geo.RQnames)>(last_index+1)
+    if (length(geo.RQnames)>(last_index+1)||last_index==0)
         if strcmp(geo.RQnames{first_index},'dx')
             % dx per unit
             last_index = first_index + geo.nlay - 1;

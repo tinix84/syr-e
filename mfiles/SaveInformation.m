@@ -49,5 +49,4 @@ else
     dataSet.DepthOfBarrier =  round(dataSet.DepthOfBarrier,2);
     dataSet.RQ =              geo.RQ;
 end
-end
 

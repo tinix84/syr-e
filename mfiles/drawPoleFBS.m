@@ -1,7 +1,5 @@
 function [rotor,BLKLABELSrot]=drawPoleFBS(geo,mat,th_FBS)
 
-
-%geo.th_FBS=th_FBS;
 geo.delta_FBS=th_FBS;
 geo.dalpha(1)=geo.dalpha(1)+geo.delta_FBS/2*180/pi;
 geo.x0=geo.r/cos(pi/2/geo.p+th_FBS);
@@ -19,19 +17,18 @@ else
     error(str);
 end
     
-%disp(['pbk = ' mat2str(geo.pbk)])
-
 % specchio il mezzo polo
 rotNeg=rotor;
 rotNeg(:,[2 4 6 7])=-rotor(:,[2 4 6 7]);
 rotor=[rotor;rotNeg];
+
 
 fem = dimMesh(geo,'singt');
 
 % find the centers of all blocks
 BarCenter = defineBlockCenters(temp,fem,geo);
 % Assign label names
-BarName = defineBlockNames(temp,geo,mat);
+%BarName = defineBlockNames(temp,geo,mat);
 
 codBound_periodic = -10; % simulate full machine
 
@@ -41,7 +38,6 @@ codBound_periodic = -10; % simulate full machine
 % rotor boundary
 [xRotBound1,yRotBound1] = rot_point(mean([geo.Ar,geo.r]),0,-90/geo.p*pi/180);
 [xRotBound2,yRotBound2] = rot_point(mean([geo.Ar,geo.r]),0,(geo.ps-1/2)*180/geo.p*pi/180);
-
 
 % Rotate rotor in zero position
 [nrig,ncol] = size(rotor);
@@ -56,7 +52,7 @@ rotor=checkPlotMatrix(rotor,1e-9);
 
 %%% Block centers %%%
 BLKLABELSrot.xy     =   BarCenter;
-BLKLABELSrot.BarName =   BarName';
+%BLKLABELSrot.BarName =   BarName';
 % Rotate block labels selection points
 [xtemp,ytemp]=rot_point(BLKLABELSrot.xy(:,1),BLKLABELSrot.xy(:,2),90/geo.p*pi/180);
 BLKLABELSrot.xy=[xtemp,ytemp,BLKLABELSrot.xy(:,3:end)];

@@ -101,12 +101,13 @@ F_centrifuga = M_Fe .* rG/1000 *  (nmax * pi/30)^2;
 if geo.radial_ribs_eval == 0
     pont = F_centrifuga/(sigma_max * l);    % mm
 else
-    pont = geo.pont;
+    pont = geo.pontR;
 end
 
 pont(pont < pont0) = 0; % NOTA BENE: Elimino i ponticelli troppo sottili
 hpont=pont;
 racc_pont=abs(B1k-B2k)/4;
+racc_pont=pont0*ones(size(pont));
 
 for ii=1:nlay
     

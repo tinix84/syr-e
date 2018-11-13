@@ -53,7 +53,8 @@ Lld=eval(setup{3});
 Llq=eval(setup{4});
 n3phase=eval(setup{5});
 
-save(strcat(pathname,'fdfq_idiq_n256.mat'),'n3phase','-append');
+%save(strcat(pathname,'fdfq_idiq_n256.mat'),'n3phase','-append');
+save(strcat(pathname,FILENAME),'n3phase','-append');
 
 if (Kr~=1 || Kl~=1 || Lld~=0 || Llq~=0)
     %FILENAME=[FILENAME(1:end-4) '_Kr' num2str(Kr,2) '_Kl' num2str(Kl,2) '_Lld=' num2str(Lld,4) '_Llq=' num2str(Llq,4) '.mat'];

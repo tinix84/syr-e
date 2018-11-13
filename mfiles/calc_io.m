@@ -19,12 +19,13 @@
 % - g : geometria della macchina (+ car. avvolgimento)
 % output:
 % - io (A)
+% - Rs (Ohm)
 
 % ref. Tutorial Course Notes: Design, Analysis and Control of Interior PM Synchronous Machines
 % IEEE IAS Annual Meeting 2004 - Seattle
 % cap. 6 - Vagati
 
-function [io Rs] = calc_io(geo,per)
+function [io,Rs] = calc_io(geo,per)
 
 % input
 loss = per.Loss; % [W]

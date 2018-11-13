@@ -184,10 +184,10 @@ for n=1:generations
     if strcmp(dataSet.RMVTmp,'ON')
        disp('Deleting tmp files...')
        if exist([cd,'\tmp'],'dir')
-           rmdir([cd,'\tmp'],'s');
+           [status,msg] = rmdir([cd,'\tmp'],'s');
        end
        if exist([cd,'\tmp'],'dir') == 0
-           mkdir([cd,'\tmp']);
+           [status,msg] = mkdir([cd,'\tmp']);
        end
        disp('tmp files deleted')
     end
@@ -293,16 +293,18 @@ disp('------------------------------------------------')
 
 if mod(Dat.CounterGEN,1)==0
     if Dat.NOBJ==3
-        
         plot3(OUT.PFront(:,1),OUT.PFront(:,2),OUT.PFront(:,3),'*r');
-        grid on;hold on,drawnow
+        grid on; hold on; drawnow
     elseif Dat.NOBJ==2
-        
-        plot(OUT.PFront(:,1),OUT.PFront(:,2),'*r'); grid on;hold on,drawnow
+        plot(OUT.PFront(:,1),OUT.PFront(:,2),'*r');
+        grid on; hold on; drawnow
     elseif Dat.NOBJ==1
-        
-        plot(Dat.CounterGEN,log(min(OUT.PFront(:,1))),'*r'); ...
-            grid on; hold on,drawnow
+        plot(Dat.CounterGEN,log(min(OUT.PFront(:,1))),'*r');
+        grid on; hold on; drawnow
+    else
+        plot(OUT.PFront(:,1),OUT.PFront(:,2),'*r');
+        grid on; hold on; drawnow
+        title('Pareto front on the first two objs only')
     end
 end
 

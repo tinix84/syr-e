@@ -141,7 +141,7 @@ if strcmp(ButtonName,'Yes')
     % Save the results
     %OutputFolder=[pathname 'Output' datestr(now,30)];
     %OutputFolder=[pathname 'TwMap_' int2str(d.Tmax) 'Nm_' int2str(d.temp) 'C'];
-    OutputFolder=[pathname 'TwMap_' d.motorName];
+    OutputFolder=[pathname 'TwMap_' d.motorName '_' datestr(now,30)];
     mkdir(OutputFolder)
     if isoctave()  
         filenamewithpath=strcat(OutputFolder, SLASH, 'TwMap_', int2str(d.Tmax), 'Nm.mat');

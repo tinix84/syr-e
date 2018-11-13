@@ -22,12 +22,10 @@ function [geo,mat] = draw_motor_in_FEMM(geo,eval_type,mat)
 % - updated geo (individual for the machine)
 % - mot0.fem (th_m = 0, i123 = [0,0,0])
 
-fem = dimMesh(geo,eval_type);
-
-filename = 'mot0.fem';
-% opendocument('empty_case.fem');
 FEMM_initialize(geo,mat);
 mi_probdef(0,'millimeters','planar',1e-8,geo.l,15);
+
+fem = dimMesh(geo,eval_type);
 
 % calc winding factor (kavv) and rotor offset (phase1_offset)
 [kavv, phase1_offset] = calcKwTh0(geo.tempWinTable,geo.ns*geo.p,geo.p);
@@ -40,8 +38,8 @@ end
 
 th_m0 = 0;                              % rotor position [mec deg]
 geo.th0 = th_m0*geo.p - phase1_offset;  % d- to alpha-axis offset [elt deg]
-% if FBS, the mean q-axis must be aligned - used equation alignment with
-% mean q-axis
+
+% if FBS, the mean q-axis must be aligned - used equation alignment with mean q-axis
 alphaQs=[pi/(2*geo.p)];  % s=simmetrico
 alphaQa=[pi/(2*geo.p)];  % a=asimmetrico
 delta_FBS=geo.th_FBS*[-1 1];
@@ -135,9 +133,6 @@ end
 geo.fem=fem;
 if isoctave() %OCT
     mat.LayerMag.Br = unique_oct(mat.LayerMag.Br,'stable');     
-    mi_saveas('mot0.fem');                                    
-
 else    
     mat.LayerMag.Br = unique(mat.LayerMag.Br,'stable');   % reset geo.Br to input value (either scalar or size = nlay)
-    mi_saveas(filename);                                     %saves the file with name ’filename’end
 end

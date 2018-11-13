@@ -152,4 +152,37 @@ uicontrol('Parent',h0, ...
           'Position', [xpos(2) ypos w h], ...
           'BackgroundColor',BackColor(2,:), ...
           'String',num2str(mat.sigmaPM));
+
+% BH curve
+if isfield(mat,'temp')
+    ypos = ypos-0.03;
+    hax=axes('Units','Normalized','Position',[0.5-ypos*0.8*0.5,ypos*0.2,ypos*0.8,ypos*0.8]);
+    set(hax,'XGrid','on',...
+            'YGrid','on',...
+            'XColor',[0 0 0],...
+            'YColor',[0 0 0],...
+            'Box','on',...
+            'NextPlot','add',...
+            'LineWidth',1);
+    colors=get(hax,'ColorOrder');
+    colors=[colors;colors;colors];
+    for ii=1:length(mat.temp.temp)
+        Br=mat.temp.Br(ii);
+        Bd=mat.temp.Bd(ii);
+        mu=mat.mu;
+        Hc=Br/(mu*4*pi*1e-7);
+        Hr=(Br-Bd)/(mu*4*pi*1e-7);
+        tmpX=[0 -Hc];
+        tmpY=[Br 0];
+        plot(tmpX,tmpY,'--','Color',colors(ii,:),'LineWidth',1.5,'HandleVisibility','off');
+        tmpX=[0 -Hr -Hr];
+        tmpY=[Br Bd 0];
+        plot(tmpX,tmpY,'-','Color',colors(ii,:),'LineWidth',1.5,'DisplayName',['\theta = ' int2str(mat.temp.temp(ii)) ' °C']);
+    end
+    set(hax,'XLim',[-1.1*mat.Hc 0],'YLim',[0 1.1*mat.Br]);
+    legend('show','Location','northwest');
+    xlabel('H [A/m]')
+    ylabel('B [T]')
+end
+
 end

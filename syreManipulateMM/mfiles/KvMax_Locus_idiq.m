@@ -121,7 +121,7 @@ if not(isempty(id_KvMax))
         [p_KvMax_T,s] = polyfit(iq_KvMax,T_KvMax,7);
         [p_KvMax_F,s] = polyfit(id_KvMax,F_KvMax,7);
         [p_KvMax_fd,s] = polyfit(id_KvMax,fd_KvMax,7);
-        [p_KvMax_fq,s] = polyfit(id_KvMax,fq_KvMax,7)
+        [p_KvMax_fq,s] = polyfit(id_KvMax,fq_KvMax,7);
         iq_KvMax_p = linspace(0,max(iq_KvMax),length(iq_KvMax));
         id_KvMax_p = polyval(p_KvMax_i,iq_KvMax_p);
         T_KvMax_p = polyval(p_KvMax_T,iq_KvMax_p);

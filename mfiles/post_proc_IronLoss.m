@@ -22,46 +22,6 @@ temp_out = mo_getcircuitproperties('fase3');
 temp_out = temp_out - mo_getcircuitproperties('fase3n');
 f3 = temp_out(3) * 2 * p/ps;
 
-% evaluate torque
-% % T1 - from the innermost integration line (rot + gap/6)
-% x = r + gap*1/6;
-% ang0 = th_m; ang1 = gradi_da_sim + th_m;
-% [x1,y1] = rot_point(x,0,ang0*pi/180);
-% [x2,y2] = rot_point(x,0,ang1*pi/180);
-% mo_addcontour(x1,y1);
-% mo_addcontour(x2,y2);
-% mo_bendcontour(gradi_da_sim,0.5);
-% 
-% T1 = mo_lineintegral(4);
-% T1 = T1(1) * 2 * p/ps;
-% mo_clearcontour();
-% 
-% % T2 - from the outermost integration line (stat - gap/6)
-% x = r + gap*5/6;
-% ang0 = -pc; ang1 = gradi_da_sim-pc;
-% 
-% [x1,y1] = rot_point(x,0,ang0*pi/180);
-% [x2,y2] = rot_point(x,0,ang1*pi/180);
-% mo_addcontour(x1,y1);
-% mo_addcontour(x2,y2);
-% mo_bendcontour(gradi_da_sim,0.5);
-% T2 = mo_lineintegral(4);
-% T2 = T2(1) * 2 * p/ps;
-% mo_clearcontour();
-% 
-% % T3 - from an intermediate line (rot + gap/2)
-% x = r + gap*1/2;
-% ang0 = -pc; ang1 = gradi_da_sim-pc;
-% 
-% [x1,y1] = rot_point(x,0,ang0*pi/180);
-% [x2,y2] = rot_point(x,0,ang1*pi/180);
-% mo_addcontour(x1,y1);
-% mo_addcontour(x2,y2);
-% mo_bendcontour(gradi_da_sim,0.5);
-% T3 = mo_lineintegral(4);
-% T3 = T3(1) * 2 * p/ps;
-% mo_clearcontour();
-
 % dq flux linkaged
 fdq = abc2dq(f1,f2,f3,th(jj)*pi/180);
 

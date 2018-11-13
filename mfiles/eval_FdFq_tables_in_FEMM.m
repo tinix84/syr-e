@@ -26,63 +26,50 @@ temp1 = id_vett;
 temp2 = iq_vett;
 [Id,Iq] = meshgrid(temp1,temp2);
 
-% results = [];
-
 I = Id + 1i * Iq;
-%io = abs(I);
 iAmp = abs(I);
 gamma = angle(I) * 180/pi;
 [i0,~]=calc_io(geo,per);
 
-
-
-% geo_ref=geo;
-% per_temp=cell(5,5);
-% for rr=1:size(io,1)
-%     for cc=1:size(io,2)
-%         per.io=io(rr,cc);
-%         per.gamma=gamma(rr,cc);
-%         per_temp{rr,cc}=per;
-%     end
-% end
-
 currentDir=pwd(); %OCT
-
 filemot = strrep(filemot,'.mat','.fem');
 
-%io_femm=io*geo.Nbob;
 iAmpCoil=iAmp*geo.Nbob*geo.n3phase;   %AS
 
 %Fd = zeros(size(Id)); Fq = Fd; T = Fd; dT = Fd;
-if dataIn.LossEvaluationCheck == 0
+% if dataIn.LossEvaluationCheck == 0
     for rr = 1:size(iAmp,1)
         parfor cc = 1:size(iAmp,2)
-            [thisfilepath,dirName]=createTempDir();
+            [thisfilepath,pathname]=createTempDir();
             disp(['Evaluation of position I:',num2str(iAmp(rr,cc)),' gamma:',num2str(gamma(rr,cc))]);
             if isoctave()
-                dest_dir=strcat(dirName,'mot0.fem');
+                dest_dir=strcat(pathname,'mot0.fem');
                 copyfile(filemot,dest_dir);
             else
-                copyfile(filemot,[dirName,'mot0.fem']);
+                copyfile(filemot,[pathname,'mot0.fem']);
             end
             perTmp=per;
             perTmp.gamma=gamma(rr,cc);
             perTmp.overload=iAmp(rr,cc)/i0;
-            [SOLUTION{rr,cc}] = simulate_xdeg(geo,perTmp,eval_type,dirName,'mot0.fem');
+            matTmp=mat;
+            matTmp.LayerMag.Br = per.BrPP;
+            matTmp.LayerMag.Hc = per.BrPP/(4e-7*pi*mat.LayerMag.mu);
+            [SOLUTION{rr,cc}] = simulate_xdeg(geo,perTmp,matTmp,eval_type,pathname,'mot0.fem',dataIn.LossEvaluationCheck);
             cd(currentDir)
         end
     end
-else
-    for rr = 1:size(iAmp,1)
-        parfor cc = 1:size(iAmp,2)
-            [thisfilepath,dirName]=createTempDir();
-            disp(['Evaluation of position I:',num2str(iAmp(rr,cc)),' gamma:',num2str(gamma(rr,cc))]);
-            copyfile(filemot,[currentDir,'\tmp\',dirName,'\mot0.fem']);
-            [SOLUTION{rr,cc}] = simulate_xdeg_IronLoss(geo,iAmpCoil(rr,cc),per.BrPP,gamma(rr,cc),eval_type,mat,per);
-            cd(currentDir)
-        end
-    end
-end
+% else
+%     for rr = 1:size(iAmp,1)
+%         parfor cc = 1:size(iAmp,2)
+%             [thisfilepath,pathname]=createTempDir();
+%             disp(['Evaluation of position I:',num2str(iAmp(rr,cc)),' gamma:',num2str(gamma(rr,cc))]);
+% %             copyfile(filemot,[currentDir,'\tmp\',pathname,'\mot0.fem']);
+%             copyfile(filemot,[pathname,'mot0.fem']);
+%             [SOLUTION{rr,cc}] = simulate_xdeg_IronLoss(geo,iAmpCoil(rr,cc),per.BrPP,gamma(rr,cc),eval_type,mat,per);
+%             cd(currentDir)
+%         end
+%     end
+% end
 
 Fd   = zeros(size(Id));
 Fq   = zeros(size(Id));

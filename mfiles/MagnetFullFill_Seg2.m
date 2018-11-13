@@ -46,18 +46,6 @@ for kk=1:nlay
         YpMag1B1(kk)=y;
         %         end
     end
-    %     xv=70:0.1:80;
-    %     yv4=-a4/b4*xv-c4/b4;
-    %     yv5=-a5/b5*xv-c5/b5;
-    %     yv6b=-a6/b6*xv-c6/b6;
-    %     m4=-a4/b4;
-    %     m6=-1/m4; d6=YpBar2(kk)-m6*XpBar2(kk);
-    %     yv6=m6*xv+d6
-    %     figure(100);plot(B2k(kk),0,'rs'); hold on;
-    %     plot(XpBar2(kk),YpBar2(kk),'rs');
-    %     plot(xv,yv4); plot(xv,yv5); plot(xv,yv6);plot(xv,yv6b,'r');
-    %     plot(x,y,'cs');
-    %     hold off; axis equal
 end
 clear a b c a1 b1 c1 a2 b2 c2 a3 b3 c3 a4 b4 c4 x y
 
@@ -155,24 +143,3 @@ for kk=1:nlay
 end
 zmag=zeros(1,size(xmag,2));
 
-%% Cross section drawing
-
-% figure(100);hold on;
-% % plot(xo',yo','--r','LineWidth',2); axis([0 rlim 0 rlim]); axis square
-% plot(B1k,0,'ob');plot(B2k,0,'ob');
-% plot(xpont,ypont,'*c');
-% plot(XpBar2,YpBar2,'bs');
-% plot(XpBar1,YpBar1,'bs');
-% plot(xTraf1,yTraf1,'*m');
-% plot(xTraf2,yTraf2,'*m');
-% plot(xD1k,yD1k,'ob');
-% plot(XpMag2B1,YpMag2B1,'dc');
-% %
-% for ii=1:nlay
-%    plot([XpBar1(ii),xxD1k(ii)],[YpBar1(ii),yyD1k(ii)],'b','LineWidth',2);
-%    plot([XpBar2(ii),xxD2k(ii)],[YpBar2(ii),yyD2k(ii)],'b','LineWidth',2);
-%    plot([B1k(ii),XpBar1(ii)],[0,YpBar1(ii)],'b','LineWidth',2);
-%    plot([B2k(ii),XpBar2(ii)],[0,YpBar2(ii)],'b','LineWidth',2);
-%
-% end
-% hold off;

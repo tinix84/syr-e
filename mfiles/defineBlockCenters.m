@@ -56,7 +56,7 @@ switch geo.RotType
         
         if geo.BarFillFac ~= 2
             %% regular or rounded shape
-            if seg~=1
+            if seg~=1  % more than one PMs segment
                 % find the center of each PM segment; defined as the middle
                 % point of diagonal;
                 xPMcenter = (xPMi + xPMso(1))/2;
@@ -75,9 +75,18 @@ switch geo.RotType
                     xPMcenter = [xPMcenter,xPMcenter];
                     yPMcenter = [yPMcenter,-yPMcenter];
                 end
-                PMBaricentro = [PMBaricentro; xPMcenter',yPMcenter',codMatPM*ones(seg,1),res*ones(seg,1),ones(seg,1),zeros(seg,1),zeros(seg,1),zeros(seg,1)];
+                % compute the PMs direction
+                if geo.PMdir=='p' % parallel magnetization
+                    xmag = -ones(size(xPMcenter));
+                    ymag = zeros(size(xmag));
+                else
+                    angle = atan2(yPMcenter,xPMcenter)+pi;
+                    xmag = cos(angle.');
+                    ymag = sin(angle.');
+                end
+                PMBaricentro = [PMBaricentro; xPMcenter',yPMcenter',codMatPM*ones(seg,1),res*ones(seg,1),ones(seg,1),xmag,ymag,zeros(seg,1)];
             else
-                PMBaricentro = [mean([xPMci,xPMco]),0,codMatPM,res,1,0,0,0];
+                PMBaricentro = [mean([xPMci,xPMco]),0,codMatPM,res,1,-1,0,0];
             end
         else
             %% hybrid shape
@@ -95,10 +104,10 @@ switch geo.RotType
         
         if not(isempty(PMBaricentro))
             while kk<=ps-1
-                for ii = 1:seg
-                    [xtemp(ii),ytemp(ii)]=rot_point(PMBaricentro(ii,1),PMBaricentro(ii,2),kk*180/p*pi/180);
-                    Temp = [Temp; xtemp(ii),ytemp(ii),codMatPM,res,1,0,0,0];
-                end
+                [xtemp,ytemp]=rot_point(PMBaricentro(:,1),PMBaricentro(:,2),kk*180/p*pi/180);
+                magdir=atan2(PMBaricentro(:,7),PMBaricentro(:,6));
+                magdir_tmp=magdir+(kk*pi/p-eps)+(cos((kk-1)*pi)+1)/2*pi;
+                Temp=[Temp;xtemp,ytemp,PMBaricentro(:,3),PMBaricentro(:,4),PMBaricentro(:,5),cos(magdir_tmp),sin(magdir_tmp),PMBaricentro(:,8)];
                 kk=kk+1;
             end
             PMBaricentro =[PMBaricentro;Temp];
@@ -133,8 +142,8 @@ switch geo.RotType
         ShaftBaricentro=[mean([0,Ar]),0,codMatShaft,res,1,NaN,NaN,NaN];
         
         BarCenter=[PMBaricentro;Aircentro;RotBaricentro;ShaftBaricentro];
-       
-    case 'Vtype' % definzione regioni barriera - rev.Gallo 20/03/2018 
+        
+    case 'Vtype' % definzione regioni barriera - rev.Gallo 20/03/2018
         xc = temp.xc;
         yc = temp.yc;
         
@@ -163,8 +172,8 @@ switch geo.RotType
                 xair,yair,codMatAir*ones(length(xair),1),res*ones(length(xair),1),1*ones(length(xair),1),zeros(length(xair),1),zeros(length(xair),1),zeros(length(xair),1)];
             magdir=atan2(ymag,xmag);
             magdir=[magdir;atan2(ymagair,xmagair)];
-        end    
-
+        end
+        
         % Replicate poles ps-1 times
         Temp=[]; kk=1;
         if not(isempty(BarCenter))
@@ -185,7 +194,7 @@ switch geo.RotType
         % shaft
         ShaftBaricentro=[mean([0,Ar]),0,codMatShaft,res,1,NaN,NaN,NaN];
         
-        BarCenter=[BarCenter;RotBaricentro;ShaftBaricentro];        
+        BarCenter=[BarCenter;RotBaricentro;ShaftBaricentro];
         
     otherwise
         
@@ -194,7 +203,7 @@ switch geo.RotType
         
         % Barriers: magnetization direction
         xmag=temp.xmag; ymag=temp.ymag; zmag=temp.zmag;
-
+        
         if strcmp(geo.RotType,'Seg') || strcmp(geo.RotType,'ISeg') %mod walter
             xc = temp.xc;
             yc = temp.yc;
@@ -211,13 +220,12 @@ switch geo.RotType
             ymag=zeros(r,c);
             zmag=zeros(r,c);
         end
-
+        
         % barrier block centers
         if isempty(xc)
             BarCenter=[];
         else
-            
-            if(sum(geo.BarFillFac~=0)&&strcmp('Circular',geo.RotType))
+            if (strcmp('Circular',geo.RotType)&&sum(geo.BarFillFac~=0))
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%just for circular type with BarFillFac~=0
                 XpontRadBarSx=temp.XpontRadBarSx;
                 YpontRadBarSx=temp.YpontRadBarSx;

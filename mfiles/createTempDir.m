@@ -14,26 +14,17 @@
 
 function [thisfilepath,dirName]=createTempDir()
 
-% createTempDir: creates a temporary variable and moves into it
+% createTempDir: creates a temporary variable for FEMM simulation
 
-mang=num2str(randi((10^5),1));
+mang=num2str(randi((10^7),1));
 dirName=mang(1:end);
 warning off MATLAB:MKDIR:DirectoryExists
 thisfilepath = fileparts(which('MODEstart.m'));
 mkdir(fullfile(thisfilepath,'tmp'));
-if isoctave() %OCT
- file_path = strcat(thisfilepath,'\tmp\');
- cd(file_path)
- dirName=strcat(file_path,dirName);
- clear file_path 
-else
- cd(fullfile(thisfilepath,'tmp'))
-end                                                                   
 warning on MATLAB:MKDIR:DirectoryExists
-while(exist(dirName,'dir'))
+while(exist([thisfilepath '\tmp\' dirName],'dir'))
     mang=num2str(randi((10^6),1));
     dirName=mang(1:end);
 end
+dirName=[thisfilepath '\tmp\' dirName '\'];
 mkdir(dirName);
-dirName=[cd '\' dirName '\'];
-cd(dirName);

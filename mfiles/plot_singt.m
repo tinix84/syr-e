@@ -28,7 +28,6 @@ fq60=[f_q;f_q(1)];
 fq=repeat_n(fq60',360/delta_sim_singt);
 gamma = mean(atan2(-out.SOL.id',out.SOL.iq')) * 180/pi;
 
-
 delta = atan2(fq,fd) * 180/pi;
 
 % 4 marzo 2013 - dubbio: assi PM style, gamma da asse q in senso

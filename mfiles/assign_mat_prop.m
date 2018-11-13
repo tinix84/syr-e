@@ -43,7 +43,6 @@ mat.SlotCond.MatName = tmp.MatName;
 %mat.MatList.conductor = tmp.MatList;
 
 %% slot air
-
 mat.SlotAir.kgm3 = 3;
 mat.SlotAir.sigma = 0;
 mat.SlotAir.MatName = 'Air';
@@ -61,9 +60,15 @@ if isfield(tmp,'BH')
     mat.LayerMag.Hci = tmp.Hci;
     mat.LayerMag.Bnom = tmp.Bnom;
 else
-    mat.LayerMag.Br = tmp.Br;
-    mat.LayerMag.Hc = tmp.Hc;
-    mat.LayerMag.mu = tmp.mu;
+    mat.LayerMag.Br      = tmp.Br;
+    mat.LayerMag.Hc      = tmp.Hc;
+    mat.LayerMag.mu      = tmp.mu;
+    mat.LayerMag.kgm3    = tmp.kgm3;
+    mat.LayerMag.sigmaPM = tmp.sigmaPM;
+    if isfield(tmp,'temp')
+        mat.LayerMag.temp    = tmp.temp;
+    end
+    
 end
 mat.LayerMag.MatName = tmp.MatName;
 %mat.MatList.barrier = tmp.MatList;

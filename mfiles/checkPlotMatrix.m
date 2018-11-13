@@ -4,7 +4,7 @@ function [Mat]=checkPlotMatrix(Mat,tol)
 % 
 % Check rotor and stator geometry matrix to avoid the error that plot the
 % entire circumference either a short arc.
-% Two points are coincident if the distance between their is equal or
+% Two points are coincident if the distance between them is equal or
 % smaller than tol
 
 for ii=1:length(Mat(:,1))

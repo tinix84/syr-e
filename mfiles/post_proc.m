@@ -12,9 +12,6 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-
-l = geo.l;
-
 % load phase flux linkages
 for ii=0:(n3phase-1) %AS
     temp_out = mo_getcircuitproperties(phase_name{3*ii+1});
@@ -28,93 +25,9 @@ for ii=0:(n3phase-1) %AS
     f(3*ii+3) = temp_out(3) * 2 * p/ps;
 end
 
-% evaluate torque
-% % T1 - from the innermost integration line (rot + gap/6)
-% x = r + gap*1/6;
-% if gradi_da_sim<=180
-%     ang0 = th_m;
-%     ang1 = gradi_da_sim+th_m;
-%     [x1,y1] = rot_point(x,0,ang0*pi/180);
-%     [x2,y2] = rot_point(x,0,ang1*pi/180);
-%     mo_addcontour(x1,y1);
-%     mo_addcontour(x2,y2);
-%     mo_bendcontour(gradi_da_sim,0.5);
-% else
-%     ang0 = th_m;
-%     ang1 = gradi_da_sim/2+th_m;
-%     ang2 = gradi_da_sim+th_m;
-%     [x1,y1] = rot_point(x,0,ang0*pi/180);
-%     [x2,y2] = rot_point(x,0,ang1*pi/180);
-%     [x3,y3] = rot_point(x,0,ang2*pi/180);
-%     mo_addcontour(x1,y1);
-%     mo_addcontour(x2,y2);
-%     mo_bendcontour(gradi_da_sim/2,0.5);
-%     mo_addcontour(x3,y3);
-%     mo_bendcontour(gradi_da_sim/2,0.5);
-% end
-
-% T1 = mo_lineintegral(4);
-% T1 = T1(1) * 2 * p/ps;
-% mo_clearcontour();
-
-% % T2 - from the outermost integration line (stat - gap/6)
-% x = r + gap*5/6;
-% if gradi_da_sim<=180
-%     ang0 = -pc;
-%     ang1 = gradi_da_sim-pc;
-%     [x1,y1] = rot_point(x,0,ang0*pi/180);
-%     [x2,y2] = rot_point(x,0,ang1*pi/180);
-%     mo_addcontour(x1,y1);
-%     mo_addcontour(x2,y2);
-%     mo_bendcontour(gradi_da_sim,0.5);
-% else
-%     ang0 = -pc;
-%     ang1 = gradi_da_sim/2-pc;
-%     ang2 = gradi_da_sim-pc;
-%     [x1,y1] = rot_point(x,0,ang0*pi/180);
-%     [x2,y2] = rot_point(x,0,ang1*pi/180);
-%     [x3,y3] = rot_point(x,0,ang2*pi/180);
-%     mo_addcontour(x1,y1);
-%     mo_addcontour(x2,y2);
-%     mo_bendcontour(gradi_da_sim/2,0.5);
-%     mo_addcontour(x3,y3);
-%     mo_bendcontour(gradi_da_sim/2,0.5);
-% end
-% T2 = mo_lineintegral(4);
-% T2 = T2(1) * 2 * p/ps;
-% mo_clearcontour();
-
-% % T3 - from an intermediate line (rot + gap/2)
-% x = r + gap*1/2;
-% if gradi_da_sim<=180
-%     ang0 = -pc;
-%     ang1 = gradi_da_sim-pc;
-%     [x1,y1] = rot_point(x,0,ang0*pi/180);
-%     [x2,y2] = rot_point(x,0,ang1*pi/180);
-%     mo_addcontour(x1,y1);
-%     mo_addcontour(x2,y2);
-%     mo_bendcontour(gradi_da_sim,0.5);
-% else
-%     ang0 = -pc;
-%     ang1 = gradi_da_sim/2-pc;
-%     ang2 = gradi_da_sim-pc;
-%     [x1,y1] = rot_point(x,0,ang0*pi/180);
-%     [x2,y2] = rot_point(x,0,ang1*pi/180);
-%     [x3,y3] = rot_point(x,0,ang2*pi/180);
-%     mo_addcontour(x1,y1);
-%     mo_addcontour(x2,y2);
-%     mo_bendcontour(gradi_da_sim/2,0.5);
-%     mo_addcontour(x3,y3);
-%     mo_bendcontour(gradi_da_sim/2,0.5);
-% end
-% T3 = mo_lineintegral(4);
-% T3 = T3(1) * 2 * p/ps;
-% mo_clearcontour();
-
-% dq flux linkaged
+% dq flux linkage
 for ik=0:(n3phase-1) %AS
     fdq = abc2dq(f(3*ik+1),f(3*ik+2),f(3*ik+3),th(jj)*pi/180,n3phase,ik);
-%     flusso(ik+1,jj)=fdq(1)+j*fdq(2);
     fd_temp(ik+1,jj)=fdq(1);
     fq_temp(ik+1,jj)=fdq(2);
 end
@@ -126,14 +39,11 @@ fq=mean(fq_temp(:,jj));
 for ii=1:length(geo.BLKLABELS.rotore.xy(:,1))
     xB=geo.BLKLABELS.rotore.xy(ii,1);
     yB=geo.BLKLABELS.rotore.xy(ii,2);
-    %[xB,yB]=rot_point(xB,yB,(th(jj) - th(1))/p*pi/180);
     [xB,yB]=rot_point(xB,yB,th_m*pi/180);
     mo_selectblock(xB,yB);
 end
 
 Tblock=mo_blockintegral(22)*2*p/ps;
-%Fx=mo_blockintegral(18);
-%Fy=mo_blockintegral(19);
 mo_clearblock;
 
 % Calcolo del Volume dei magneti VolPM - rev.Gallo 14/03/2018
@@ -148,7 +58,7 @@ if jj==1 %viene calcolato solo alla prima simulazione (rotore in posizione di pa
             flagPM=1;
         end
     end
-    if flagPM %flag per capire se area del magnete rettangolare è presente o no 
+    if flagPM %flag per capire se area del magnete rettangolare è presente o no
         VolPM=(2*geo.p*mo_blockintegral(10))/geo.ps; %Calcolo Volume magnete totale nel rotore [m3]
     else
         VolPM=0;
@@ -157,15 +67,100 @@ if jj==1 %viene calcolato solo alla prima simulazione (rotore in posizione di pa
     mo_clearblock();
 end
 
-% ang0 = th_m;
-% ang1 = gradi_da_sim+th_m;
-% angC = mean([ang0 ang1]);
-% Frt=(Fx+j*Fy)*exp(-j*angC);
-% string of SOL
-% sol = [th(jj) id iq fdq(1) fdq(2) mean([T1,T2,T3])];
-% %sol = [th(jj) id iq fdq(1) fdq(2) mean([T1,T2,T3]) T1 T2 T3];
-% sol = [th(jj) id iq fdq(1) fdq(2) mean([T1,T2,T3]) mean([F1,F2,F3]) F1 F2 F3];
-
-
-
-
+if(0)
+    % % Store first simulation status, including sampling coordinate, group
+    % number, saved in Matrix
+    if jj == 1
+        EleNo = mo_numelements;               % Number of mesh elements
+        pos = zeros(EleNo,1);                 % Matrix that will hold the mesh elements centroid coordinates as complex number
+        area = zeros(EleNo,1);                % Matrix that will hold the mesh elements area
+        groNo = zeros(EleNo,1);               % Matrix that will hold the mesh elements group number
+        for i = 1:EleNo
+            elm = mo_getelement(i);
+            pos(i) = elm(4)+j*elm(5);
+            area(i) = elm(6);
+            groNo(i) = elm(7);
+        end
+        
+        %% find stator iron elements
+        [line_Sta, row] = find(groNo==12);      % Stator Iron
+        pos_Sta = pos(line_Sta);
+        area_Sta = area(line_Sta);
+        gro_Sta = groNo(line_Sta);
+        %% select 1/3 stator iron elements
+        Sta = find(angle(pos_Sta) < ((geo.Qs/3*2-1)*pc*pi/180));
+        pos_Sta = pos_Sta(Sta);
+        area_Sta = area_Sta(Sta);
+        gro_Sta = gro_Sta(Sta);
+        
+        %% find rotor iron element
+        [line_Rot, row] = find(groNo==22);
+        pos_Rot = pos(line_Rot);
+        area_Rot = area(line_Rot);
+        gro_Rot = groNo(line_Rot);
+        
+        %% Matrix to store data
+        areaIron = [area_Sta; area_Rot];
+        posIron = [pos_Sta; pos_Rot];
+        groNoIron = [gro_Sta; gro_Rot];
+        %% delete redundant data, just keep iron element data
+        IronNo = size(groNoIron,1);
+        fIron =zeros(IronNo,6);            % Matrix that save flux density of iron element
+    end
+    
+    for kk = 1:1:5
+        if jj == 1+(kk-1)*round(nsim/5)               % 5 positions are simulated for losses
+            RotPos = exp(j*th_m*pi/180);              % It is a parameter that considers the rotor position
+            for i = 1:IronNo
+                if (groNoIron(i) == 22)                       % rotor iron elements
+                    Pos_Rot = posIron(i)*RotPos;              % get element position
+                    %% axis transform
+                    fIron(i,kk) = (mo_getb(real(Pos_Rot),imag(Pos_Rot))*[1;j]);
+                    Bd = real(fIron(i,kk)) * cosd(th_m) + imag(fIron(i,kk)) * sind(th_m);
+                    Bq = imag(fIron(i,kk)) * cosd(th_m) - real(fIron(i,kk)) * sind(th_m);
+                    fIron(i,kk) = [Bd,Bq] * [1;j];
+                elseif (groNoIron(i) == 12)                   % stator iron elements
+                    if ceil(th_m) < 60/p                      % for stator, just 60 ele degree rotation data is needed
+                        %%          first one third of stator
+                        Pos_Sta = posIron(i);
+                        fIron(i,kk) = (mo_getb(real(Pos_Sta),imag(Pos_Sta))*[1;j]);
+                        %%          second one third stator iron area
+                        Pos_Sta1 = Pos_Sta*exp(j*(geo.Qs/3*2*pc)*pi/180);
+                        fIron(i,kk+6) = (mo_getb(real(Pos_Sta1),imag(Pos_Sta1))*[1;j]);
+                        %%          last one third stator iron area
+                        Pos_Sta2 = Pos_Sta1*exp(j*(geo.Qs/3*2*pc)*pi/180);
+                        fIron(i,kk+6*2) = (mo_getb(real(Pos_Sta2),imag(Pos_Sta2))*[1;j]);
+                    end
+                end
+            end
+        end
+    end
+    
+    if jj == nsim                                 % Last postion data collection
+        RotPos = exp(j*th_m*pi/180);              % It is a parameter that considers the rotor position
+        for i = 1:IronNo
+            if (groNoIron(i) == 22)                       % rotor iron elements
+                Pos_Rot = posIron(i)*RotPos;              % get element position
+                %% axis transform
+                fIron(i,6) = (mo_getb(real(Pos_Rot),imag(Pos_Rot))*[1;j]);
+                Bd = real(fIron(i,6)) * cosd(th_m) + imag(fIron(i,6)) * sind(th_m);
+                Bq = imag(fIron(i,6)) * cosd(th_m) - real(fIron(i,6)) * sind(th_m);
+                fIron(i,6) = [Bd,Bq] * [1;j];
+            elseif (groNoIron(i) == 12)                   % stator iron elements
+                if th_m < 60/p                      % for stator, just 60 ele degree rotation data is needed
+                    %%          first one third of stator
+                    Pos_Sta = posIron(i);
+                    fIron(i,6) = (mo_getb(real(Pos_Sta),imag(Pos_Sta))*[1;j]);
+                    %%          second one third stator iron area
+                    Pos_Sta1 = Pos_Sta*exp(j*(geo.Qs/3*2*pc)*pi/180);
+                    fIron(i,6+6) = (mo_getb(real(Pos_Sta1),imag(Pos_Sta1))*[1;j]);
+                    %%          last one third stator iron area
+                    Pos_Sta2 = Pos_Sta1*exp(j*(geo.Qs/3*2*pc)*pi/180);
+                    fIron(i,6+6*2) = (mo_getb(real(Pos_Sta2),imag(Pos_Sta2))*[1;j]);
+                end
+            end
+        end
+        fluxdens = [posIron areaIron groNoIron fIron];      % Saving all the info necessary to calculate Iron Losses
+    end
+    
+end

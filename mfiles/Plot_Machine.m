@@ -17,29 +17,17 @@ function [hc,dalpha,geo] = Plot_Machine(h,dataSet,flag_plot)
 axes(h); cla(h);
 [~, ~, geo,per,mat] = data0(dataSet);
 [geo,gamma,mat] = interpretRQ(dataSet.RQ,geo,mat);
+
 geo.x0 = geo.r/cos(pi/2/geo.p);
-
 th_m0 = 0;                 % rotor offset angle [mec deg]
-
 geo.th0 = th_m0*geo.p - 0;     % offset angle [elt deg] (for coordinate transformations)
 
 fem.res = 0;
 fem.res_traf = 0;
 
-geo.Areaob0 = dataSet.Areaob0; %mod walter
-geo.Areaob = dataSet.Areaob;
-geo.Areavert0 = dataSet.Areavert0;
-geo.Areavert = dataSet.Areavert;
-geo.dob = dataSet.dob;
-geo.dvert = dataSet.dvert;
-% NB: questi vanno spostati in dataSet...
-
-
-
 % nodes
 [rotor,BLKLABELSrot,geo] = ROTmatr(geo,fem,mat);
 [geo,statore,BLKLABELSstat] = STATmatr(geo,fem);
-
 
 dalpha = geo.dalpha;            % Angoli dalpha
 hc = geo.hc;                    % Altezze in mm
@@ -62,16 +50,6 @@ if strcmp(flag_plot,'Y')
             plot(h,[x1,x2],[y1,y2],'Linewidth',2,'Color','k');
             grid minor, axis equal
             
-            %         elseif Mat(i,ncol)== eps || Mat(i,ncol)== -eps   % tracciamento linee per area inserimento magneti nella geometria Seg/ISeg
-            %
-            %             if ~strcmp(dataSet.FluxBarrierMaterial,'Air')
-            %                 x1=Mat(i,1);
-            %                 x2=Mat(i,3);
-            %                 y1=Mat(i,2);
-            %                 y2=Mat(i,4);
-            %                 plot([x1,x2],[y1,y2],'Color','r','Linewidth',2);
-            %
-            %             end
         elseif Mat(i,ncol) == 1 || Mat(i,ncol) == -1
             % draw arcs
             dati = Mat(i,:);
@@ -122,8 +100,6 @@ if strcmp(flag_plot,'Y')
                 else    %red
                     plot([x1,x2],[y1,y2],'Color','r','Linewidth',2);
                 end
-                
-                
             end
         else
             disp('error');
@@ -132,5 +108,4 @@ if strcmp(flag_plot,'Y')
     hold off
 end
 
-% end
 

@@ -12,7 +12,7 @@
 %    See the License for the specific language governing permissions and
 %    limitations under the License.
 
-function rotore = finishRotorMatrix(rotore,geo)
+function [rotore,temp] = finishRotorMatrix(rotore,geo,temp)
 
 % input: half pole description of rotor geometry
 % output: full rotor description (ps poles)
@@ -24,9 +24,9 @@ Ar = geo.Ar;
 lm = geo.lm;
 RotType = geo.RotType;
 
+
 % Check the rotor matrix, to avoid plot error due to arcs
 [rotore]=checkPlotMatrix(rotore,1e-9);
-
 
 if not(isempty(rotore))
     % mirror the rotor points
@@ -47,7 +47,7 @@ if not(isempty(rotore))
         num_poli=num_poli+1;
     end
     rotore=[rotore;Temp2];
-    clear Temp1 Temp2 xtemp ytemp;
+    %     clear Temp1 Temp2 xtemp ytemp;
 end
 %
 % raggio esterno
@@ -68,8 +68,8 @@ if (ps<2*p)
         0 0 xre2 yre2 xre3 yre3 1];
 else
     rotore=[rotore;
-    0 0 xre2 yre2 xre3 yre3 1;
-    0 0 xre3 yre3 xre2 yre2 1]; 
+        0 0 xre2 yre2 xre3 yre3 1;
+        0 0 xre3 yre3 xre2 yre2 1];
 end
 
 % Albero
@@ -81,12 +81,12 @@ end
 [xAl2,yAl2] = rot_point(Ar,0,-90/p*pi/180);
 
 if (ps<2*p)
-rotore=[rotore;
-    0,0,xAl2,yAl2,xAl1,yAl1,1];
+    rotore=[rotore;
+        0,0,xAl2,yAl2,xAl1,yAl1,1];
 else
-   rotore=[rotore;
-    0,0,xAl2,yAl2,xAl1,yAl1,1;
-    0,0,xAl1,yAl1,xAl2,yAl2,1];
+    rotore=[rotore;
+        0,0,xAl2,yAl2,xAl1,yAl1,1;
+        0,0,xAl1,yAl1,xAl2,yAl2,1];
 end
 
 % Completo il rotore con linee di chiusura laterali
@@ -94,4 +94,31 @@ if (ps<2*p)
     rotore=[rotore;
         0,0,xre2,yre2,NaN,NaN,0;
         0,0,xre3,yre3,NaN,NaN,0];
+end
+
+% PM machine
+if (nargin>2)&&not(isempty(temp.Mag))
+    magneti = temp.Mag;
+    [magneti]=checkPlotMatrix(magneti,1e-9);
+    
+    % mirror the rotor points
+    magNeg=magneti;
+    magNeg(:,[2 4 6 7])=-magneti(:,[2 4 6 7]);
+    magneti=[magneti;magNeg];
+    
+    % replicate the pole ps-1 times (fractional slots have ps>1)
+    Temp2=[];
+    num_poli=1;
+    while num_poli<ps
+        Temp1=[];
+        for kk=1:2:size(magneti,2)-2
+            [xtemp,ytemp]=rot_point(magneti(:,kk),magneti(:,kk+1),num_poli*180/p*pi/180);
+            Temp1=[Temp1,xtemp,ytemp];
+        end
+        Temp2=[Temp2;[Temp1,magneti(:,end)]];
+        num_poli=num_poli+1;
+    end
+    magneti=[magneti;Temp2];
+    
+    temp.Mag = magneti;
 end

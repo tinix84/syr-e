@@ -20,15 +20,21 @@ function i123 = dq2abc(id,iq,theta,n3phase,index)
 % index vary between 0 to (n3phase-1)
 % n3phase = number of 3-phase circuits
 
-delta = pi/3;                   %sextant amplitude
-theta_i = delta*index/n3phase;  %angular difference between alpha-axis and first phase of the n3phase-th 3-phase circuit
+if (nargin == 3)
+    theta_i = 0;
+else
+    delta = pi/3;
+    theta_i = delta*index/n3phase;  %angular difference between alpha-axis and first phase of the n3phase-th 3-phase circuit
+end
+
 
 % Inverse transformation matrix (2 -> 3)
 T23 = [cos(theta_i)            sin(theta_i)
-       cos(theta_i+2*pi/3)     sin(theta_i+2*pi/3)
-       cos(theta_i-2*pi/3)     sin(theta_i-2*pi/3)];
+    cos(theta_i+2*pi/3)     sin(theta_i+2*pi/3)
+    cos(theta_i-2*pi/3)     sin(theta_i-2*pi/3)];
 
 % dq -> alpha beta
 iab = (id + j * iq) .* exp(j*theta);
 % alpha beta -> 123
 i123 = T23 * [real(iab);imag(iab)];
+
